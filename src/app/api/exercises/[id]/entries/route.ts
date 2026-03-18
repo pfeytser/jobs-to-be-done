@@ -4,10 +4,14 @@ import { getEntriesByExercise, getEntriesByUser, createEntry } from '@/lib/db/en
 import { getExerciseById } from '@/lib/db/exercises'
 import { z } from 'zod'
 
-const CreateEntrySchema = z.object({
+const CreateClassicEntrySchema = z.object({
   situation: z.string().min(1).max(500),
   motivation: z.string().min(1).max(500),
   expectedOutcome: z.string().min(1).max(500),
+})
+
+const CreateHiringEntrySchema = z.object({
+  hiringText: z.string().min(1).max(500).transform((s) => s.trim()),
 })
 
 export async function GET(
@@ -32,10 +36,8 @@ export async function GET(
 
     let entries
     if (isAdmin || exercise.currentPhase >= 2) {
-      // Admin always sees all; collaborators see all in phase 2+
       entries = await getEntriesByExercise(exerciseId)
     } else {
-      // Phase 1: user sees only their own entries
       entries = await getEntriesByUser(exerciseId, userId)
     }
 
@@ -85,7 +87,31 @@ export async function POST(
     }
 
     const body = await req.json()
-    const parsed = CreateEntrySchema.safeParse(body)
+
+    if (exercise.jtbdMode === 'hiring') {
+      const parsed = CreateHiringEntrySchema.safeParse(body)
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid input', details: parsed.error.issues },
+          { status: 400 }
+        )
+      }
+      const { hiringText } = parsed.data
+      const entry = await createEntry({
+        exerciseId,
+        userId: session.user.userId,
+        userEmail: session.user.email!,
+        userName: session.user.name ?? undefined,
+        situation: hiringText,
+        motivation: '',
+        expectedOutcome: '',
+        fullSentenceOverride: `I am hiring it to ${hiringText}`,
+      })
+      return NextResponse.json({ entry }, { status: 201 })
+    }
+
+    // Classic mode
+    const parsed = CreateClassicEntrySchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Invalid input', details: parsed.error.issues },

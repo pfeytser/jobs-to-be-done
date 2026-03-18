@@ -9,9 +9,13 @@ interface Exercise {
   name: string
   mainPrompt?: string | null
   isActive: boolean
-  currentPhase: 1 | 2 | 3
+  isArchived: boolean
+  currentPhase: 1 | 2 | 3 | 4
   timerEndsAt?: string | null
   createdAt: string
+  type: 'jtbd' | 'sentiment'
+  jtbdMode: 'classic' | 'hiring'
+  sentimentAnalysis?: object | null
 }
 
 interface PerUserSpend {
@@ -34,10 +38,16 @@ const fetcher = (url: string) =>
 export function AdminPanel() {
   const [newExerciseName, setNewExerciseName] = useState('')
   const [newExercisePrompt, setNewExercisePrompt] = useState('')
+  const [newExerciseType, setNewExerciseType] = useState<'jtbd' | 'sentiment'>('jtbd')
+  const [newJtbdMode, setNewJtbdMode] = useState<'classic' | 'hiring'>('classic')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [timerMinutes, setTimerMinutes] = useState('5')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [deduplicating, setDeduplicating] = useState(false)
+  const [brainstormGenerating, setBrainstormGenerating] = useState(false)
+  const [archiveOpen, setArchiveOpen] = useState(false)
 
   const { data, mutate } = useSWR<{ exercises: Exercise[] }>(
     '/api/exercises',
@@ -47,6 +57,8 @@ export function AdminPanel() {
 
   const exercises = data?.exercises ?? []
   const activeExercise = exercises.find((e) => e.isActive)
+  const visibleExercises = exercises.filter((e) => !e.isArchived)
+  const archivedExercises = exercises.filter((e) => e.isArchived)
 
   const { data: voteData } = useSWR<VoteData>(
     activeExercise?.currentPhase === 2
@@ -68,6 +80,8 @@ export function AdminPanel() {
         body: JSON.stringify({
           name: newExerciseName.trim(),
           mainPrompt: newExercisePrompt.trim() || null,
+          type: newExerciseType,
+          jtbdMode: newExerciseType === 'jtbd' ? newJtbdMode : 'classic',
         }),
       })
       if (!res.ok) {
@@ -76,6 +90,8 @@ export function AdminPanel() {
       }
       setNewExerciseName('')
       setNewExercisePrompt('')
+      setNewExerciseType('jtbd')
+      setNewJtbdMode('classic')
       await mutate()
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Failed to create')
@@ -119,17 +135,120 @@ export function AdminPanel() {
     await handlePatch(exerciseId, { timerEndsAt: null })
   }
 
+  async function handleSwitchPhase(exerciseId: string, phase: 1 | 2 | 3 | 4) {
+    await handlePatch(exerciseId, { currentPhase: phase })
+    if (phase === 2 && activeExercise?.type === 'jtbd') {
+      await triggerDeduplicate(exerciseId)
+    }
+    if (phase === 4) {
+      await triggerBrainstormGenerate(exerciseId)
+    }
+  }
+
+  async function triggerDeduplicate(exerciseId: string) {
+    setDeduplicating(true)
+    try {
+      const res = await fetch(`/api/exercises/${exerciseId}/deduplicate`, { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error ?? 'Deduplication failed. Please try again.')
+      }
+      await mutate()
+    } catch {
+      alert('Deduplication failed. Please try again.')
+    } finally {
+      setDeduplicating(false)
+    }
+  }
+
+  async function triggerBrainstormGenerate(exerciseId: string) {
+    setBrainstormGenerating(true)
+    try {
+      const res = await fetch(`/api/exercises/${exerciseId}/brainstorm/generate`, { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error ?? 'Generation failed. Please try again.')
+      }
+      await mutate()
+    } catch {
+      alert('Generation failed. Please try again.')
+    } finally {
+      setBrainstormGenerating(false)
+    }
+  }
+
+  async function handleGenerateAnalysis(exerciseId: string) {
+    setAnalyzing(true)
+    try {
+      const res = await fetch(`/api/exercises/${exerciseId}/analyze`, { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error ?? 'Analysis failed')
+      }
+      await mutate()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Analysis failed')
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Create Exercise */}
       <section className="bg-surface rounded-[14px] border border-warm-border p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
         <h2 className="text-base font-semibold text-ink mb-4">Create Exercise</h2>
         <form onSubmit={handleCreate} className="space-y-3">
+          {/* Exercise type selector */}
+          <div className="flex gap-2">
+            {(['jtbd', 'sentiment'] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => {
+                  setNewExerciseType(t)
+                  if (t === 'sentiment' && !newExercisePrompt.trim()) {
+                    setNewExercisePrompt('What feeling do you want to evoke in our members when they are using our app?')
+                  }
+                  if (t === 'jtbd') {
+                    setNewExercisePrompt('')
+                  }
+                }}
+                className={`flex-1 py-2 rounded-full text-sm font-medium transition-all border ${
+                  newExerciseType === t
+                    ? 'bg-ink text-white border-ink'
+                    : 'bg-canvas text-ink-2 border-warm-border hover:border-ink hover:text-ink'
+                }`}
+              >
+                {t === 'jtbd' ? 'Jobs to Be Done' : 'Sentiment Design'}
+              </button>
+            ))}
+          </div>
+          {/* JTBD mode selector */}
+          {newExerciseType === 'jtbd' && (
+            <div className="flex gap-2">
+              {(['classic', 'hiring'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setNewJtbdMode(m)}
+                  className={`flex-1 py-2 rounded-full text-sm font-medium transition-all border ${
+                    newJtbdMode === m
+                      ? 'bg-ink text-white border-ink'
+                      : 'bg-canvas text-ink-2 border-warm-border hover:border-ink hover:text-ink'
+                  }`}
+                >
+                  {m === 'classic' ? 'Classic JTBD' : 'Hiring Mode'}
+                </button>
+              ))}
+            </div>
+          )}
+
           <input
             type="text"
             value={newExerciseName}
             onChange={(e) => setNewExerciseName(e.target.value)}
-            placeholder="Exercise name (e.g. Q1 2025 App Roadmap)"
+            placeholder={newExerciseType === 'sentiment' ? 'Exercise name (e.g. Member Sentiment — Q1 2025)' : 'Exercise name (e.g. Q1 2025 App Roadmap)'}
             className="w-full px-4 py-2.5 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent transition-all"
             maxLength={200}
             required
@@ -138,7 +257,11 @@ export function AdminPanel() {
             type="text"
             value={newExercisePrompt}
             onChange={(e) => setNewExercisePrompt(e.target.value)}
-            placeholder="Main prompt question (e.g. What job are members hiring the app for?)"
+            placeholder={
+              newExerciseType === 'sentiment'
+                ? 'What feeling do you want to evoke in our members when they are using our app?'
+                : 'Main prompt question (e.g. What job are members hiring the app for?)'
+            }
             className="w-full px-4 py-2.5 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent transition-all"
             maxLength={500}
           />
@@ -177,7 +300,7 @@ export function AdminPanel() {
                 <h2 className="text-base font-semibold text-ink">Active: {activeExercise.name}</h2>
               </div>
               <div className="flex items-center gap-3">
-                <PhaseBadge phase={activeExercise.currentPhase} />
+                <PhaseBadge phase={activeExercise.currentPhase} exerciseType={activeExercise.type} />
                 <Timer endsAt={activeExercise.timerEndsAt} />
               </div>
             </div>
@@ -200,23 +323,105 @@ export function AdminPanel() {
           {/* Phase Controls */}
           <div className="mb-5">
             <p className="text-sm font-medium text-ink mb-2">Set Phase</p>
-            <div className="flex gap-2">
-              {([1, 2, 3] as const).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => handlePatch(activeExercise.id, { currentPhase: p })}
-                  disabled={activeExercise.currentPhase === p || !!actionLoading}
-                  className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
-                    activeExercise.currentPhase === p
-                      ? 'bg-ink text-white'
-                      : 'bg-canvas text-ink-2 border border-warm-border hover:border-ink hover:text-ink disabled:opacity-50'
-                  }`}
-                >
-                  {p === 1 ? '1 · Creation' : p === 2 ? '2 · Voting' : '3 · Discussion'}
-                </button>
-              ))}
-            </div>
+            {activeExercise.type === 'sentiment' ? (
+              <div className="flex gap-2">
+                {([1, 2] as const).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => handlePatch(activeExercise.id, { currentPhase: p })}
+                    disabled={activeExercise.currentPhase === p || !!actionLoading}
+                    className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
+                      activeExercise.currentPhase === p
+                        ? 'bg-ink text-white'
+                        : 'bg-canvas text-ink-2 border border-warm-border hover:border-ink hover:text-ink disabled:opacity-50'
+                    }`}
+                  >
+                    {p === 1 ? '1 · Creation' : '2 · Analysis'}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex gap-2 flex-wrap">
+                {([1, 2, 3, 4] as const).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => handleSwitchPhase(activeExercise.id, p)}
+                    disabled={activeExercise.currentPhase === p || !!actionLoading || (p === 2 && deduplicating) || (p === 4 && brainstormGenerating)}
+                    className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
+                      activeExercise.currentPhase === p
+                        ? 'bg-ink text-white'
+                        : 'bg-canvas text-ink-2 border border-warm-border hover:border-ink hover:text-ink disabled:opacity-50'
+                    }`}
+                  >
+                    {p === 1 ? '1 · Creation' : p === 2 ? '2 · Voting' : p === 3 ? '3 · Discussion' : '4 · Brainstorm'}
+                  </button>
+                ))}
+              </div>
+            )}
+            {deduplicating && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Consolidating entries…
+              </div>
+            )}
+            {brainstormGenerating && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Generating problem statements…
+              </div>
+            )}
+            {activeExercise.type === 'jtbd' && activeExercise.currentPhase === 4 && !brainstormGenerating && (
+              <button
+                onClick={() => triggerBrainstormGenerate(activeExercise.id)}
+                className="mt-2 px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
+              >
+                Regenerate problem statements
+              </button>
+            )}
           </div>
+
+          {/* Generate Analysis (Sentiment only, Phase 2) */}
+          {activeExercise.type === 'sentiment' && activeExercise.currentPhase === 2 && !activeExercise.sentimentAnalysis && (
+            <div className="mb-5">
+              <p className="text-sm font-medium text-ink mb-2">AI Analysis</p>
+              <button
+                onClick={() => handleGenerateAnalysis(activeExercise.id)}
+                disabled={analyzing}
+                className="flex items-center gap-2 px-5 py-2.5 bg-ink text-white rounded-full text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                {analyzing ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Generating…
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    Generate Analysis
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+          {activeExercise.type === 'sentiment' && activeExercise.sentimentAnalysis && (
+            <div className="mb-5 flex items-center gap-2 text-sm text-ink-2">
+              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Analysis complete — visible to participants
+            </div>
+          )}
 
           {/* Timer Controls */}
           <div>
@@ -285,19 +490,17 @@ export function AdminPanel() {
       {/* All Exercises */}
       <section className="bg-surface rounded-[14px] border border-warm-border p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
         <h2 className="text-base font-semibold text-ink mb-4">
-          All Exercises ({exercises.length})
+          All Exercises ({visibleExercises.length})
         </h2>
-        {exercises.length === 0 ? (
+        {visibleExercises.length === 0 ? (
           <p className="text-ink-3 text-sm">No exercises yet. Create one above.</p>
         ) : (
           <div className="space-y-2">
-            {exercises.map((ex) => (
+            {visibleExercises.map((ex) => (
               <div
                 key={ex.id}
                 className={`flex items-center justify-between p-4 rounded-[14px] border transition-colors ${
-                  ex.isActive
-                    ? 'bg-sand border-warm-border'
-                    : 'bg-canvas border-warm-border'
+                  ex.isActive ? 'bg-sand border-warm-border' : 'bg-canvas border-warm-border'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -307,24 +510,89 @@ export function AdminPanel() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-ink truncate">{ex.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <PhaseBadge phase={ex.currentPhase} small />
+                      <PhaseBadge phase={ex.currentPhase} small exerciseType={ex.type} />
+                      {ex.type === 'jtbd' && ex.jtbdMode === 'hiring' && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-mist text-ink-2 border border-warm-border font-medium">
+                          Hiring
+                        </span>
+                      )}
                       <span className="text-xs text-ink-3">
                         {new Date(ex.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
                 </div>
-                {!ex.isActive && (
-                  <button
-                    onClick={() => handlePatch(ex.id, { isActive: true })}
-                    disabled={!!actionLoading}
-                    className="shrink-0 px-4 py-1.5 bg-surface border border-warm-border text-ink text-xs font-medium rounded-full hover:bg-ink hover:text-white hover:border-ink disabled:opacity-50 transition-all"
-                  >
-                    Activate
-                  </button>
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                  {!ex.isActive && (
+                    <button
+                      onClick={() => handlePatch(ex.id, { isActive: true })}
+                      disabled={!!actionLoading}
+                      className="px-4 py-1.5 bg-surface border border-warm-border text-ink text-xs font-medium rounded-full hover:bg-ink hover:text-white hover:border-ink disabled:opacity-50 transition-all"
+                    >
+                      Activate
+                    </button>
+                  )}
+                  {!ex.isActive && (
+                    <button
+                      onClick={() => handlePatch(ex.id, { isArchived: true })}
+                      disabled={!!actionLoading}
+                      className="px-3 py-1.5 text-ink-3 hover:text-ink text-xs font-medium transition-colors disabled:opacity-50"
+                      title="Archive"
+                    >
+                      Archive
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Archive accordion */}
+        {archivedExercises.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-warm-border">
+            <button
+              onClick={() => setArchiveOpen((o) => !o)}
+              className="flex items-center gap-2 text-sm font-medium text-ink-2 hover:text-ink transition-colors w-full text-left"
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${archiveOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              Archive ({archivedExercises.length})
+            </button>
+
+            {archiveOpen && (
+              <div className="mt-3 space-y-2">
+                {archivedExercises.map((ex) => (
+                  <div
+                    key={ex.id}
+                    className="flex items-center justify-between p-4 rounded-[14px] border border-warm-border bg-canvas opacity-60"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-ink truncate">{ex.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <PhaseBadge phase={ex.currentPhase} small exerciseType={ex.type} />
+                        <span className="text-xs text-ink-3">
+                          {new Date(ex.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handlePatch(ex.id, { isArchived: false })}
+                      disabled={!!actionLoading}
+                      className="shrink-0 px-3 py-1.5 text-ink-3 hover:text-ink text-xs font-medium transition-colors disabled:opacity-50"
+                    >
+                      Unarchive
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -371,11 +639,16 @@ function PromptEditor({
 function PhaseBadge({
   phase,
   small = false,
+  exerciseType = 'jtbd',
 }: {
-  phase: 1 | 2 | 3
+  phase: 1 | 2 | 3 | 4
   small?: boolean
+  exerciseType?: 'jtbd' | 'sentiment'
 }) {
-  const labels = { 1: 'Creation', 2: 'Voting', 3: 'Discussion' }
+  const labels: Record<number, string> =
+    exerciseType === 'sentiment'
+      ? { 1: 'Creation', 2: 'Analysis', 3: 'Analysis', 4: 'Brainstorm' }
+      : { 1: 'Creation', 2: 'Voting', 3: 'Discussion', 4: 'Brainstorm' }
   return (
     <span
       className={`inline-flex items-center rounded-full font-medium bg-sand text-ink ${

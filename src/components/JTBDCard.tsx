@@ -9,6 +9,7 @@ interface JTBDCardProps {
   expectedOutcome: string
   fullSentence: string
   createdAt: string
+  mode?: 'classic' | 'hiring'
   onDelete?: (id: string) => Promise<void>
   showDelete?: boolean
 }
@@ -18,8 +19,9 @@ export function JTBDCard({
   situation,
   motivation,
   expectedOutcome,
-  fullSentence: _fullSentence,
+  fullSentence,
   createdAt,
+  mode = 'classic',
   onDelete,
   showDelete = false,
 }: JTBDCardProps) {
@@ -49,11 +51,17 @@ export function JTBDCard({
     <div className="bg-surface rounded-[14px] border border-warm-border p-5 group transition-shadow hover:shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
-          <p className="text-sm text-ink leading-relaxed">
-            When <strong>{situation}</strong>,{' '}
-            I want to <strong>{motivation}</strong>,{' '}
-            so I can <strong>{expectedOutcome}</strong>.
-          </p>
+          {mode === 'hiring' ? (
+            <p className="text-sm text-ink leading-relaxed">
+              <strong>I am hiring it to</strong> {situation}.
+            </p>
+          ) : (
+            <p className="text-sm text-ink leading-relaxed">
+              When <strong>{situation}</strong>,{' '}
+              I want to <strong>{motivation}</strong>,{' '}
+              so I can <strong>{expectedOutcome}</strong>.
+            </p>
+          )}
         </div>
 
         {showDelete && onDelete && (

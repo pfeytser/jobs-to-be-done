@@ -6,6 +6,8 @@ import { z } from 'zod'
 const CreateExerciseSchema = z.object({
   name: z.string().min(1).max(200),
   mainPrompt: z.string().max(500).nullable().optional(),
+  type: z.enum(['jtbd', 'sentiment']).optional().default('jtbd'),
+  jtbdMode: z.enum(['classic', 'hiring']).optional().default('classic'),
 })
 
 export async function GET() {
@@ -45,7 +47,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const exercise = await createExercise(parsed.data.name, parsed.data.mainPrompt)
+    const exercise = await createExercise(parsed.data.name, parsed.data.mainPrompt, parsed.data.type, parsed.data.jtbdMode)
     return NextResponse.json({ exercise }, { status: 201 })
   } catch (error) {
     console.error('[exercises POST]', error)

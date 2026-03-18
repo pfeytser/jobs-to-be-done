@@ -60,11 +60,13 @@ export async function createEntry(data: {
   situation: string
   motivation: string
   expectedOutcome: string
+  fullSentenceOverride?: string
 }): Promise<JTBDEntry> {
   await runMigrations()
   const id = crypto.randomUUID()
   const createdAt = new Date().toISOString()
-  const fullSentence = `When ${data.situation}, I want to ${data.motivation}, so I can ${data.expectedOutcome}.`
+  const fullSentence = data.fullSentenceOverride
+    ?? `When ${data.situation}, I want to ${data.motivation}, so I can ${data.expectedOutcome}.`
 
   await turso.execute({
     sql: `INSERT INTO jtbd_entries

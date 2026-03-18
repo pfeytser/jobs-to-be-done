@@ -15,6 +15,8 @@ export async function runMigrations(): Promise<void> {
         isActive INTEGER NOT NULL DEFAULT 0,
         currentPhase INTEGER NOT NULL DEFAULT 1,
         timerEndsAt TEXT,
+        type TEXT NOT NULL DEFAULT 'jtbd',
+        sentimentAnalysis TEXT,
         createdAt TEXT NOT NULL
       );
 
@@ -43,17 +45,66 @@ export async function runMigrations(): Promise<void> {
         FOREIGN KEY (entryId) REFERENCES jtbd_entries(id) ON DELETE CASCADE
       );
 
+      CREATE TABLE IF NOT EXISTS sentiment_entries (
+        id TEXT PRIMARY KEY,
+        exerciseId TEXT NOT NULL,
+        userId TEXT NOT NULL,
+        userEmail TEXT NOT NULL,
+        userName TEXT,
+        term TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
+      );
+
       CREATE INDEX IF NOT EXISTS idx_entries_exercise ON jtbd_entries(exerciseId);
       CREATE INDEX IF NOT EXISTS idx_entries_user ON jtbd_entries(userId);
       CREATE INDEX IF NOT EXISTS idx_votes_exercise ON vote_transactions(exerciseId);
       CREATE INDEX IF NOT EXISTS idx_votes_entry ON vote_transactions(entryId);
       CREATE INDEX IF NOT EXISTS idx_votes_user ON vote_transactions(userId);
+      CREATE INDEX IF NOT EXISTS idx_sentiment_exercise ON sentiment_entries(exerciseId);
+      CREATE INDEX IF NOT EXISTS idx_sentiment_user ON sentiment_entries(userId);
+
+      CREATE TABLE IF NOT EXISTS brainstorm_problem_statements (
+        id TEXT PRIMARY KEY,
+        exerciseId TEXT NOT NULL,
+        entryId TEXT NOT NULL,
+        problemStatement TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS brainstorm_solutions (
+        id TEXT PRIMARY KEY,
+        exerciseId TEXT NOT NULL,
+        entryId TEXT NOT NULL,
+        userId TEXT NOT NULL,
+        userName TEXT,
+        text TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_bps_exercise ON brainstorm_problem_statements(exerciseId);
+      CREATE INDEX IF NOT EXISTS idx_bps_entry ON brainstorm_problem_statements(entryId);
+      CREATE INDEX IF NOT EXISTS idx_bs_exercise ON brainstorm_solutions(exerciseId);
+      CREATE INDEX IF NOT EXISTS idx_bs_entry ON brainstorm_solutions(entryId);
     `)
-    // Add mainPrompt column to existing tables (safe to fail if already present)
-    try {
-      await turso.execute('ALTER TABLE exercises ADD COLUMN mainPrompt TEXT')
-    } catch {
-      // Column already exists
+
+    // Add columns to existing tables (safe to fail if already present)
+    const safeAlters = [
+      'ALTER TABLE exercises ADD COLUMN mainPrompt TEXT',
+      "ALTER TABLE exercises ADD COLUMN type TEXT NOT NULL DEFAULT 'jtbd'",
+      'ALTER TABLE exercises ADD COLUMN sentimentAnalysis TEXT',
+      'ALTER TABLE exercises ADD COLUMN isArchived INTEGER NOT NULL DEFAULT 0',
+      "ALTER TABLE exercises ADD COLUMN jtbdMode TEXT NOT NULL DEFAULT 'classic'",
+      'ALTER TABLE exercises ADD COLUMN jtbdDeduplication TEXT',
+    ]
+    for (const sql of safeAlters) {
+      try {
+        await turso.execute(sql)
+      } catch {
+        // Column already exists
+      }
     }
 
     console.log('[migrations] Turso migrations completed successfully')

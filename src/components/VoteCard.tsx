@@ -7,6 +7,8 @@ interface VoteCardProps {
   situation: string
   motivation: string
   expectedOutcome: string
+  fullSentence?: string
+  mode?: 'classic' | 'hiring'
   totalVotes: number
   myVotes: number
   remainingVotes: number
@@ -21,6 +23,8 @@ export function VoteCard({
   situation,
   motivation,
   expectedOutcome,
+  fullSentence,
+  mode = 'classic',
   totalVotes,
   myVotes,
   remainingVotes,
@@ -68,11 +72,17 @@ export function VoteCard({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-ink leading-relaxed mb-2">
-            <strong>When</strong> {situation},{' '}
-            <strong>I want to</strong> {motivation},{' '}
-            <strong>so I can</strong> {expectedOutcome}.
-          </p>
+          {mode === 'hiring' ? (
+            <p className="text-sm text-ink leading-relaxed mb-2">
+              <strong>I am hiring it to</strong> {situation}.
+            </p>
+          ) : (
+            <p className="text-sm text-ink leading-relaxed mb-2">
+              <strong>When</strong> {situation},{' '}
+              <strong>I want to</strong> {motivation},{' '}
+              <strong>so I can</strong> {expectedOutcome}.
+            </p>
+          )}
 
           {!discussionMode && myVotes > 0 && (
             <div className="flex items-center gap-1">

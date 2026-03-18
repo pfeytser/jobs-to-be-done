@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
 import { getActiveExercise } from '@/lib/db/exercises'
 import { PhaseView } from '@/components/PhaseView'
@@ -39,11 +40,19 @@ export default async function JTBDPage() {
     <div className="min-h-screen bg-canvas">
       <header className="bg-surface border-b border-warm-border sticky top-0 z-40">
         <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <Link href="/jtbd" className="flex items-center gap-2 hover:opacity-75 transition-opacity">
             <span className="text-xl">🐝</span>
             <span className="font-semibold text-ink">Jobs to Bee Done</span>
-          </div>
+          </Link>
           <div className="flex items-center gap-3">
+            {session.user.role === 'admin' && (
+              <Link
+                href="/admin"
+                className="px-3 py-1.5 bg-sand border border-warm-border text-ink text-xs font-semibold rounded-full hover:bg-ink hover:text-white hover:border-ink transition-all"
+              >
+                Admin
+              </Link>
+            )}
             {session.user.image && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -82,12 +91,13 @@ export default async function JTBDPage() {
               {activeExercise.mainPrompt}
             </p>
           )}
-          <JTBDInfoAccordion />
+          {activeExercise.type !== 'sentiment' && <JTBDInfoAccordion />}
         </div>
 
         <PhaseView
           exercise={activeExercise}
           userId={session.user.userId}
+          isAdmin={session.user.role === 'admin'}
         />
       </main>
     </div>

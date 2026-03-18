@@ -7,14 +7,20 @@ import {
   updateExerciseTimer,
   updateExercisePrompt,
   deactivateExercise,
+  archiveExercise,
+  unarchiveExercise,
+  updateExerciseAnalysis,
+  type SentimentAnalysisResult,
 } from '@/lib/db/exercises'
 import { z } from 'zod'
 
 const UpdateExerciseSchema = z.object({
   isActive: z.boolean().optional(),
-  currentPhase: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
+  isArchived: z.boolean().optional(),
+  currentPhase: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
   timerEndsAt: z.string().nullable().optional(),
   mainPrompt: z.string().max(500).nullable().optional(),
+  sentimentAnalysis: z.unknown().optional(),
 })
 
 export async function GET(
@@ -64,7 +70,7 @@ export async function PATCH(
       )
     }
 
-    const { isActive, currentPhase, timerEndsAt, mainPrompt } = parsed.data
+    const { isActive, isArchived, currentPhase, timerEndsAt, mainPrompt, sentimentAnalysis } = parsed.data
 
     if (isActive === true) {
       await setActiveExercise(id)
@@ -72,8 +78,14 @@ export async function PATCH(
       await deactivateExercise(id)
     }
 
+    if (isArchived === true) {
+      await archiveExercise(id)
+    } else if (isArchived === false) {
+      await unarchiveExercise(id)
+    }
+
     if (currentPhase !== undefined) {
-      await updateExercisePhase(id, currentPhase)
+      await updateExercisePhase(id, currentPhase as 1 | 2 | 3)
     }
 
     if (timerEndsAt !== undefined) {
@@ -82,6 +94,10 @@ export async function PATCH(
 
     if (mainPrompt !== undefined) {
       await updateExercisePrompt(id, mainPrompt)
+    }
+
+    if (sentimentAnalysis !== undefined) {
+      await updateExerciseAnalysis(id, sentimentAnalysis as SentimentAnalysisResult)
     }
 
     const updated = await getExerciseById(id)
