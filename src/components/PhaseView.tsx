@@ -8,6 +8,8 @@ import { VoteCard } from './VoteCard'
 import { Timer } from './Timer'
 import { SentimentView } from './SentimentView'
 import { BrainstormView } from './BrainstormView'
+import { DiscussionInsights } from './DiscussionInsights'
+import { SynthesisView } from './SynthesisView'
 
 interface SentimentCluster {
   label: string
@@ -26,16 +28,28 @@ interface DeduplicationGroup {
   supportingIds: string[]
 }
 
+interface JTBDDiscussionTension {
+  concept1: string
+  concept2: string
+  description: string
+}
+
+interface JTBDDiscussionAnalysis {
+  commonalities: string[]
+  tensions: JTBDDiscussionTension[]
+}
+
 interface Exercise {
   id: string
   name: string
   isActive: boolean
-  currentPhase: 1 | 2 | 3 | 4
+  currentPhase: 1 | 2 | 3 | 4 | 5
   timerEndsAt?: string | null
   type: 'jtbd' | 'sentiment'
   jtbdMode: 'classic' | 'hiring'
   sentimentAnalysis?: SentimentAnalysisResult | null
   jtbdDeduplication?: { groups: DeduplicationGroup[] } | null
+  jtbdDiscussionAnalysis?: JTBDDiscussionAnalysis | null
 }
 
 interface Entry {
@@ -200,6 +214,10 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
 
   if (exercise.currentPhase === 4) {
     return <BrainstormView exercise={exercise} />
+  }
+
+  if (exercise.currentPhase === 5) {
+    return <SynthesisView exercise={exercise} isAdmin={isAdmin} />
   }
 
   return (
@@ -381,6 +399,11 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
       {/* Phase 3: Discussion */}
       {exercise.currentPhase === 3 && (
         <div className="space-y-5">
+          <DiscussionInsights
+            exerciseId={exercise.id}
+            initialAnalysis={exercise.jtbdDiscussionAnalysis}
+          />
+
           <div className="bg-sand rounded-[14px] border border-warm-border p-4 text-sm text-ink">
             <strong>Discussion phase:</strong> Cards are sorted by votes. Use these to guide your conversation.
           </div>
@@ -587,12 +610,13 @@ function SupportingEntryCard({
   )
 }
 
-function PhaseBadge({ phase }: { phase: 1 | 2 | 3 | 4 }) {
+function PhaseBadge({ phase }: { phase: 1 | 2 | 3 | 4 | 5 }) {
   const labels = {
     1: 'Phase 1: Creation',
     2: 'Phase 2: Voting',
     3: 'Phase 3: Discussion',
     4: 'Phase 4: Brainstorming',
+    5: 'Phase 5: Synthesis',
   }
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-sand text-ink border border-warm-border">

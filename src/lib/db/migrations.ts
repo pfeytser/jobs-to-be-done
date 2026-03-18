@@ -88,6 +88,20 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_bps_entry ON brainstorm_problem_statements(entryId);
       CREATE INDEX IF NOT EXISTS idx_bs_exercise ON brainstorm_solutions(exerciseId);
       CREATE INDEX IF NOT EXISTS idx_bs_entry ON brainstorm_solutions(entryId);
+
+      CREATE TABLE IF NOT EXISTS sentiment_cluster_solutions (
+        id TEXT PRIMARY KEY,
+        exerciseId TEXT NOT NULL,
+        clusterLabel TEXT NOT NULL,
+        userId TEXT NOT NULL,
+        userName TEXT,
+        text TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (exerciseId) REFERENCES exercises(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_scs_exercise ON sentiment_cluster_solutions(exerciseId);
+      CREATE INDEX IF NOT EXISTS idx_scs_cluster ON sentiment_cluster_solutions(exerciseId, clusterLabel);
     `)
 
     // Add columns to existing tables (safe to fail if already present)
@@ -98,6 +112,8 @@ export async function runMigrations(): Promise<void> {
       'ALTER TABLE exercises ADD COLUMN isArchived INTEGER NOT NULL DEFAULT 0',
       "ALTER TABLE exercises ADD COLUMN jtbdMode TEXT NOT NULL DEFAULT 'classic'",
       'ALTER TABLE exercises ADD COLUMN jtbdDeduplication TEXT',
+      'ALTER TABLE exercises ADD COLUMN jtbdDiscussionAnalysis TEXT',
+      'ALTER TABLE exercises ADD COLUMN jtbdSynthesis TEXT',
     ]
     for (const sql of safeAlters) {
       try {

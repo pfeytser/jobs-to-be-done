@@ -17,7 +17,7 @@ import { z } from 'zod'
 const UpdateExerciseSchema = z.object({
   isActive: z.boolean().optional(),
   isArchived: z.boolean().optional(),
-  currentPhase: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  currentPhase: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]).optional(),
   timerEndsAt: z.string().nullable().optional(),
   mainPrompt: z.string().max(500).nullable().optional(),
   sentimentAnalysis: z.unknown().optional(),
@@ -85,7 +85,7 @@ export async function PATCH(
     }
 
     if (currentPhase !== undefined) {
-      await updateExercisePhase(id, currentPhase as 1 | 2 | 3)
+      await updateExercisePhase(id, currentPhase as 1 | 2 | 3 | 4 | 5)
     }
 
     if (timerEndsAt !== undefined) {

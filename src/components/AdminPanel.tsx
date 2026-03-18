@@ -10,7 +10,7 @@ interface Exercise {
   mainPrompt?: string | null
   isActive: boolean
   isArchived: boolean
-  currentPhase: 1 | 2 | 3 | 4
+  currentPhase: 1 | 2 | 3 | 4 | 5
   timerEndsAt?: string | null
   createdAt: string
   type: 'jtbd' | 'sentiment'
@@ -47,6 +47,8 @@ export function AdminPanel() {
   const [analyzing, setAnalyzing] = useState(false)
   const [deduplicating, setDeduplicating] = useState(false)
   const [brainstormGenerating, setBrainstormGenerating] = useState(false)
+  const [discussionAnalyzing, setDiscussionAnalyzing] = useState(false)
+  const [synthesizing, setSynthesizing] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
 
   const { data, mutate } = useSWR<{ exercises: Exercise[] }>(
@@ -135,13 +137,19 @@ export function AdminPanel() {
     await handlePatch(exerciseId, { timerEndsAt: null })
   }
 
-  async function handleSwitchPhase(exerciseId: string, phase: 1 | 2 | 3 | 4) {
+  async function handleSwitchPhase(exerciseId: string, phase: 1 | 2 | 3 | 4 | 5) {
     await handlePatch(exerciseId, { currentPhase: phase })
     if (phase === 2 && activeExercise?.type === 'jtbd') {
       await triggerDeduplicate(exerciseId)
     }
+    if (phase === 3 && activeExercise?.type === 'jtbd') {
+      await triggerDiscussionAnalyze(exerciseId)
+    }
     if (phase === 4) {
       await triggerBrainstormGenerate(exerciseId)
+    }
+    if (phase === 5 && activeExercise?.type === 'jtbd') {
+      await triggerSynthesize(exerciseId)
     }
   }
 
@@ -161,6 +169,22 @@ export function AdminPanel() {
     }
   }
 
+  async function triggerDiscussionAnalyze(exerciseId: string) {
+    setDiscussionAnalyzing(true)
+    try {
+      const res = await fetch(`/api/exercises/${exerciseId}/discussion-analyze`, { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error ?? 'Discussion analysis failed. Please try again.')
+      }
+      await mutate()
+    } catch {
+      alert('Discussion analysis failed. Please try again.')
+    } finally {
+      setDiscussionAnalyzing(false)
+    }
+  }
+
   async function triggerBrainstormGenerate(exerciseId: string) {
     setBrainstormGenerating(true)
     try {
@@ -174,6 +198,22 @@ export function AdminPanel() {
       alert('Generation failed. Please try again.')
     } finally {
       setBrainstormGenerating(false)
+    }
+  }
+
+  async function triggerSynthesize(exerciseId: string) {
+    setSynthesizing(true)
+    try {
+      const res = await fetch(`/api/exercises/${exerciseId}/synthesize`, { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error ?? 'Synthesis failed. Please try again.')
+      }
+      await mutate()
+    } catch {
+      alert('Synthesis failed. Please try again.')
+    } finally {
+      setSynthesizing(false)
     }
   }
 
@@ -325,7 +365,7 @@ export function AdminPanel() {
             <p className="text-sm font-medium text-ink mb-2">Set Phase</p>
             {activeExercise.type === 'sentiment' ? (
               <div className="flex gap-2">
-                {([1, 2] as const).map((p) => (
+                {([1, 2, 3] as const).map((p) => (
                   <button
                     key={p}
                     onClick={() => handlePatch(activeExercise.id, { currentPhase: p })}
@@ -336,24 +376,24 @@ export function AdminPanel() {
                         : 'bg-canvas text-ink-2 border border-warm-border hover:border-ink hover:text-ink disabled:opacity-50'
                     }`}
                   >
-                    {p === 1 ? '1 · Creation' : '2 · Analysis'}
+                    {p === 1 ? '1 · Creation' : p === 2 ? '2 · Analysis' : '3 · Brainstorm'}
                   </button>
                 ))}
               </div>
             ) : (
               <div className="flex gap-2 flex-wrap">
-                {([1, 2, 3, 4] as const).map((p) => (
+                {([1, 2, 3, 4, 5] as const).map((p) => (
                   <button
                     key={p}
                     onClick={() => handleSwitchPhase(activeExercise.id, p)}
-                    disabled={activeExercise.currentPhase === p || !!actionLoading || (p === 2 && deduplicating) || (p === 4 && brainstormGenerating)}
+                    disabled={activeExercise.currentPhase === p || !!actionLoading || (p === 2 && deduplicating) || (p === 4 && brainstormGenerating) || (p === 5 && synthesizing)}
                     className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
                       activeExercise.currentPhase === p
                         ? 'bg-ink text-white'
                         : 'bg-canvas text-ink-2 border border-warm-border hover:border-ink hover:text-ink disabled:opacity-50'
                     }`}
                   >
-                    {p === 1 ? '1 · Creation' : p === 2 ? '2 · Voting' : p === 3 ? '3 · Discussion' : '4 · Brainstorm'}
+                    {p === 1 ? '1 · Creation' : p === 2 ? '2 · Voting' : p === 3 ? '3 · Discussion' : p === 4 ? '4 · Brainstorm' : '5 · Synthesis'}
                   </button>
                 ))}
               </div>
@@ -366,6 +406,23 @@ export function AdminPanel() {
                 </svg>
                 Consolidating entries…
               </div>
+            )}
+            {discussionAnalyzing && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Generating discussion insights…
+              </div>
+            )}
+            {activeExercise.type === 'jtbd' && activeExercise.currentPhase === 3 && !discussionAnalyzing && (
+              <button
+                onClick={() => triggerDiscussionAnalyze(activeExercise.id)}
+                className="mt-2 px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
+              >
+                Regenerate discussion insights
+              </button>
             )}
             {brainstormGenerating && (
               <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
@@ -382,6 +439,23 @@ export function AdminPanel() {
                 className="mt-2 px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
               >
                 Regenerate problem statements
+              </button>
+            )}
+            {synthesizing && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Generating synthesis… (may take up to a minute)
+              </div>
+            )}
+            {activeExercise.type === 'jtbd' && activeExercise.currentPhase === 5 && !synthesizing && (
+              <button
+                onClick={() => triggerSynthesize(activeExercise.id)}
+                className="mt-2 px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
+              >
+                Regenerate synthesis
               </button>
             )}
           </div>
@@ -641,14 +715,14 @@ function PhaseBadge({
   small = false,
   exerciseType = 'jtbd',
 }: {
-  phase: 1 | 2 | 3 | 4
+  phase: 1 | 2 | 3 | 4 | 5
   small?: boolean
   exerciseType?: 'jtbd' | 'sentiment'
 }) {
   const labels: Record<number, string> =
     exerciseType === 'sentiment'
-      ? { 1: 'Creation', 2: 'Analysis', 3: 'Analysis', 4: 'Brainstorm' }
-      : { 1: 'Creation', 2: 'Voting', 3: 'Discussion', 4: 'Brainstorm' }
+      ? { 1: 'Creation', 2: 'Analysis', 3: 'Brainstorm', 4: 'Brainstorm', 5: 'Synthesis' }
+      : { 1: 'Creation', 2: 'Voting', 3: 'Discussion', 4: 'Brainstorm', 5: 'Synthesis' }
   return (
     <span
       className={`inline-flex items-center rounded-full font-medium bg-sand text-ink ${

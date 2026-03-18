@@ -22,19 +22,69 @@ export interface JTBDDeduplicationResult {
   groups: JTBDDeduplicationGroup[]
 }
 
+export interface JTBDDiscussionTension {
+  concept1: string
+  concept2: string
+  description: string
+}
+
+export interface JTBDDiscussionAnalysis {
+  commonalities: string[]
+  tensions: JTBDDiscussionTension[]
+}
+
+export interface FinalJTBDJob {
+  id: string
+  title: string
+  statement: string
+  jobType: 'functional' | 'emotional' | 'social' | 'supporting'
+  priorityTier: 'primary' | 'secondary' | 'niche'
+  voteCount: number
+  contributorCount: number
+  confidence: 'high' | 'medium' | 'low'
+  opportunityStatement: string
+  keyTension: string | null
+  qualityFlags: string[]
+  canonicalEntryId: string
+  ideas: string[]
+}
+
+export interface JTBDSynthesisTheme {
+  name: string
+  description: string
+  strength: 'high' | 'medium' | 'low'
+  implication: string
+}
+
+export interface JTBDSynthesisTension {
+  concept1: string
+  concept2: string
+  implication: string
+}
+
+export interface JTBDSynthesis {
+  executiveSummary: string
+  finalJobs: FinalJTBDJob[]
+  themes: JTBDSynthesisTheme[]
+  tensions: JTBDSynthesisTension[]
+  nextSteps: string[]
+}
+
 export interface Exercise {
   id: string
   name: string
   mainPrompt?: string | null
   isActive: boolean
   isArchived: boolean
-  currentPhase: 1 | 2 | 3 | 4
+  currentPhase: 1 | 2 | 3 | 4 | 5
   timerEndsAt?: string | null
   createdAt: string
   type: 'jtbd' | 'sentiment'
   jtbdMode: 'classic' | 'hiring'
   sentimentAnalysis?: SentimentAnalysisResult | null
   jtbdDeduplication?: JTBDDeduplicationResult | null
+  jtbdDiscussionAnalysis?: JTBDDiscussionAnalysis | null
+  jtbdSynthesis?: JTBDSynthesis | null
 }
 
 function rowToExercise(row: Record<string, unknown>): Exercise {
@@ -54,19 +104,37 @@ function rowToExercise(row: Record<string, unknown>): Exercise {
       jtbdDeduplication = null
     }
   }
+  let jtbdDiscussionAnalysis: JTBDDiscussionAnalysis | null = null
+  if (row.jtbdDiscussionAnalysis && typeof row.jtbdDiscussionAnalysis === 'string') {
+    try {
+      jtbdDiscussionAnalysis = JSON.parse(row.jtbdDiscussionAnalysis)
+    } catch {
+      jtbdDiscussionAnalysis = null
+    }
+  }
+  let jtbdSynthesis: JTBDSynthesis | null = null
+  if (row.jtbdSynthesis && typeof row.jtbdSynthesis === 'string') {
+    try {
+      jtbdSynthesis = JSON.parse(row.jtbdSynthesis)
+    } catch {
+      jtbdSynthesis = null
+    }
+  }
   return {
     id: row.id as string,
     name: row.name as string,
     mainPrompt: row.mainPrompt as string | null,
     isActive: row.isActive === 1 || row.isActive === true,
     isArchived: row.isArchived === 1 || row.isArchived === true,
-    currentPhase: (row.currentPhase as 1 | 2 | 3 | 4) ?? 1,
+    currentPhase: (row.currentPhase as 1 | 2 | 3 | 4 | 5) ?? 1,
     timerEndsAt: row.timerEndsAt as string | null,
     createdAt: row.createdAt as string,
     type: ((row.type as string) === 'sentiment' ? 'sentiment' : 'jtbd'),
     jtbdMode: ((row.jtbdMode as string) === 'hiring' ? 'hiring' : 'classic'),
     sentimentAnalysis,
     jtbdDeduplication,
+    jtbdDiscussionAnalysis,
+    jtbdSynthesis,
   }
 }
 
@@ -134,7 +202,7 @@ export async function setActiveExercise(id: string): Promise<void> {
 
 export async function updateExercisePhase(
   id: string,
-  phase: 1 | 2 | 3
+  phase: 1 | 2 | 3 | 4 | 5
 ): Promise<void> {
   await runMigrations()
   await turso.execute({
@@ -197,5 +265,27 @@ export async function deactivateExercise(id: string): Promise<void> {
   await turso.execute({
     sql: 'UPDATE exercises SET isActive = 0 WHERE id = ?',
     args: [id],
+  })
+}
+
+export async function updateDiscussionAnalysis(
+  id: string,
+  analysis: JTBDDiscussionAnalysis
+): Promise<void> {
+  await runMigrations()
+  await turso.execute({
+    sql: 'UPDATE exercises SET jtbdDiscussionAnalysis = ? WHERE id = ?',
+    args: [JSON.stringify(analysis), id],
+  })
+}
+
+export async function updateExerciseSynthesis(
+  id: string,
+  synthesis: JTBDSynthesis
+): Promise<void> {
+  await runMigrations()
+  await turso.execute({
+    sql: 'UPDATE exercises SET jtbdSynthesis = ? WHERE id = ?',
+    args: [JSON.stringify(synthesis), id],
   })
 }

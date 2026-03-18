@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { SentimentForm } from './SentimentForm'
 import { SentimentCard } from './SentimentCard'
 import { SentimentAnalysis } from './SentimentAnalysis'
+import { SentimentBrainstormView } from './SentimentBrainstormView'
 import { Timer } from './Timer'
 
 interface SentimentCluster {
@@ -24,7 +25,7 @@ interface Exercise {
   name: string
   mainPrompt?: string | null
   isActive: boolean
-  currentPhase: 1 | 2 | 3 | 4
+  currentPhase: 1 | 2 | 3 | 4 | 5
   timerEndsAt?: string | null
   type: 'jtbd' | 'sentiment'
   sentimentAnalysis?: SentimentAnalysisResult | null
@@ -54,9 +55,9 @@ export function SentimentView({ exercise }: SentimentViewProps) {
     refreshInterval: 5000,
   })
 
-  // Poll the exercise to detect when analysis is ready
+  // Poll the exercise to detect when analysis is ready or phase changes
   const { data: exerciseData } = useSWR<{ exercise: Exercise }>(
-    exercise.currentPhase === 2 ? `/api/exercises/${exercise.id}` : null,
+    exercise.currentPhase >= 2 ? `/api/exercises/${exercise.id}` : null,
     fetcher,
     { refreshInterval: 3000 }
   )
@@ -94,6 +95,11 @@ export function SentimentView({ exercise }: SentimentViewProps) {
     },
     [exercise.id, mutateEntries]
   )
+
+  // Phase 3: Brainstorming — render directly, no outer header
+  if (liveExercise.currentPhase === 3) {
+    return <SentimentBrainstormView exercise={liveExercise} />
+  }
 
   return (
     <div className="space-y-6">
@@ -162,10 +168,11 @@ export function SentimentView({ exercise }: SentimentViewProps) {
   )
 }
 
-function PhaseBadge({ phase }: { phase: 1 | 2 | 3 | 4 }) {
+function PhaseBadge({ phase }: { phase: 1 | 2 | 3 | 4 | 5 }) {
   const labels: Record<number, string> = {
     1: 'Phase 1: Creation',
     2: 'Phase 2: Analysis',
+    3: 'Phase 3: Brainstorming',
   }
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-sand text-ink border border-warm-border">

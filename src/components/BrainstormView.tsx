@@ -23,7 +23,7 @@ interface BrainstormCard {
 interface Exercise {
   id: string
   name: string
-  currentPhase: 1 | 2 | 3 | 4
+  currentPhase: 1 | 2 | 3 | 4 | 5
   timerEndsAt?: string | null
   jtbdMode: 'classic' | 'hiring'
 }
