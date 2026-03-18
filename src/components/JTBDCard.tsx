@@ -50,13 +50,10 @@ export function JTBDCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <p className="text-sm text-ink leading-relaxed">
-            <strong>When</strong> {situation},{' '}
-            <strong>I want to</strong> {motivation},{' '}
-            <strong>so I can</strong> {expectedOutcome}.
+            When <strong>{situation}</strong>,{' '}
+            I want to <strong>{motivation}</strong>,{' '}
+            so I can <strong>{expectedOutcome}</strong>.
           </p>
-          <div className="text-xs text-ink-3 mt-2">
-            Added at {timeStr}
-          </div>
         </div>
 
         {showDelete && onDelete && (
