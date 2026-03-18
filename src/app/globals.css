@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #F4F3F0;
+  --color-surface: #FFFFFF;
+  --color-warm-border: #E6E1D8;
+  --color-ink: #112220;
+  --color-ink-2: #64625B;
+  --color-ink-3: #A5A59F;
+  --color-sand: #DECEAC;
+  --color-mist: #EBF0F5;
+  --color-gold: #FBD349;
+}
+
+body {
+  background: #F4F3F0;
+  color: #112220;
+  font-family: Inter, 'Helvetica Neue', system-ui, sans-serif;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
