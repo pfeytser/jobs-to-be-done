@@ -51,9 +51,19 @@ export async function GET(
     }
 
     if (isAdmin) {
-      const perUserSpend = await getPerUserVoteSpend(exerciseId)
+      const [perUserSpend, entriesResult] = await Promise.all([
+        getPerUserVoteSpend(exerciseId),
+        import('@/lib/db/entries').then((m) => m.getEntriesByExercise(exerciseId)),
+      ])
+      const userNameMap = new Map<string, string>()
+      for (const entry of entriesResult) {
+        if (entry.userId && entry.userName && !userNameMap.has(entry.userId)) {
+          userNameMap.set(entry.userId, entry.userName.split(' ')[0])
+        }
+      }
       response.perUserSpend = perUserSpend.map((spend) => ({
         userId: spend.userId,
+        userName: userNameMap.get(spend.userId) ?? null,
         used: spend.used,
         remaining: MAX_VOTES_PER_USER - spend.used,
       }))

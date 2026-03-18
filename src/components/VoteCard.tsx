@@ -49,29 +49,22 @@ export function VoteCard({
       myVotes > 0 ? 'border-ink' : 'border-warm-border'
     }`} style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
       <div className="flex items-start gap-4">
-        {/* Rank / vote badge */}
-        <div className="shrink-0 text-center">
-          {discussionMode && rank !== undefined ? (
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ${
-              rank === 1 ? 'bg-gold text-ink' :
-              rank === 2 ? 'bg-sand text-ink' :
-              rank === 3 ? 'bg-warm-border text-ink' :
-              'bg-canvas text-ink-3'
-            }`}>
-              {rank}
-            </div>
-          ) : (
-            <div className="w-10 h-10 bg-canvas rounded-full flex items-center justify-center border border-warm-border">
-              <span className="text-ink font-bold text-sm">{totalVotes}</span>
-            </div>
-          )}
-          {!discussionMode && (
-            <div className="text-xs text-ink-3 mt-0.5">votes</div>
-          )}
-          {discussionMode && (
+        {/* Rank / vote badge (discussion mode only) */}
+        {discussionMode && (
+          <div className="shrink-0 text-center">
+            {rank !== undefined ? (
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ${
+                rank === 1 ? 'bg-gold text-ink' :
+                rank === 2 ? 'bg-sand text-ink' :
+                rank === 3 ? 'bg-warm-border text-ink' :
+                'bg-canvas text-ink-3'
+              }`}>
+                {rank}
+              </div>
+            ) : null}
             <div className="text-xs text-ink-3 mt-1">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 min-w-0">

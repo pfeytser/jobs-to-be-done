@@ -16,6 +16,7 @@ interface Exercise {
 
 interface PerUserSpend {
   userId: string
+  userName: string | null
   used: number
   remaining: number
 }
@@ -261,7 +262,7 @@ export function AdminPanel() {
                   {voteData.perUserSpend.map((u) => (
                     <div key={u.userId} className="flex items-center gap-3">
                       <div className="text-xs text-ink-3 truncate max-w-[140px]">
-                        {u.userId.substring(0, 8)}…
+                        {u.userName ?? u.userId.substring(0, 8) + '…'}
                       </div>
                       <div className="flex-1 h-1.5 bg-canvas rounded-full overflow-hidden border border-warm-border">
                         <div
