@@ -139,7 +139,7 @@ ${job.statement}
 }
 
 export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps) {
-  const { data, mutate } = useSWR<{ synthesis: JTBDSynthesis | null }>(
+  const { data, error, mutate } = useSWR<{ synthesis: JTBDSynthesis | null }>(
     `/api/exercises/${exercise.id}/synthesize`,
     fetcher,
     { refreshInterval: 8000 }
@@ -153,6 +153,7 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
 
   // Sync server data to local state when not dirty
   const synthesis = isDirty ? localSynthesis : (data?.synthesis ?? null)
+  const isLoading = !data && !error
 
   const updateJob = useCallback((jobId: string, updates: Partial<FinalJTBDJob>) => {
     setLocalSynthesis((prev) => {
@@ -207,15 +208,32 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
     })
   }, [synthesis, exercise])
 
-  if (!synthesis) {
+  if (isLoading) {
     return (
       <div className="text-center py-16 text-ink-3">
         <svg className="w-5 h-5 animate-spin mx-auto mb-3" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
-        <p className="text-sm">Generating synthesis…</p>
-        <p className="text-xs text-ink-3 mt-1">This may take up to a minute</p>
+        <p className="text-sm">Loading synthesis…</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-16 text-ink-3">
+        <p className="text-sm">Failed to load synthesis.</p>
+        <p className="text-xs mt-1 font-mono text-red-500">{String(error)}</p>
+      </div>
+    )
+  }
+
+  if (!synthesis) {
+    return (
+      <div className="text-center py-16 text-ink-3">
+        <p className="text-sm">Synthesis not yet generated.</p>
+        {isAdmin && <p className="text-xs mt-1">Use the admin panel to generate it.</p>}
       </div>
     )
   }
