@@ -11,7 +11,7 @@ import { getVoteTotalsForExercise } from '@/lib/db/votes'
 import { getProblemStatements, getSolutions } from '@/lib/db/brainstorm'
 import { z } from 'zod'
 
-export const maxDuration = 120
+export const maxDuration = 300
 
 const client = new Anthropic()
 
