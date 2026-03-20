@@ -246,7 +246,7 @@ export async function POST(
       solutionsMap.get(s.entryId)!.push(s.text)
     }
 
-    // Build job data for prompt, sorted by votes descending
+    // Build job data for prompt, sorted by votes descending, capped at 20
     const jobs = groups
       .map((group) => {
         const canonical = entryMap.get(group.canonicalId)
@@ -266,17 +266,20 @@ export async function POST(
           fullSentence: canonical.fullSentence,
           votes: voteMap.get(canonical.id) ?? 0,
           contributors: contributorIds.size,
-          supporting,
+          supporting: supporting.slice(0, 2),
           problemStatement: psMap.get(canonical.id) ?? null,
-          ideas: solutionsMap.get(canonical.id) ?? [],
+          ideas: (solutionsMap.get(canonical.id) ?? []).slice(0, 4),
         }
       })
       .filter((j): j is NonNullable<typeof j> => j !== null)
       .sort((a, b) => b.votes - a.votes)
+      .slice(0, 20)
+
+    console.log(`[synthesize POST] exercise=${exerciseId} jobs=${jobs.length}`)
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 6000,
+      max_tokens: 8000,
       messages: [{
         role: 'user',
         content: buildSynthesisPrompt({
@@ -293,20 +296,22 @@ export async function POST(
       .map((b) => (b as { type: 'text'; text: string }).text)
       .join('')
 
+    console.log(`[synthesize POST] Claude response length: ${rawText.length} chars`)
+
     let synthesis: JTBDSynthesis
     try {
       const jsonStr = extractJSON(rawText)
       const parsed = JTBDSynthesisSchema.safeParse(JSON.parse(jsonStr))
       if (!parsed.success) {
-        console.error('[synthesize] Schema validation failed:', parsed.error.issues)
+        console.error('[synthesize] Schema validation failed:', JSON.stringify(parsed.error.issues))
         return NextResponse.json(
-          { error: 'Synthesis returned an unexpected format. Please try again.' },
+          { error: `Synthesis format error: ${parsed.error.issues[0]?.message ?? 'unknown'}` },
           { status: 502 }
         )
       }
       synthesis = parsed.data
     } catch (parseError) {
-      console.error('[synthesize] JSON parse error:', parseError, 'raw:', rawText)
+      console.error('[synthesize] JSON parse error:', parseError, 'raw (first 500):', rawText.slice(0, 500))
       return NextResponse.json(
         { error: 'Synthesis could not be parsed. Please try again.' },
         { status: 502 }

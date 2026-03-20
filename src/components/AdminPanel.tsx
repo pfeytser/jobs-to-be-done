@@ -49,6 +49,7 @@ export function AdminPanel() {
   const [brainstormGenerating, setBrainstormGenerating] = useState(false)
   const [discussionAnalyzing, setDiscussionAnalyzing] = useState(false)
   const [synthesizing, setSynthesizing] = useState(false)
+  const [synthesisError, setSynthesisError] = useState<string | null>(null)
   const [archiveOpen, setArchiveOpen] = useState(false)
 
   const { data, mutate } = useSWR<{ exercises: Exercise[] }>(
@@ -203,15 +204,16 @@ export function AdminPanel() {
 
   async function triggerSynthesize(exerciseId: string) {
     setSynthesizing(true)
+    setSynthesisError(null)
     try {
       const res = await fetch(`/api/exercises/${exerciseId}/synthesize`, { method: 'POST' })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        alert(err.error ?? 'Synthesis failed. Please try again.')
+        setSynthesisError(err.error ?? 'Synthesis failed. Please try again.')
       }
       await mutate()
-    } catch {
-      alert('Synthesis failed. Please try again.')
+    } catch (e) {
+      setSynthesisError(e instanceof Error ? e.message : 'Synthesis failed. Please try again.')
     } finally {
       setSynthesizing(false)
     }
@@ -450,12 +452,17 @@ export function AdminPanel() {
                 Generating synthesis… (may take up to a minute)
               </div>
             )}
+            {synthesisError && (
+              <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-[10px] px-3 py-2">
+                {synthesisError}
+              </div>
+            )}
             {activeExercise.type === 'jtbd' && activeExercise.currentPhase === 5 && !synthesizing && (
               <button
                 onClick={() => triggerSynthesize(activeExercise.id)}
                 className="mt-2 px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
               >
-                Regenerate synthesis
+                {synthesisError ? 'Retry synthesis' : 'Regenerate synthesis'}
               </button>
             )}
           </div>
