@@ -279,7 +279,7 @@ export async function POST(
 
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4000,
+      max_tokens: 8000,
       messages: [{
         role: 'user',
         content: buildSynthesisPrompt({
@@ -311,7 +311,7 @@ export async function POST(
       }
       synthesis = parsed.data
     } catch (parseError) {
-      console.error('[synthesize] JSON parse error:', parseError, 'raw (first 500):', rawText.slice(0, 500))
+      console.error('[synthesize] JSON parse error:', parseError, 'raw length:', rawText.length, 'raw (first 1000):', rawText.slice(0, 1000))
       return NextResponse.json(
         { error: 'Synthesis could not be parsed. Please try again.' },
         { status: 502 }
