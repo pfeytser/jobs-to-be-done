@@ -15,13 +15,6 @@ export const maxDuration = 300
 
 const client = new Anthropic()
 
-function extractJSON(text: string): string {
-  const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/)
-  if (codeBlock) return codeBlock[1].trim()
-  const jsonObject = text.match(/\{[\s\S]*\}/)
-  if (jsonObject) return jsonObject[0]
-  return text.trim()
-}
 
 const FinalJTBDJobSchema = z.object({
   id: z.string(),
@@ -129,48 +122,7 @@ Your task is to produce a comprehensive synthesis. Instructions:
 
 11. NEXTSTEPS — 3–5 concrete recommended actions (research, design exploration, prototyping, roadmap work).
 
-Return ONLY valid JSON. The "id" field for each job should be a short slug based on the title (e.g. "access-workplace-smoothly"). The "canonicalEntryId" must exactly match the entry_id provided in brackets above.
-
-Required JSON structure:
-{
-  "executiveSummary": "...",
-  "finalJobs": [
-    {
-      "id": "short-slug",
-      "title": "Access my workplace smoothly",
-      "statement": "When I'm arriving at a location, I want to quickly access the spaces I'm entitled to use, so I can start working without delay.",
-      "jobType": "functional",
-      "priorityTier": "primary",
-      "voteCount": 18,
-      "contributorCount": 7,
-      "confidence": "high",
-      "opportunityStatement": "Make it easier to enter the right workspace immediately without confusion about access or eligibility.",
-      "keyTension": "Speed vs. clarity of rules",
-      "qualityFlags": [],
-      "canonicalEntryId": "the-exact-entry_id-from-above",
-      "ideas": ["idea1", "idea2"]
-    }
-  ],
-  "themes": [
-    {
-      "name": "Friction-free access",
-      "description": "The highest-voted jobs cluster around removing steps, uncertainty, and delays from core workflows.",
-      "strength": "high",
-      "implication": "Reducing friction at key touchpoints should be the primary design focus."
-    }
-  ],
-  "tensions": [
-    {
-      "concept1": "Speed",
-      "concept2": "Clarity",
-      "implication": "Members want faster access but also want to understand what they're entitled to — over-simplifying the flow risks leaving eligibility ambiguous."
-    }
-  ],
-  "nextSteps": [
-    "Conduct usability testing on the access and check-in flow",
-    "Map the full member entitlement journey to identify where confusion occurs"
-  ]
-}`
+Call the submit_synthesis tool with your completed analysis. The "id" field for each job should be a short slug based on the title (e.g. "access-workplace-smoothly"). The "canonicalEntryId" must exactly match the entry_id provided in brackets above.`
 }
 
 export async function GET(
@@ -280,6 +232,66 @@ export async function POST(
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 8000,
+      tools: [{
+        name: 'submit_synthesis',
+        description: 'Submit the completed JTBD synthesis as structured data.',
+        input_schema: {
+          type: 'object' as const,
+          properties: {
+            executiveSummary: { type: 'string' },
+            finalJobs: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  title: { type: 'string' },
+                  statement: { type: 'string' },
+                  jobType: { type: 'string', enum: ['functional', 'emotional', 'social', 'supporting'] },
+                  priorityTier: { type: 'string', enum: ['primary', 'secondary', 'niche'] },
+                  voteCount: { type: 'number' },
+                  contributorCount: { type: 'number' },
+                  confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+                  opportunityStatement: { type: 'string' },
+                  keyTension: { type: ['string', 'null'] },
+                  qualityFlags: { type: 'array', items: { type: 'string' } },
+                  canonicalEntryId: { type: 'string' },
+                  ideas: { type: 'array', items: { type: 'string' } },
+                },
+                required: ['id', 'title', 'statement', 'jobType', 'priorityTier', 'voteCount', 'contributorCount', 'confidence', 'opportunityStatement', 'keyTension', 'qualityFlags', 'canonicalEntryId', 'ideas'],
+              },
+            },
+            themes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  description: { type: 'string' },
+                  strength: { type: 'string', enum: ['high', 'medium', 'low'] },
+                  implication: { type: 'string' },
+                },
+                required: ['name', 'description', 'strength', 'implication'],
+              },
+            },
+            tensions: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  concept1: { type: 'string' },
+                  concept2: { type: 'string' },
+                  implication: { type: 'string' },
+                },
+                required: ['concept1', 'concept2', 'implication'],
+              },
+            },
+            nextSteps: { type: 'array', items: { type: 'string' } },
+          },
+          required: ['executiveSummary', 'finalJobs', 'themes', 'tensions', 'nextSteps'],
+        },
+      }],
+      tool_choice: { type: 'tool', name: 'submit_synthesis' },
       messages: [{
         role: 'user',
         content: buildSynthesisPrompt({
@@ -291,32 +303,31 @@ export async function POST(
       }],
     })
 
-    const rawText = message.content
-      .filter((b) => b.type === 'text')
-      .map((b) => (b as { type: 'text'; text: string }).text)
-      .join('')
+    console.log(`[synthesize POST] stop_reason=${message.stop_reason} content_blocks=${message.content.length}`)
+    console.log(`[synthesize POST] content types:`, message.content.map((b) => b.type))
 
-    console.log(`[synthesize POST] Claude response length: ${rawText.length} chars`)
+    const toolUse = message.content.find((b) => b.type === 'tool_use')
+    if (!toolUse || toolUse.type !== 'tool_use') {
+      console.error('[synthesize] No tool_use block. Full content:', JSON.stringify(message.content))
+      return NextResponse.json({
+        error: `No tool_use block returned (stop_reason=${message.stop_reason}). Check server logs.`,
+      }, { status: 502 })
+    }
+
+    console.log(`[synthesize POST] tool input keys:`, Object.keys(toolUse.input as object))
+    console.log(`[synthesize POST] finalJobs count:`, (toolUse.input as { finalJobs?: unknown[] }).finalJobs?.length)
 
     let synthesis: JTBDSynthesis
-    try {
-      const jsonStr = extractJSON(rawText)
-      const parsed = JTBDSynthesisSchema.safeParse(JSON.parse(jsonStr))
-      if (!parsed.success) {
-        console.error('[synthesize] Schema validation failed:', JSON.stringify(parsed.error.issues))
-        return NextResponse.json(
-          { error: `Synthesis format error: ${parsed.error.issues[0]?.message ?? 'unknown'}` },
-          { status: 502 }
-        )
-      }
-      synthesis = parsed.data
-    } catch (parseError) {
-      console.error('[synthesize] JSON parse error:', parseError, 'raw length:', rawText.length, 'raw (first 1000):', rawText.slice(0, 1000))
+    const parsed = JTBDSynthesisSchema.safeParse(toolUse.input)
+    if (!parsed.success) {
+      console.error('[synthesize] Schema validation failed:', JSON.stringify(parsed.error.issues, null, 2))
+      console.error('[synthesize] tool input was:', JSON.stringify(toolUse.input, null, 2).slice(0, 2000))
       return NextResponse.json(
-        { error: 'Synthesis could not be parsed. Please try again.' },
+        { error: `Schema validation failed: ${parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')}` },
         { status: 502 }
       )
     }
+    synthesis = parsed.data
 
     await updateExerciseSynthesis(exerciseId, synthesis)
     return NextResponse.json({ synthesis })
