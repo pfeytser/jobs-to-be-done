@@ -5,8 +5,13 @@ import { useRouter } from 'next/navigation'
 import type { QAProject } from '@/lib/db/qa-projects'
 
 const VIEWPORTS = ['Desktop', 'Tablet', 'Mobile']
-const OPERATING_SYSTEMS = ['Mac', 'Windows', 'iOS', 'Android']
 const BROWSERS = ['Chrome', 'Safari', 'Firefox', 'Edge']
+
+const OS_BY_VIEWPORT: Record<string, string[]> = {
+  Desktop: ['Mac', 'Windows'],
+  Tablet: ['iOS', 'Android', 'Windows'],
+  Mobile: ['iOS', 'Android'],
+}
 
 export function NewSessionForm({ project }: { project: QAProject }) {
   const router = useRouter()
@@ -22,7 +27,7 @@ export function NewSessionForm({ project }: { project: QAProject }) {
       ? project.viewports.filter((v) => VIEWPORTS.includes(v))
       : VIEWPORTS
 
-  const availableOs = OPERATING_SYSTEMS
+  const availableOs = viewport ? (OS_BY_VIEWPORT[viewport] ?? []) : []
   const availableBrowsers = BROWSERS
 
   const isValid = userType && viewport && os && browser
@@ -91,7 +96,7 @@ export function NewSessionForm({ project }: { project: QAProject }) {
             <button
               key={v}
               type="button"
-              onClick={() => setViewport(v)}
+              onClick={() => { setViewport(v); setOs('') }}
               className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
                 viewport === v
                   ? 'bg-ink text-white border-ink'
@@ -107,6 +112,7 @@ export function NewSessionForm({ project }: { project: QAProject }) {
       {/* OS */}
       <div>
         <label className="block text-sm font-medium text-ink mb-1.5">Operating system</label>
+        {!viewport && <p className="text-xs text-ink-3 mb-2">Select a viewport first</p>}
         <div className="flex gap-2 flex-wrap">
           {availableOs.map((o) => (
             <button
