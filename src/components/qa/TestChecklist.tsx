@@ -107,7 +107,7 @@ export function TestChecklist({
   return (
     <>
       {/* Session header */}
-      <div className="sticky top-[57px] z-30 bg-surface border-b border-warm-border shadow-sm">
+      <div className="sticky top-[53px] z-30 bg-surface border-b border-warm-border shadow-sm">
         <div className="max-w-3xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-2 flex-wrap text-xs text-ink-2">
