@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
-import { getActiveExercise } from '@/lib/db/exercises'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,26 +11,42 @@ export default async function HomePage() {
     redirect('/auth/signin')
   }
 
-  const activeExercise = await getActiveExercise()
-
-  if (activeExercise) {
-    redirect('/jtbd')
-  }
-
   return (
-    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
-      <div className="text-center max-w-md">
-        <div className="text-7xl mb-6 animate-bounce">🐝</div>
-        <h1 className="text-3xl font-bold text-ink mb-3">
-          Jobs to Bee Done
-        </h1>
-        <p className="text-lg text-ink-2 font-medium mb-4">
-          We&apos;ll start soon!
-        </p>
-        <p className="text-ink-3 text-sm">
-          Your facilitator is getting things set up. Hang tight!
-        </p>
+    <main className="min-h-screen bg-canvas flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-ink mb-2">Welcome back</h1>
+          <p className="text-sm text-ink-3">Where would you like to go?</p>
+        </div>
+
+        <div className="space-y-3">
+          <Link
+            href="/jtbd"
+            className="flex items-center justify-between w-full p-5 bg-surface border border-warm-border rounded-[16px] hover:border-ink transition-colors group"
+          >
+            <div>
+              <p className="text-base font-semibold text-ink">JTBD Exercises</p>
+              <p className="text-sm text-ink-3 mt-0.5">Brainstorm and analyze jobs to be done</p>
+            </div>
+            <svg className="w-5 h-5 text-ink-3 group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+
+          <Link
+            href="/qa"
+            className="flex items-center justify-between w-full p-5 bg-surface border border-warm-border rounded-[16px] hover:border-ink transition-colors group"
+          >
+            <div>
+              <p className="text-base font-semibold text-ink">QA Projects</p>
+              <p className="text-sm text-ink-3 mt-0.5">Run and track QA testing sessions</p>
+            </div>
+            <svg className="w-5 h-5 text-ink-3 group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
       </div>
-    </div>
+    </main>
   )
 }
