@@ -21,6 +21,7 @@
     "@vercel/blob": "^2.3.3",
     "csv-parse": "^6.2.1",
     "jszip": "^3.10.1",
+    "lottie-react": "^2.4.1",
     "mammoth": "^1.12.0",
     "next": "^15.0.0",
     "next-auth": "^5.0.0-beta.25",

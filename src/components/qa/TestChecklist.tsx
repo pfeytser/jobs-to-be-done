@@ -7,6 +7,7 @@ import type { QAResult } from '@/lib/db/qa-results'
 import type { QASession } from '@/lib/db/qa-sessions'
 import { FailModal } from './FailModal'
 import { BlockedModal } from './BlockedModal'
+import { SessionMood } from './SessionMood'
 
 interface TestChecklistProps {
   qaSession: QASession
@@ -30,6 +31,8 @@ export function TestChecklist({
   backLabel,
 }: TestChecklistProps) {
   const router = useRouter()
+  const [passTrigger, setPassTrigger] = useState(0)
+
   // Map test_item_id → result
   const [results, setResults] = useState<Map<string, QAResult>>(() => {
     const map = new Map<string, QAResult>()
@@ -81,6 +84,7 @@ export function TestChecklist({
       if (res.ok) {
         const data = await res.json()
         setResults((prev) => new Map(prev).set(item.id, data.result))
+        if (status === 'pass') setPassTrigger((n) => n + 1)
       }
     } finally {
       setSavingItemId(null)
@@ -118,7 +122,9 @@ export function TestChecklist({
       <div className="sticky top-[53px] z-30 bg-surface border-b border-warm-border shadow-sm">
         <div className="max-w-3xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-2 flex-wrap text-xs text-ink-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              <SessionMood trigger={passTrigger} />
+              <div className="flex items-center gap-2 flex-wrap text-xs text-ink-2">
               <span className="font-semibold text-ink">{qaSession.user_type}</span>
               <span className="text-ink-3">·</span>
               <span>{qaSession.viewport}</span>
@@ -126,6 +132,7 @@ export function TestChecklist({
               <span>{qaSession.operating_system}</span>
               <span className="text-ink-3">·</span>
               <span>{qaSession.browser}</span>
+              </div>
             </div>
             <div className="flex items-center gap-3 text-xs">
               <span className="text-ink-2">
