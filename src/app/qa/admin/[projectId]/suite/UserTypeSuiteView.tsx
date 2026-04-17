@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { UploadPanel } from '@/components/qa/UploadPanel'
 import { TestSuiteEditor } from '@/components/qa/TestSuiteEditor'
+import { InstructionsEditor } from '@/components/qa/InstructionsEditor'
 import type { QATestItem } from '@/lib/db/qa-test-items'
 
 interface UploadedItem {
@@ -34,10 +35,12 @@ export function UserTypeSuiteView({
   projectId,
   userType,
   initialItems,
+  initialInstructions,
 }: {
   projectId: string
   userType: string
   initialItems: QATestItem[]
+  initialInstructions: string
 }) {
   const [items, setItems] = useState<QATestItem[]>(initialItems)
   const [showUpload, setShowUpload] = useState(false)
@@ -49,6 +52,13 @@ export function UserTypeSuiteView({
 
   return (
     <div>
+      {/* Setup instructions editor */}
+      <div className="max-w-3xl mb-8">
+        <h2 className="text-sm font-semibold text-ink mb-2">Setup instructions</h2>
+        <p className="text-xs text-ink-3 mb-3">Shown to testers at the top of their session page. Use this to describe how to set up the test account or environment.</p>
+        <InstructionsEditor projectId={projectId} userType={userType} initialHtml={initialInstructions} />
+      </div>
+
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <p className="text-sm text-ink-3">
           {items.length} test item{items.length !== 1 ? 's' : ''}

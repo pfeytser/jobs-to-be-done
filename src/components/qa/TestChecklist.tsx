@@ -12,6 +12,7 @@ interface TestChecklistProps {
   items: QATestItem[]
   initialResults: QAResult[]
   previousUsernames: string[]
+  setupInstructions?: string
 }
 
 type ResultStatus = 'pass' | 'fail' | 'blocked' | 'skipped' | 'not_tested'
@@ -21,6 +22,7 @@ export function TestChecklist({
   items,
   initialResults,
   previousUsernames,
+  setupInstructions,
 }: TestChecklistProps) {
   // Map test_item_id → result
   const [results, setResults] = useState<Map<string, QAResult>>(() => {
@@ -138,6 +140,19 @@ export function TestChecklist({
           </div>
         </div>
       </div>
+
+      {/* Setup instructions */}
+      {setupInstructions && (
+        <div className="max-w-3xl mx-auto px-6 pt-6">
+          <div className="bg-surface border border-warm-border rounded-[12px] p-5">
+            <p className="text-xs font-semibold text-ink-3 uppercase tracking-wide mb-3">Setup instructions</p>
+            <div
+              className="prose prose-sm max-w-none text-ink"
+              dangerouslySetInnerHTML={{ __html: setupInstructions }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Test items */}
       <div className="max-w-3xl mx-auto px-6 py-6 space-y-8">

@@ -115,6 +115,7 @@ export async function runMigrations(): Promise<void> {
       'ALTER TABLE exercises ADD COLUMN jtbdDiscussionAnalysis TEXT',
       'ALTER TABLE exercises ADD COLUMN jtbdSynthesis TEXT',
       "ALTER TABLE qa_projects ADD COLUMN slug TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE qa_projects ADD COLUMN user_type_instructions TEXT NOT NULL DEFAULT '{}'",
     ]
     for (const sql of safeAlters) {
       try {

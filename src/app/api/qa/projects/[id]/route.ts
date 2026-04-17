@@ -11,6 +11,8 @@ const UpdateSchema = z.object({
   operating_systems: z.array(z.string()).optional(),
   browsers: z.array(z.string()).optional(),
   user_types: z.array(z.string()).optional(),
+  user_type_instructions: z.record(z.string(), z.string()).optional(),
+  _merge_instructions: z.record(z.string(), z.string()).optional(),
   status: z.enum(['draft', 'active', 'complete', 'archived']).optional(),
 })
 
@@ -44,7 +46,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
-    const project = await updateQAProject(id, parsed.data)
+    const { _merge_instructions, ...rest } = parsed.data
+    let updateData: typeof rest & { user_type_instructions?: Record<string, string> } = rest
+    if (_merge_instructions) {
+      const existing = await getQAProjectById(id)
+      if (existing) {
+        updateData = { ...rest, user_type_instructions: { ...existing.user_type_instructions, ..._merge_instructions } }
+      }
+    }
+    const project = await updateQAProject(id, updateData)
     if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json({ project })
   } catch (error) {

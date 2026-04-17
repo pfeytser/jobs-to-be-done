@@ -66,6 +66,7 @@ export default async function SessionPage({
         items={items}
         initialResults={results}
         previousUsernames={previousUsernames}
+        setupInstructions={project.user_type_instructions[qaSession.user_type] ?? ''}
       />
     </div>
   )

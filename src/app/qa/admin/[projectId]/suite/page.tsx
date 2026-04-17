@@ -51,6 +51,7 @@ export default async function SuitePage({
           projectId={project.id}
           userType={userType}
           initialItems={items}
+          initialInstructions={project.user_type_instructions[userType] ?? ''}
         />
       ) : (
         <TestSuiteEditor projectId={project.id} initialItems={items} />

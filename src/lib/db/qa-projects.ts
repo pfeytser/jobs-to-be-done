@@ -11,6 +11,7 @@ export interface QAProject {
   operating_systems: string[]
   browsers: string[]
   user_types: string[]
+  user_type_instructions: Record<string, string>
   status: 'draft' | 'active' | 'complete' | 'archived'
   created_by: string
   created_at: string
@@ -32,6 +33,7 @@ function parseProject(row: Record<string, unknown>): QAProject {
     operating_systems: JSON.parse((row.operating_systems as string) ?? '[]'),
     browsers: JSON.parse((row.browsers as string) ?? '[]'),
     user_types: JSON.parse((row.user_types as string) ?? '[]'),
+    user_type_instructions: JSON.parse((row.user_type_instructions as string) ?? '{}'),
     status: (row.status as QAProject['status']) ?? 'draft',
     created_by: row.created_by as string,
     created_at: row.created_at as string,
@@ -120,6 +122,7 @@ export async function updateQAProject(
     operating_systems: string[]
     browsers: string[]
     user_types: string[]
+    user_type_instructions: Record<string, string>
     status: QAProject['status']
   }>
 ): Promise<QAProject | null> {
@@ -136,6 +139,7 @@ export async function updateQAProject(
   if (data.operating_systems !== undefined) { fields.push('operating_systems = ?'); args.push(JSON.stringify(data.operating_systems)) }
   if (data.browsers !== undefined) { fields.push('browsers = ?'); args.push(JSON.stringify(data.browsers)) }
   if (data.user_types !== undefined) { fields.push('user_types = ?'); args.push(JSON.stringify(data.user_types)) }
+  if (data.user_type_instructions !== undefined) { fields.push('user_type_instructions = ?'); args.push(JSON.stringify(data.user_type_instructions)) }
   if (data.status !== undefined) { fields.push('status = ?'); args.push(data.status) }
 
   args.push(id)
