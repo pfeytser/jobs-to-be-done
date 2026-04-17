@@ -10,6 +10,7 @@ const PUBLIC_PATTERNS = [
 
 const ADMIN_PATTERNS = [
   /^\/admin(\/.*)?$/,
+  /^\/qa\/admin(\/.*)?$/,
 ]
 
 export default auth(function middleware(req: NextAuthRequest) {

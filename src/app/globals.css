@@ -10,6 +10,18 @@
   --color-sand: #DECEAC;
   --color-mist: #EBF0F5;
   --color-gold: #FBD349;
+  --color-status-pass: #D1FAE5;
+  --color-status-pass-border: #6EE7B7;
+  --color-status-pass-text: #065F46;
+  --color-status-fail: #FEE2E2;
+  --color-status-fail-border: #FCA5A5;
+  --color-status-fail-text: #991B1B;
+  --color-status-blocked: #FEF3C7;
+  --color-status-blocked-border: #FCD34D;
+  --color-status-blocked-text: #92400E;
+  --color-status-skipped: #F1F0EE;
+  --color-status-skipped-border: #D4D0C8;
+  --color-status-skipped-text: #64625B;
 }
 
 body {
