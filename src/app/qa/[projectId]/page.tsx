@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
 import { getQAProjectBySlug } from '@/lib/db/qa-projects'
-import { getTesterSessionsWithProgress } from '@/lib/db/qa-sessions'
+import { getTesterSessionsWithProgress, getUserTypeTesterCounts } from '@/lib/db/qa-sessions'
 import { NewSessionForm } from './NewSessionForm'
 
 export const dynamic = 'force-dynamic'
@@ -18,10 +18,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
     redirect('/qa')
   }
 
-  const existingSessions = await getTesterSessionsWithProgress(
-    session.user.userId,
-    project.id
-  )
+  const [existingSessions, testerCounts] = await Promise.all([
+    getTesterSessionsWithProgress(session.user.userId, project.id),
+    getUserTypeTesterCounts(project.id, session.user.userId),
+  ])
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-8">
@@ -92,7 +92,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
           {existingSessions.length > 0 ? 'Start a new session' : 'Start a QA session'}
         </h2>
         <div className="bg-surface border border-warm-border rounded-[14px] p-6">
-          <NewSessionForm project={project} />
+          <NewSessionForm project={project} testerCounts={testerCounts} />
         </div>
       </section>
     </main>

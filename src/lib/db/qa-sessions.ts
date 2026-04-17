@@ -88,6 +88,28 @@ export async function createSession(data: {
   return (await getSessionById(data.id))!
 }
 
+export async function getUserTypeTesterCounts(
+  projectId: string,
+  excludeTesterId: string
+): Promise<Record<string, number>> {
+  await runMigrations()
+  const result = await turso.execute({
+    sql: `
+      SELECT user_type, COUNT(DISTINCT tester_id) AS tester_count
+      FROM qa_sessions
+      WHERE project_id = ? AND tester_id != ?
+      GROUP BY user_type
+    `,
+    args: [projectId, excludeTesterId],
+  })
+  const counts: Record<string, number> = {}
+  for (const row of result.rows) {
+    const r = row as Record<string, unknown>
+    counts[r.user_type as string] = Number(r.tester_count ?? 0)
+  }
+  return counts
+}
+
 export async function touchSession(id: string): Promise<void> {
   await runMigrations()
   await turso.execute({

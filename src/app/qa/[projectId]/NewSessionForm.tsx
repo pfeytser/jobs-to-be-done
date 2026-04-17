@@ -13,7 +13,7 @@ const OS_BY_VIEWPORT: Record<string, string[]> = {
   Mobile: ['iOS', 'Android'],
 }
 
-export function NewSessionForm({ project }: { project: QAProject }) {
+export function NewSessionForm({ project, testerCounts }: { project: QAProject; testerCounts: Record<string, number> }) {
   const router = useRouter()
   const [userType, setUserType] = useState('')
   const [viewport, setViewport] = useState('')
@@ -65,17 +65,44 @@ export function NewSessionForm({ project }: { project: QAProject }) {
           Which user type are you testing?
         </label>
         {project.user_types.length > 0 ? (
-          <select
-            value={userType}
-            onChange={(e) => setUserType(e.target.value)}
-            required
-            className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
-          >
-            <option value="">Select a user type…</option>
-            {project.user_types.map((ut) => (
-              <option key={ut} value={ut}>{ut}</option>
-            ))}
-          </select>
+          <>
+            {Object.keys(testerCounts).length > 0 && (
+              <p className="text-xs text-ink-3 mb-2">
+                Others are already testing — consider picking an uncovered type.
+              </p>
+            )}
+            <div className="space-y-2">
+              {project.user_types.map((ut) => {
+                const count = testerCounts[ut] ?? 0
+                const isTaken = count > 0
+                const isSelected = userType === ut
+                return (
+                  <button
+                    key={ut}
+                    type="button"
+                    onClick={() => setUserType(ut)}
+                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-[10px] border text-sm text-left transition-all ${
+                      isSelected
+                        ? 'bg-ink text-white border-ink'
+                        : isTaken
+                        ? 'bg-canvas border-warm-border text-ink-2 hover:border-ink-2'
+                        : 'bg-canvas border-warm-border text-ink hover:border-ink'
+                    }`}
+                  >
+                    <span className="font-medium">{ut}</span>
+                    {isTaken && !isSelected && (
+                      <span className="text-xs text-ink-3 ml-3 shrink-0">
+                        {count === 1 ? '1 tester' : `${count} testers`}
+                      </span>
+                    )}
+                    {!isTaken && !isSelected && (
+                      <span className="text-xs text-status-pass-text ml-3 shrink-0">Available</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </>
         ) : (
           <input
             type="text"
