@@ -54,19 +54,14 @@ export default async function SessionPage({
 
   return (
     <div>
-      {/* Back link */}
-      <div className="max-w-3xl mx-auto px-6 pt-4">
-        <Link href={`/qa/${slug}`} className="text-xs text-ink-3 hover:text-ink transition-colors">
-          ← {project.name}
-        </Link>
-      </div>
-
       <TestChecklist
         qaSession={qaSession}
         items={items}
         initialResults={results}
         previousUsernames={previousUsernames}
         setupInstructions={project.user_type_instructions[qaSession.user_type] ?? ''}
+        backHref={`/qa/${slug}`}
+        backLabel={project.name}
       />
     </div>
   )

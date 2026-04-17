@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import type { QATestItem } from '@/lib/db/qa-test-items'
 import type { QAResult } from '@/lib/db/qa-results'
 import type { QASession } from '@/lib/db/qa-sessions'
@@ -13,6 +14,8 @@ interface TestChecklistProps {
   initialResults: QAResult[]
   previousUsernames: string[]
   setupInstructions?: string
+  backHref: string
+  backLabel: string
 }
 
 type ResultStatus = 'pass' | 'fail' | 'blocked' | 'skipped' | 'not_tested'
@@ -23,7 +26,10 @@ export function TestChecklist({
   initialResults,
   previousUsernames,
   setupInstructions,
+  backHref,
+  backLabel,
 }: TestChecklistProps) {
+  const router = useRouter()
   // Map test_item_id → result
   const [results, setResults] = useState<Map<string, QAResult>>(() => {
     const map = new Map<string, QAResult>()
@@ -141,9 +147,18 @@ export function TestChecklist({
         </div>
       </div>
 
-      {/* Setup instructions */}
+      {/* Back link + setup instructions */}
+      <div className="max-w-3xl mx-auto px-6 pt-4">
+        <button
+          onClick={() => router.push(backHref)}
+          className="text-xs text-ink-3 hover:text-ink transition-colors"
+        >
+          ← {backLabel}
+        </button>
+      </div>
+
       {setupInstructions && (
-        <div className="max-w-3xl mx-auto px-6 pt-6">
+        <div className="max-w-3xl mx-auto px-6 pt-4">
           <div className="bg-surface border border-warm-border rounded-[12px] p-5">
             <p className="text-xs font-semibold text-ink-3 uppercase tracking-wide mb-3">Setup instructions</p>
             <div
