@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
 import { getSessionById } from '@/lib/db/qa-sessions'
-import { getTestItemsByProject } from '@/lib/db/qa-test-items'
+import { getTestItemsForSession } from '@/lib/db/qa-test-items'
 import { getResultsBySession, getTesterUsernames } from '@/lib/db/qa-results'
 import { getQAProjectBySlug } from '@/lib/db/qa-projects'
 import { TestChecklist } from '@/components/qa/TestChecklist'
@@ -29,7 +29,7 @@ export default async function SessionPage({
   if (!project) redirect('/qa')
 
   const [items, results, previousUsernames] = await Promise.all([
-    getTestItemsByProject(project.id),
+    getTestItemsForSession(project.id, qaSession.viewport),
     getResultsBySession(sessionId),
     getTesterUsernames(session.user.userId, project.id),
   ])

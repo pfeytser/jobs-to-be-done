@@ -51,6 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       section: row.section ?? '',
       feature_area: row.feature_area ?? '',
       platform: row.platform ?? '',
+      viewport: row.viewport ?? '',
       user_type: userType,
       test_description: row.test_description ?? '',
       steps: '',

@@ -9,6 +9,7 @@ export interface QATestItem {
   section: string
   feature_area: string
   platform: string
+  viewport: string
   user_type: string
   test_description: string
   steps: string
@@ -29,6 +30,7 @@ function parseItem(row: Record<string, unknown>): QATestItem {
     section: (row.section as string) ?? '',
     feature_area: (row.feature_area as string) ?? '',
     platform: (row.platform as string) ?? '',
+    viewport: (row.viewport as string) ?? '',
     user_type: (row.user_type as string) ?? '',
     test_description: (row.test_description as string) ?? '',
     steps: (row.steps as string) ?? '',
@@ -50,6 +52,37 @@ export async function getTestItemsByProject(projectId: string): Promise<QATestIt
   return result.rows.map((r) => parseItem(r as Record<string, unknown>))
 }
 
+export async function getTestItemsForSession(
+  projectId: string,
+  sessionViewport: string
+): Promise<QATestItem[]> {
+  await runMigrations()
+  const v = sessionViewport.toLowerCase()
+
+  let sql: string
+  let args: (string)[]
+
+  if (v === 'desktop') {
+    sql = `SELECT * FROM qa_test_items
+           WHERE project_id = ? AND platform = 'Web' AND (viewport LIKE '%Desktop%')
+           ORDER BY sort_order ASC, created_at ASC`
+    args = [projectId]
+  } else if (v === 'mobile') {
+    sql = `SELECT * FROM qa_test_items
+           WHERE project_id = ?
+             AND (platform = 'Mobile App' OR (platform = 'Web' AND viewport LIKE '%Mobile%'))
+           ORDER BY sort_order ASC, created_at ASC`
+    args = [projectId]
+  } else {
+    // Tablet or anything else — show everything
+    sql = `SELECT * FROM qa_test_items WHERE project_id = ? ORDER BY sort_order ASC, created_at ASC`
+    args = [projectId]
+  }
+
+  const result = await turso.execute({ sql, args })
+  return result.rows.map((r) => parseItem(r as Record<string, unknown>))
+}
+
 export async function getTestItemById(id: string): Promise<QATestItem | null> {
   await runMigrations()
   const result = await turso.execute({
@@ -68,6 +101,7 @@ export async function createTestItem(data: {
   section: string
   feature_area: string
   platform: string
+  viewport: string
   user_type: string
   test_description: string
   steps: string
@@ -80,12 +114,12 @@ export async function createTestItem(data: {
   const now = new Date().toISOString()
   await turso.execute({
     sql: `INSERT INTO qa_test_items
-      (id, project_id, tc_number, part, section, feature_area, platform, user_type,
+      (id, project_id, tc_number, part, section, feature_area, platform, viewport, user_type,
        test_description, steps, expected_result, jira_reference, needs_review, sort_order, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       data.id, data.project_id, data.tc_number, data.part, data.section,
-      data.feature_area, data.platform, data.user_type, data.test_description,
+      data.feature_area, data.platform, data.viewport, data.user_type, data.test_description,
       data.steps, data.expected_result, data.jira_reference,
       data.needs_review ? 1 : 0, data.sort_order, now, now,
     ],
@@ -103,12 +137,12 @@ export async function bulkCreateTestItems(
     const id = `ti_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     await turso.execute({
       sql: `INSERT INTO qa_test_items
-        (id, project_id, tc_number, part, section, feature_area, platform, user_type,
+        (id, project_id, tc_number, part, section, feature_area, platform, viewport, user_type,
          test_description, steps, expected_result, jira_reference, needs_review, sort_order, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id, projectId, item.tc_number, item.part, item.section,
-        item.feature_area, item.platform, item.user_type, item.test_description,
+        item.feature_area, item.platform, item.viewport, item.user_type, item.test_description,
         item.steps, item.expected_result, item.jira_reference,
         item.needs_review ? 1 : 0, item.sort_order, now, now,
       ],
@@ -128,8 +162,8 @@ export async function updateTestItem(
 
   const fieldMap: Record<string, string> = {
     tc_number: 'tc_number', part: 'part', section: 'section',
-    feature_area: 'feature_area', platform: 'platform', user_type: 'user_type',
-    test_description: 'test_description', steps: 'steps',
+    feature_area: 'feature_area', platform: 'platform', viewport: 'viewport',
+    user_type: 'user_type', test_description: 'test_description', steps: 'steps',
     expected_result: 'expected_result', jira_reference: 'jira_reference',
     sort_order: 'sort_order',
   }

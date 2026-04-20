@@ -22,15 +22,18 @@ export function NewSessionForm({ project, testerCounts }: { project: QAProject; 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const isMobileApp = project.platform === 'Mobile App'
+
   const availableViewports =
     project.viewports.length > 0
       ? project.viewports.filter((v) => VIEWPORTS.includes(v))
       : VIEWPORTS
 
-  const availableOs = viewport ? (OS_BY_VIEWPORT[viewport] ?? []) : []
+  const effectiveViewport = isMobileApp ? 'Mobile' : viewport
+  const availableOs = effectiveViewport ? (OS_BY_VIEWPORT[effectiveViewport] ?? []) : []
   const availableBrowsers = BROWSERS
 
-  const isValid = userType && viewport && os && browser
+  const isValid = userType && effectiveViewport && os && browser
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -43,7 +46,7 @@ export function NewSessionForm({ project, testerCounts }: { project: QAProject; 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_type: userType,
-          viewport,
+          viewport: effectiveViewport,
           operating_system: os,
           browser,
         }),
@@ -115,26 +118,28 @@ export function NewSessionForm({ project, testerCounts }: { project: QAProject; 
         )}
       </div>
 
-      {/* Viewport */}
-      <div>
-        <label className="block text-sm font-medium text-ink mb-1.5">Viewport</label>
-        <div className="flex gap-2 flex-wrap">
-          {availableViewports.map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => { setViewport(v); setOs('') }}
-              className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-                viewport === v
-                  ? 'bg-ink text-white border-ink'
-                  : 'bg-canvas border-warm-border text-ink hover:border-ink-2'
-              }`}
-            >
-              {v}
-            </button>
-          ))}
+      {/* Viewport — hidden for Mobile App projects */}
+      {!isMobileApp && (
+        <div>
+          <label className="block text-sm font-medium text-ink mb-1.5">Viewport</label>
+          <div className="flex gap-2 flex-wrap">
+            {availableViewports.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => { setViewport(v); setOs('') }}
+                className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+                  viewport === v
+                    ? 'bg-ink text-white border-ink'
+                    : 'bg-canvas border-warm-border text-ink hover:border-ink-2'
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* OS */}
       <div>

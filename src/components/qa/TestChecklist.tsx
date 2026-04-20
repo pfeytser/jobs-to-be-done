@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import type { QATestItem } from '@/lib/db/qa-test-items'
 import type { QAResult } from '@/lib/db/qa-results'
@@ -8,6 +8,7 @@ import type { QASession } from '@/lib/db/qa-sessions'
 import { FailModal } from './FailModal'
 import { BlockedModal } from './BlockedModal'
 import { SessionMood } from './SessionMood'
+import { CompleteSessionButton } from './CompleteSessionButton'
 
 interface TestChecklistProps {
   qaSession: QASession
@@ -32,6 +33,7 @@ export function TestChecklist({
 }: TestChecklistProps) {
   const router = useRouter()
   const [passTrigger, setPassTrigger] = useState(0)
+  const [failTrigger, setFailTrigger] = useState(0)
 
   // Map test_item_id → result
   const [results, setResults] = useState<Map<string, QAResult>>(() => {
@@ -58,6 +60,16 @@ export function TestChecklist({
   }, [results, items.length])
 
   const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
+  const isComplete = pct === 100 && stats.total > 0
+
+  // Auto-complete session when all items are done
+  const autoCompletedRef = useRef(false)
+  useEffect(() => {
+    if (isComplete && !autoCompletedRef.current) {
+      autoCompletedRef.current = true
+      fetch(`/api/qa/sessions/${qaSession.id}`, { method: 'PATCH' }).catch(() => {})
+    }
+  }, [isComplete, qaSession.id])
 
   // Group items by Part → Section
   const grouped = useMemo(() => {
@@ -123,7 +135,7 @@ export function TestChecklist({
         <div className="max-w-3xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3 flex-wrap">
-              <SessionMood trigger={passTrigger} />
+              <SessionMood passTrigger={passTrigger} failTrigger={failTrigger} isComplete={isComplete} />
               <div className="flex items-center gap-2 flex-wrap text-xs text-ink-2">
               <span className="font-semibold text-ink">{qaSession.user_type}</span>
               <span className="text-ink-3">·</span>
@@ -155,13 +167,19 @@ export function TestChecklist({
       </div>
 
       {/* Back link + setup instructions */}
-      <div className="max-w-3xl mx-auto px-6 pt-4">
+      <div className="max-w-3xl mx-auto px-6 pt-4 flex items-center justify-between gap-3">
         <button
           onClick={() => router.push(backHref)}
           className="text-xs text-ink-3 hover:text-ink transition-colors"
         >
           ← {backLabel}
         </button>
+        {!isComplete && (
+          <CompleteSessionButton
+            sessionId={qaSession.id}
+            redirectTo={backHref}
+          />
+        )}
       </div>
 
       {setupInstructions && (
@@ -330,6 +348,7 @@ export function TestChecklist({
           onClose={() => setFailModalItemId(null)}
           onSaved={() => {
             handleResultSaved(failModalItem.id)
+            setFailTrigger((n) => n + 1)
             setFailModalItemId(null)
           }}
         />

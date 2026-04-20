@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -33,6 +33,7 @@ function newItem(projectId: string, sortOrder: number): EditableItem {
     section: '',
     feature_area: '',
     platform: '',
+    viewport: '',
     user_type: '',
     test_description: '',
     steps: '',
@@ -145,41 +146,69 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: 
   const [error, setError] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const itemsRef = useRef<EditableItem[]>(initialItems)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
+  function scheduleSave() {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    saveTimeoutRef.current = setTimeout(() => handleSave(), 1500)
+  }
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
     if (over && active.id !== over.id) {
       setItems((prev) => {
-        const oldIndex = prev.findIndex((i) => i.id === active.id)
-        const newIndex = prev.findIndex((i) => i.id === over.id)
-        return arrayMove(prev, oldIndex, newIndex)
+        const next = arrayMove(prev, prev.findIndex((i) => i.id === active.id), prev.findIndex((i) => i.id === over.id))
+        itemsRef.current = next
+        return next
       })
+      scheduleSave()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleChange = useCallback((id: string, field: keyof EditableItem, value: unknown) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    )
+    setItems((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      itemsRef.current = next
+      return next
+    })
+    scheduleSave()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleDelete = useCallback((id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id))
+    setItems((prev) => {
+      const next = prev.filter((item) => item.id !== id)
+      itemsRef.current = next
+      return next
+    })
+    scheduleSave()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleResolve = useCallback((id: string) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, needs_review: false } : item))
-    )
+    setItems((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, needs_review: false } : item))
+      itemsRef.current = next
+      return next
+    })
+    scheduleSave()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleAddRow = () => {
-    setItems((prev) => [...prev, newItem(projectId, prev.length)])
+    setItems((prev) => {
+      const next = [...prev, newItem(projectId, prev.length)]
+      itemsRef.current = next
+      return next
+    })
+    scheduleSave()
   }
 
   const handleDeleteAll = async () => {
@@ -196,6 +225,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: 
         body: JSON.stringify({ items: [], replace: true }),
       })
       if (!res.ok) throw new Error('Failed to delete')
+      itemsRef.current = []
       setItems([])
       setDeleteConfirm(false)
     } catch {
@@ -207,7 +237,9 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: 
 
   const pendingReviewCount = items.filter((i) => i.needs_review).length
 
-  async function handleSave() {
+  async function handleSave(currentItems?: EditableItem[]) {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    const itemsToSave = currentItems ?? itemsRef.current
     setSaving(true)
     setError(null)
     setSaved(false)
@@ -217,12 +249,13 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...(userType ? { user_type: userType } : {}),
-          items: items.map((item, i) => ({
+          items: itemsToSave.map((item, i) => ({
             tc_number: item.tc_number,
             part: item.part,
             section: item.section,
             feature_area: item.feature_area,
             platform: item.platform,
+            viewport: item.viewport,
             user_type: item.user_type,
             test_description: item.test_description,
             steps: item.steps,
@@ -239,6 +272,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: 
         throw new Error(err.error ?? 'Failed to save')
       }
       const data = await res.json()
+      itemsRef.current = data.items
       setItems(data.items)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
@@ -263,7 +297,13 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: 
   ]
 
   return (
-    <div>
+    <div
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          handleSave()
+        }
+      }}
+    >
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div className="flex items-center gap-3">
@@ -275,6 +315,16 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: 
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          {saving && (
+            <span className="flex items-center gap-1 text-xs text-ink-3">
+              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Saving…
+            </span>
+          )}
+          {saved && <span className="text-xs text-status-pass-text">✓ Saved</span>}
           {items.length > 0 && (
             <>
               {deleteConfirm && (
@@ -313,25 +363,6 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: 
             className="px-3 py-2 bg-canvas border border-warm-border text-ink text-sm font-medium rounded-[8px] hover:border-ink transition-colors"
           >
             + Add row
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-4 py-2 bg-ink text-white text-sm font-semibold rounded-[8px] hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-2"
-          >
-            {saving ? (
-              <>
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Saving…
-              </>
-            ) : saved ? (
-              '✓ Saved'
-            ) : (
-              'Save suite'
-            )}
           </button>
         </div>
       </div>

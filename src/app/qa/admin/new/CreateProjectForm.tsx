@@ -124,7 +124,7 @@ export function CreateProjectForm() {
             <button
               key={p}
               type="button"
-              onClick={() => setPlatform(p)}
+              onClick={() => { setPlatform(p); if (p === 'Mobile App') setViewports([]) }}
               className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
                 platform === p
                   ? 'bg-ink text-white border-ink'
@@ -137,12 +137,14 @@ export function CreateProjectForm() {
         </div>
       </div>
 
-      <MultiSelect
-        label="Viewports to test"
-        options={VIEWPORTS}
-        selected={viewports}
-        onChange={setViewports}
-      />
+      {platform === 'Web' && (
+        <MultiSelect
+          label="Viewports to test"
+          options={VIEWPORTS}
+          selected={viewports}
+          onChange={setViewports}
+        />
+      )}
 
       {/* User types */}
       <div>

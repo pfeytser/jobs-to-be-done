@@ -9,6 +9,7 @@ const CreateSchema = z.object({
   section: z.string().default(''),
   feature_area: z.string().default(''),
   platform: z.string().default(''),
+  viewport: z.string().default(''),
   user_type: z.string().default(''),
   test_description: z.string().default(''),
   steps: z.string().default(''),

@@ -12,6 +12,7 @@ interface UploadedItem {
   section: string
   feature_area: string
   platform: string
+  viewport: string
   user_type: string
   test_description: string
   steps: string

@@ -12,6 +12,7 @@ interface UploadedItem {
   section: string
   feature_area: string
   platform: string
+  viewport: string
   user_type: string
   test_description: string
   steps: string
@@ -44,10 +45,12 @@ export function UserTypeSuiteView({
 }) {
   const [items, setItems] = useState<QATestItem[]>(initialItems)
   const [showUpload, setShowUpload] = useState(false)
+  const [editorKey, setEditorKey] = useState(0)
 
   function handleItemsReady(uploaded: UploadedItem[]) {
     setItems(uploaded.map((item, i) => toEditorItem(item, projectId, i)))
     setShowUpload(false)
+    setEditorKey((k) => k + 1)
   }
 
   return (
@@ -80,7 +83,7 @@ export function UserTypeSuiteView({
         </div>
       )}
 
-      <TestSuiteEditor projectId={projectId} userType={userType} initialItems={items} />
+      <TestSuiteEditor key={editorKey} projectId={projectId} userType={userType} initialItems={items} />
     </div>
   )
 }

@@ -67,6 +67,12 @@ export default async function ProjectDashboard({
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Link
+            href={`/qa/${projectId}`}
+            className="px-3 py-2 text-sm font-medium bg-canvas border border-warm-border text-ink rounded-[8px] hover:border-ink transition-colors"
+          >
+            Start session
+          </Link>
+          <Link
             href={`/qa/admin/${projectId}/edit`}
             className="px-3 py-2 text-sm font-medium bg-canvas border border-warm-border text-ink rounded-[8px] hover:border-ink transition-colors"
           >
@@ -154,7 +160,7 @@ export default async function ProjectDashboard({
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="bg-canvas border-b border-warm-border">
-                  {['Tester', 'User type', 'Viewport / OS / Browser', 'Progress', 'Pass', 'Fail', 'Blocked', 'Last active'].map((h) => (
+                  {['Tester', 'User type', 'Viewport / OS / Browser', 'Progress', 'Pass', 'Fail', 'Blocked', 'Last active', 'Status', ''].map((h) => (
                     <th key={h} className="px-3 py-2 text-left text-xs font-semibold text-ink-3 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -185,6 +191,18 @@ export default async function ProjectDashboard({
                       <td className="px-3 py-2.5 text-center text-xs text-status-blocked-text font-medium">{s.blocked}</td>
                       <td className="px-3 py-2.5 text-xs text-ink-3 whitespace-nowrap">
                         {new Date(s.last_active_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
+                          s.status === 'complete'
+                            ? 'bg-status-pass border-status-pass-border text-status-pass-text'
+                            : 'bg-canvas border-warm-border text-ink-2'
+                        }`}>
+                          {s.status === 'complete' ? 'Complete' : 'In progress'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        {s.status !== 'complete' && <EndSessionButton sessionId={s.id} />}
                       </td>
                     </tr>
                   )
@@ -263,5 +281,6 @@ export default async function ProjectDashboard({
   )
 }
 
-// Client component for status change
+// Client components
 import { StatusChanger } from './StatusChanger'
+import { EndSessionButton } from './EndSessionButton'

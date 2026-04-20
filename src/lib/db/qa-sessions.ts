@@ -13,6 +13,7 @@ export interface QASession {
   browser: string
   started_at: string
   last_active_at: string
+  status: string
 }
 
 function parseSession(row: Record<string, unknown>): QASession {
@@ -28,6 +29,7 @@ function parseSession(row: Record<string, unknown>): QASession {
     browser: (row.browser as string) ?? '',
     started_at: row.started_at as string,
     last_active_at: row.last_active_at as string,
+    status: (row.status as string) ?? 'in_progress',
   }
 }
 
@@ -108,6 +110,14 @@ export async function getUserTypeTesterCounts(
     counts[r.user_type as string] = Number(r.tester_count ?? 0)
   }
   return counts
+}
+
+export async function completeSession(id: string): Promise<void> {
+  await runMigrations()
+  await turso.execute({
+    sql: "UPDATE qa_sessions SET status = 'complete', last_active_at = ? WHERE id = ?",
+    args: [new Date().toISOString(), id],
+  })
 }
 
 export async function touchSession(id: string): Promise<void> {
