@@ -29,7 +29,7 @@ export default async function SessionPage({
   if (!project) redirect('/qa')
 
   const [items, results, previousUsernames] = await Promise.all([
-    getTestItemsForSession(project.id, qaSession.viewport),
+    getTestItemsForSession(project.id, qaSession.viewport, qaSession.user_type),
     getResultsBySession(sessionId),
     getTesterUsernames(session.user.userId, project.id),
   ])

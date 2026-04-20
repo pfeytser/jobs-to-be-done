@@ -54,29 +54,38 @@ export async function getTestItemsByProject(projectId: string): Promise<QATestIt
 
 export async function getTestItemsForSession(
   projectId: string,
-  sessionViewport: string
+  sessionViewport: string,
+  userType?: string
 ): Promise<QATestItem[]> {
   await runMigrations()
   const v = sessionViewport.toLowerCase()
+  const userTypeFilter = userType ? ` AND user_type = ?` : ''
 
   let sql: string
-  let args: (string)[]
+  let args: string[]
 
   if (v === 'desktop') {
     sql = `SELECT * FROM qa_test_items
-           WHERE project_id = ? AND platform = 'Web' AND (viewport LIKE '%Desktop%')
+           WHERE project_id = ?
+             AND LOWER(platform) = 'web'
+             AND (LOWER(viewport) LIKE '%desktop%')
+             ${userTypeFilter}
            ORDER BY sort_order ASC, created_at ASC`
-    args = [projectId]
+    args = userType ? [projectId, userType] : [projectId]
   } else if (v === 'mobile') {
     sql = `SELECT * FROM qa_test_items
            WHERE project_id = ?
-             AND (platform = 'Mobile App' OR (platform = 'Web' AND viewport LIKE '%Mobile%'))
+             AND (LOWER(platform) = 'mobile app' OR (LOWER(platform) = 'web' AND LOWER(viewport) LIKE '%mobile%'))
+             ${userTypeFilter}
            ORDER BY sort_order ASC, created_at ASC`
-    args = [projectId]
+    args = userType ? [projectId, userType] : [projectId]
   } else {
-    // Tablet or anything else — show everything
-    sql = `SELECT * FROM qa_test_items WHERE project_id = ? ORDER BY sort_order ASC, created_at ASC`
-    args = [projectId]
+    // Tablet or anything else — show everything for this user type
+    sql = `SELECT * FROM qa_test_items
+           WHERE project_id = ?
+             ${userTypeFilter}
+           ORDER BY sort_order ASC, created_at ASC`
+    args = userType ? [projectId, userType] : [projectId]
   }
 
   const result = await turso.execute({ sql, args })

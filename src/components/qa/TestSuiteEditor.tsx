@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -137,9 +137,10 @@ interface TestSuiteEditorProps {
   userType?: string
   initialItems: QATestItem[]
   onSaved?: () => void
+  saveOnMount?: boolean
 }
 
-export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: TestSuiteEditorProps) {
+export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, saveOnMount }: TestSuiteEditorProps) {
   const [items, setItems] = useState<EditableItem[]>(initialItems)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -148,6 +149,14 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved }: 
   const [deleting, setDeleting] = useState(false)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const itemsRef = useRef<EditableItem[]>(initialItems)
+
+  // Save immediately when mounted after a CSV upload
+  useEffect(() => {
+    if (saveOnMount && initialItems.length > 0) {
+      handleSave(initialItems)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor),

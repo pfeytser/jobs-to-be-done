@@ -46,10 +46,12 @@ export function UserTypeSuiteView({
   const [items, setItems] = useState<QATestItem[]>(initialItems)
   const [showUpload, setShowUpload] = useState(false)
   const [editorKey, setEditorKey] = useState(0)
+  const [saveOnMount, setSaveOnMount] = useState(false)
 
   function handleItemsReady(uploaded: UploadedItem[]) {
     setItems(uploaded.map((item, i) => toEditorItem(item, projectId, i)))
     setShowUpload(false)
+    setSaveOnMount(true)
     setEditorKey((k) => k + 1)
   }
 
@@ -83,7 +85,7 @@ export function UserTypeSuiteView({
         </div>
       )}
 
-      <TestSuiteEditor key={editorKey} projectId={projectId} userType={userType} initialItems={items} />
+      <TestSuiteEditor key={editorKey} projectId={projectId} userType={userType} initialItems={items} saveOnMount={saveOnMount} onSaved={() => setSaveOnMount(false)} />
     </div>
   )
 }
