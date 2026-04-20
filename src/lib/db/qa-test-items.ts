@@ -65,17 +65,23 @@ export async function getTestItemsForSession(
   let args: string[]
 
   if (v === 'desktop') {
+    // Web items where viewport is empty (no data) OR explicitly includes Desktop
+    // Exclude items that are explicitly Mobile-only or Mobile App
     sql = `SELECT * FROM qa_test_items
            WHERE project_id = ?
-             AND LOWER(platform) = 'web'
-             AND (LOWER(viewport) LIKE '%desktop%')
+             AND LOWER(platform) != 'mobile app'
+             AND (viewport = '' OR LOWER(viewport) LIKE '%desktop%')
              ${userTypeFilter}
            ORDER BY sort_order ASC, created_at ASC`
     args = userType ? [projectId, userType] : [projectId]
   } else if (v === 'mobile') {
+    // Mobile App items, plus Web items where viewport is empty or includes Mobile
     sql = `SELECT * FROM qa_test_items
            WHERE project_id = ?
-             AND (LOWER(platform) = 'mobile app' OR (LOWER(platform) = 'web' AND LOWER(viewport) LIKE '%mobile%'))
+             AND (
+               LOWER(platform) = 'mobile app'
+               OR (LOWER(platform) != 'mobile app' AND (viewport = '' OR LOWER(viewport) LIKE '%mobile%'))
+             )
              ${userTypeFilter}
            ORDER BY sort_order ASC, created_at ASC`
     args = userType ? [projectId, userType] : [projectId]
