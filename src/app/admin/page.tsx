@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
 import { signOut } from '@/lib/auth/config'
+import { AdminNav } from '@/components/AdminNav'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,7 @@ export default async function AdminPage() {
             <span className="font-semibold text-ink">Admin</span>
           </div>
           <div className="flex items-center gap-3">
+            <AdminNav role={session.user.role} />
             {session.user.image && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -81,6 +83,20 @@ export default async function AdminPage() {
             <div className="flex-1">
               <p className="text-base font-semibold text-ink">QA Project</p>
               <p className="text-sm text-ink-3">Set up test suites and track volunteer QA sessions</p>
+            </div>
+            <svg className="w-5 h-5 text-ink-3 group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+
+          <Link
+            href="/admin/storyboard"
+            className="flex items-center gap-4 p-5 bg-surface border border-warm-border rounded-[14px] hover:border-ink transition-colors group"
+          >
+            <span className="text-3xl">🎬</span>
+            <div className="flex-1">
+              <p className="text-base font-semibold text-ink">Storyboard</p>
+              <p className="text-sm text-ink-3">Create and manage storyboard use cases for collaborators</p>
             </div>
             <svg className="w-5 h-5 text-ink-3 group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

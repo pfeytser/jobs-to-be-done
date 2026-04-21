@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
 import { AdminPanel } from '@/components/AdminPanel'
 import { signOut } from '@/lib/auth/config'
+import { AdminNav } from '@/components/AdminNav'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +33,7 @@ export default async function JTBDAdminPage() {
             </Link>
           </div>
           <div className="flex items-center gap-3">
+            <AdminNav role={session.user.role} />
             {session.user.image && (
               // eslint-disable-next-line @next/next/no-img-element
               <img

@@ -127,6 +127,9 @@ export async function runMigrations(): Promise<void> {
       }
     }
 
+    // Rename storyboard status 'edit' → 'create'
+    await turso.execute("UPDATE storyboard_use_cases SET status = 'create' WHERE status = 'edit'")
+
     // Backfill slugs for existing qa_projects rows that don't have one
     function toSlug(name: string): string {
       return name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 80)
@@ -225,6 +228,61 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_qa_results_session ON qa_results(session_id);
       CREATE INDEX IF NOT EXISTS idx_qa_results_item ON qa_results(test_item_id);
       CREATE INDEX IF NOT EXISTS idx_qa_tester_usernames ON qa_tester_usernames(tester_id, project_id);
+    `)
+
+    // On-site & Storyboard feature tables
+    await turso.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS user_profiles (
+        user_id TEXT PRIMARY KEY,
+        sea_creature TEXT,
+        sea_creature_why TEXT,
+        sea_creature_avatar TEXT,
+        sea_creature_skipped INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS storyboard_use_cases (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'draft',
+        created_by TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS storyboards (
+        id TEXT PRIMARY KEY,
+        use_case_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        customer_name TEXT NOT NULL DEFAULT '',
+        customer_demographics TEXT NOT NULL DEFAULT '',
+        company_type TEXT NOT NULL DEFAULT '',
+        customer_role TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (use_case_id) REFERENCES storyboard_use_cases(id) ON DELETE CASCADE
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_storyboards_unique ON storyboards(use_case_id, user_id);
+
+      CREATE TABLE IF NOT EXISTS storyboard_cards (
+        id TEXT PRIMARY KEY,
+        storyboard_id TEXT NOT NULL,
+        scene_description TEXT NOT NULL DEFAULT '',
+        image_url TEXT,
+        generation_requested_at TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (storyboard_id) REFERENCES storyboards(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_storyboard_use_cases_status ON storyboard_use_cases(status);
+      CREATE INDEX IF NOT EXISTS idx_storyboards_use_case ON storyboards(use_case_id);
+      CREATE INDEX IF NOT EXISTS idx_storyboards_user ON storyboards(user_id);
+      CREATE INDEX IF NOT EXISTS idx_storyboard_cards_board ON storyboard_cards(storyboard_id);
+      CREATE INDEX IF NOT EXISTS idx_storyboard_cards_sort ON storyboard_cards(storyboard_id, sort_order);
     `)
 
     console.log('[migrations] Turso migrations completed successfully')

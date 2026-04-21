@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { AdminNav } from '@/components/AdminNav'
 
 interface QAHeaderProps {
   role: 'admin' | 'collaborator'
@@ -18,16 +19,9 @@ export function QAHeader({ role, userName, userImage, onSignOut }: QAHeaderProps
             <span className="text-xl">🧪</span>
             <span className="font-semibold text-ink">QA Testing</span>
           </Link>
-          {role === 'admin' && (
-            <Link
-              href="/qa/admin"
-              className="px-2.5 py-0.5 bg-sand text-ink rounded-full text-xs font-semibold hover:opacity-80 transition-opacity"
-            >
-              Admin
-            </Link>
-          )}
         </div>
         <div className="flex items-center gap-3">
+          <AdminNav role={role} />
           {userImage && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={userImage} alt={userName ?? 'User'} className="w-7 h-7 rounded-full object-cover" />

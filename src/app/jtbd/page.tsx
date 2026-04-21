@@ -5,6 +5,7 @@ import { getActiveExercise } from '@/lib/db/exercises'
 import { PhaseView } from '@/components/PhaseView'
 import { JTBDInfoAccordion } from '@/components/JTBDInfoAccordion'
 import { signOut } from '@/lib/auth/config'
+import { AdminNav } from '@/components/AdminNav'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,14 +46,7 @@ export default async function JTBDPage() {
             <span className="font-semibold text-ink">Jobs to Bee Done</span>
           </Link>
           <div className="flex items-center gap-3">
-            {session.user.role === 'admin' && (
-              <Link
-                href="/admin"
-                className="px-3 py-1.5 bg-sand border border-warm-border text-ink text-xs font-semibold rounded-full hover:bg-ink hover:text-white hover:border-ink transition-all"
-              >
-                Admin
-              </Link>
-            )}
+            <AdminNav role={session.user.role} />
             {session.user.image && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
