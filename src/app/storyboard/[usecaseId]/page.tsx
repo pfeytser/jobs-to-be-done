@@ -34,10 +34,11 @@ export default async function StoryboardUseCasePage({
   const storyboard = await getStoryboard(usecaseId, session.user.userId)
   const cards = storyboard ? await getCardsForStoryboard(storyboard.id) : []
 
-  // In present mode, expose image_url; in edit mode, strip it
+  // In present mode, expose image_url and generation status; in edit mode, strip both
   const safeCards = cards.map((c) => ({
     ...c,
     image_url: useCase.status === 'present' ? c.image_url : null,
+    generation_requested_at: useCase.status === 'present' ? c.generation_requested_at : null,
   }))
 
   return (
@@ -59,6 +60,7 @@ export default async function StoryboardUseCasePage({
         <PresentationMode
           useCase={{ id: useCase.id, name: useCase.name }}
           initialCards={safeCards}
+          isAdmin={session.user.role === 'admin'}
         />
       ) : (
         <StoryboardEditor
