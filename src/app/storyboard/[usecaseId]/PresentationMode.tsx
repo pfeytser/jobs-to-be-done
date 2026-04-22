@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 interface Card {
   id: string
@@ -13,6 +13,16 @@ interface Card {
 interface UseCase {
   id: string
   name: string
+}
+
+// A card's image state from the UI's perspective
+type ImageState = 'ready' | 'generating' | 'failed' | 'never_requested'
+
+function getImageState(card: Card): ImageState {
+  if (card.image_url) return 'ready' // may still be expired — detected via onError
+  if (!card.generation_requested_at) return 'never_requested'
+  const age = Date.now() - new Date(card.generation_requested_at).getTime()
+  return age < 90_000 ? 'generating' : 'failed'
 }
 
 export default function PresentationMode({
@@ -29,35 +39,56 @@ export default function PresentationMode({
   )
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  const handleRetry = useCallback(async (cardId: string) => {
+  const handleRetry = useCallback(
+    async (cardId: string) => {
+      // Optimistically mark as generating
+      setCards((prev) =>
+        prev.map((c) =>
+          c.id === cardId
+            ? { ...c, image_url: null, generation_requested_at: new Date().toISOString() }
+            : c
+        )
+      )
+
+      try {
+        await fetch(
+          `/api/storyboard/use-cases/${useCase.id}/cards/${cardId}/generate-image`,
+          { method: 'POST' }
+        )
+      } catch {
+        // Leave in 'generating' state — will flip to 'failed' after 90s
+      }
+
+      // Poll for result after 35s
+      setTimeout(async () => {
+        try {
+          const res = await fetch(
+            `/api/storyboard/use-cases/${useCase.id}/cards?reveal=true`
+          )
+          if (!res.ok) return
+          const data = await res.json()
+          const updated = data.cards?.find((c: Card) => c.id === cardId)
+          if (updated?.image_url) {
+            setCards((prev) =>
+              prev.map((c) => (c.id === cardId ? { ...c, image_url: updated.image_url } : c))
+            )
+          }
+        } catch {
+          // Silent
+        }
+      }, 35_000)
+    },
+    [useCase.id]
+  )
+
+  const handleImageError = useCallback((cardId: string) => {
+    // URL was set but failed to load (expired DALL-E URL) — treat as failed
     setCards((prev) =>
       prev.map((c) =>
-        c.id === cardId
-          ? { ...c, generation_requested_at: new Date().toISOString() }
-          : c
+        c.id === cardId ? { ...c, image_url: null } : c
       )
     )
-    try {
-      await fetch(
-        `/api/storyboard/use-cases/${useCase.id}/cards/${cardId}/generate-image`,
-        { method: 'POST' }
-      )
-      // Poll once after 30s to pick up the result
-      setTimeout(async () => {
-        const res = await fetch(`/api/storyboard/use-cases/${useCase.id}/cards?reveal=true`)
-        if (!res.ok) return
-        const data = await res.json()
-        const updated = data.cards?.find((c: Card) => c.id === cardId)
-        if (updated?.image_url) {
-          setCards((prev) =>
-            prev.map((c) => (c.id === cardId ? { ...c, image_url: updated.image_url } : c))
-          )
-        }
-      }, 35000)
-    } catch {
-      // Silent — user sees the "retry" state remain
-    }
-  }, [useCase.id])
+  }, [])
 
   if (cards.length === 0) {
     return (
@@ -75,15 +106,24 @@ export default function PresentationMode({
     <main className="min-h-[calc(100vh-57px)] flex flex-col">
       {/* Dot nav */}
       <div className="flex items-center justify-center gap-2 pt-6 pb-4">
-        {cards.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentIndex(i)}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              i === currentIndex ? 'bg-ink' : 'bg-warm-border hover:bg-ink-3'
-            }`}
-          />
-        ))}
+        {cards.map((c, i) => {
+          const state = getImageState(c)
+          const hasIssue = state !== 'ready'
+          return (
+            <button
+              key={i}
+              onClick={() => setCurrentIndex(i)}
+              title={hasIssue ? 'Image unavailable' : `Scene ${i + 1}`}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                i === currentIndex
+                  ? 'bg-ink'
+                  : hasIssue
+                  ? 'bg-red-300 hover:bg-red-400'
+                  : 'bg-warm-border hover:bg-ink-3'
+              }`}
+            />
+          )
+        })}
       </div>
 
       <div className="flex-1 flex flex-col items-center px-6 pb-6 max-w-4xl mx-auto w-full">
@@ -94,6 +134,7 @@ export default function PresentationMode({
             index={currentIndex}
             isAdmin={isAdmin}
             onRetry={() => handleRetry(card.id)}
+            onImageError={() => handleImageError(card.id)}
           />
         </div>
 
@@ -103,7 +144,9 @@ export default function PresentationMode({
             Scene {currentIndex + 1} of {cards.length}
           </p>
           <p className="text-base text-ink leading-relaxed">
-            {card.scene_description || <span className="text-ink-3 italic">No description</span>}
+            {card.scene_description || (
+              <span className="text-ink-3 italic">No description</span>
+            )}
           </p>
         </div>
 
@@ -145,53 +188,63 @@ function ImageSlot({
   index,
   isAdmin,
   onRetry,
+  onImageError,
 }: {
   card: Card
   index: number
   isAdmin: boolean
   onRetry: () => void
+  onImageError: () => void
 }) {
   const [retrying, setRetrying] = useState(false)
+  const state = getImageState(card)
+
+  // Reset retrying spinner after 40s if no image appeared
+  useEffect(() => {
+    if (state !== 'generating') setRetrying(false)
+  }, [state])
 
   async function handleRetry() {
     setRetrying(true)
     await onRetry()
-    // Keep spinner for 35s while we wait for generation
-    setTimeout(() => setRetrying(false), 35000)
   }
 
-  // State 1: image ready
-  if (card.image_url) {
+  // State: image ready — but detect if the URL is broken (expired)
+  if (state === 'ready') {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={card.image_url}
+        src={card.image_url!}
         alt={`Scene ${index + 1}`}
         className="w-full h-full object-cover"
+        onError={onImageError}
       />
     )
   }
 
-  // State 2: generation was requested but no image yet (generating or failed)
-  if (card.generation_requested_at) {
+  // State: generating (request fired < 90s ago)
+  if (state === 'generating' || retrying) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-        <div className="flex items-center gap-2 text-ink-3">
-          {retrying ? (
-            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          )}
-          <span className="text-sm">
-            {retrying ? 'Generating image…' : 'Image generation failed'}
-          </span>
-        </div>
-        {isAdmin && !retrying && (
+        <svg className="w-6 h-6 text-ink-3 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+        </svg>
+        <p className="text-sm text-ink-3">Generating image…</p>
+        <p className="text-xs text-ink-3 opacity-60">This takes about 20–30 seconds</p>
+      </div>
+    )
+  }
+
+  // State: failed (generation was attempted but no image)
+  if (state === 'failed') {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+        <svg className="w-6 h-6 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <p className="text-sm text-ink-3">Image generation failed</p>
+        {isAdmin && (
           <button
             onClick={handleRetry}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-warm-border rounded-lg text-ink-3 hover:text-ink hover:border-ink transition-colors"
@@ -206,13 +259,24 @@ function ImageSlot({
     )
   }
 
-  // State 3: never requested (scene has no text, or debounce never fired)
+  // State: never_requested (timer never fired — no text when debounce elapsed, or user left too fast)
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-2xl mb-2">🎬</p>
-        <p className="text-xs text-ink-3">Scene {index + 1}</p>
-      </div>
+    <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+      <svg className="w-6 h-6 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <p className="text-sm text-ink-3">Image not yet generated</p>
+      {isAdmin && (
+        <button
+          onClick={handleRetry}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-warm-border rounded-lg text-ink-3 hover:text-ink hover:border-ink transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Generate image
+        </button>
+      )}
     </div>
   )
 }
