@@ -3,8 +3,6 @@ import { auth } from '@/lib/auth/config'
 import { getUserProfile } from '@/lib/db/user-profiles'
 import SeaCreatureForm from './SeaCreatureForm'
 import AvatarCard from './AvatarCard'
-import { AdminNav } from '@/components/AdminNav'
-
 export const dynamic = 'force-dynamic'
 
 export default async function OnSitePage() {
@@ -16,26 +14,6 @@ export default async function OnSitePage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="bg-surface border-b border-warm-border sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
-          <span className="font-semibold text-ink">On-site</span>
-          <div className="flex items-center gap-3">
-            <AdminNav role={session.user.role} />
-            {session.user.image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={session.user.image}
-                alt={session.user.name ?? ''}
-                className="w-7 h-7 rounded-full object-cover"
-              />
-            )}
-            <span className="text-sm text-ink-2 hidden sm:block">
-              {session.user.name ?? session.user.email}
-            </span>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-lg mx-auto px-6 py-12">
         {needsPrompt ? (
           <SeaCreatureForm userId={session.user.userId} />

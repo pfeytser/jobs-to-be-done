@@ -127,9 +127,6 @@ export async function runMigrations(): Promise<void> {
       }
     }
 
-    // Rename storyboard status 'edit' → 'create'
-    await turso.execute("UPDATE storyboard_use_cases SET status = 'create' WHERE status = 'edit'")
-
     // Backfill slugs for existing qa_projects rows that don't have one
     function toSlug(name: string): string {
       return name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 80)
@@ -284,6 +281,13 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_storyboard_cards_board ON storyboard_cards(storyboard_id);
       CREATE INDEX IF NOT EXISTS idx_storyboard_cards_sort ON storyboard_cards(storyboard_id, sort_order);
     `)
+
+    // Rename storyboard status 'edit' → 'create' (must run after storyboard tables are created)
+    try {
+      await turso.execute("UPDATE storyboard_use_cases SET status = 'create' WHERE status = 'edit'")
+    } catch {
+      // Table may not exist on first run — safe to ignore
+    }
 
     console.log('[migrations] Turso migrations completed successfully')
   } catch (error) {

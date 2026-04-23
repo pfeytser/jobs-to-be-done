@@ -140,9 +140,17 @@ export default function PresentationMode({
 
         {/* Scene text */}
         <div className="w-full max-w-2xl">
-          <p className="text-xs font-semibold text-ink-3 uppercase tracking-widest mb-2">
-            Scene {currentIndex + 1} of {cards.length}
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-ink-3 uppercase tracking-widest">
+              Scene {currentIndex + 1} of {cards.length}
+            </p>
+            {isAdmin && (
+              <AdminRegenerateButton
+                cardId={card.id}
+                onRetry={() => handleRetry(card.id)}
+              />
+            )}
+          </div>
           <p className="text-base text-ink leading-relaxed">
             {card.scene_description || (
               <span className="text-ink-3 italic">No description</span>
@@ -278,5 +286,39 @@ function ImageSlot({
         </button>
       )}
     </div>
+  )
+}
+
+function AdminRegenerateButton({
+  cardId,
+  onRetry,
+}: {
+  cardId: string
+  onRetry: () => void
+}) {
+  const [busy, setBusy] = useState(false)
+
+  async function handleClick() {
+    setBusy(true)
+    await onRetry()
+    setBusy(false)
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={busy}
+      className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium border border-warm-border rounded-lg text-ink-3 hover:text-ink hover:border-ink transition-colors disabled:opacity-40"
+    >
+      <svg
+        className={`w-3.5 h-3.5 ${busy ? 'animate-spin' : ''}`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      {busy ? 'Requesting…' : 'Regenerate image'}
+    </button>
   )
 }

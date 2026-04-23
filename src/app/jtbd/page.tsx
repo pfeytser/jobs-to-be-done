@@ -1,11 +1,8 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
 import { getActiveExercise } from '@/lib/db/exercises'
 import { PhaseView } from '@/components/PhaseView'
 import { JTBDInfoAccordion } from '@/components/JTBDInfoAccordion'
-import { signOut } from '@/lib/auth/config'
-import { AdminNav } from '@/components/AdminNav'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,42 +36,6 @@ export default async function JTBDPage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="bg-surface border-b border-warm-border sticky top-0 z-40">
-        <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
-          <Link href="/jtbd" className="flex items-center gap-2 hover:opacity-75 transition-opacity">
-            <span className="text-xl">🐝</span>
-            <span className="font-semibold text-ink">Jobs to Bee Done</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <AdminNav role={session.user.role} />
-            {session.user.image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={session.user.image}
-                alt={session.user.name ?? 'User'}
-                className="w-7 h-7 rounded-full object-cover"
-              />
-            )}
-            <span className="text-sm text-ink-2 hidden sm:block">
-              {session.user.name ?? session.user.email}
-            </span>
-            <form
-              action={async () => {
-                'use server'
-                await signOut({ redirectTo: '/auth/signin' })
-              }}
-            >
-              <button
-                type="submit"
-                className="text-xs text-ink-3 hover:text-ink transition-colors"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-3xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-ink mb-2">

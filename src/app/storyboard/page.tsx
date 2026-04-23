@@ -2,8 +2,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
 import { getAllUseCases, getActiveUseCases } from '@/lib/db/storyboard-use-cases'
-import { AdminNav } from '@/components/AdminNav'
-
 export const dynamic = 'force-dynamic'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -30,19 +28,6 @@ export default async function StoryboardPage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="bg-surface border-b border-warm-border sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-ink-3 hover:text-ink transition-colors text-sm">
-              ← Home
-            </Link>
-            <span className="text-ink-3">/</span>
-            <span className="font-semibold text-ink">Storyboard</span>
-          </div>
-          <AdminNav role={session.user.role} />
-        </div>
-      </header>
-
       <main className="max-w-2xl mx-auto px-6 py-12">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-ink mb-1">Storyboards</h1>

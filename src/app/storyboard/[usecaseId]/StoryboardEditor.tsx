@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState } from 'react'
 
 interface Storyboard {
   id: string
@@ -130,6 +130,14 @@ export default function StoryboardEditor({
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
       )}
 
+      {/* Use case context */}
+      <section>
+        <h1 className="text-2xl font-bold text-ink mb-2">{useCase.name}</h1>
+        {useCase.description && (
+          <p className="text-sm text-ink-3 leading-relaxed">{useCase.description}</p>
+        )}
+      </section>
+
       {/* Customer profile */}
       <section>
         <h2 className="text-lg font-bold text-ink mb-1">Customer Profile</h2>
@@ -175,23 +183,14 @@ export default function StoryboardEditor({
       {/* Cards */}
       {profileSaved && (
         <section>
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-lg font-bold text-ink">Storyboard Scenes</h2>
-              <p className="text-sm text-ink-3 mt-0.5">Add scenes in chronological order.</p>
-            </div>
-            <button
-              onClick={addCard}
-              disabled={addingCard}
-              className="px-4 py-2 bg-ink text-white text-sm font-medium rounded-lg hover:opacity-80 transition-opacity disabled:opacity-40"
-            >
-              {addingCard ? 'Adding…' : '+ Add scene'}
-            </button>
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-ink">Storyboard Scenes</h2>
+            <p className="text-sm text-ink-3 mt-0.5">Add scenes in chronological order.</p>
           </div>
 
           {cards.length === 0 ? (
             <div className="text-sm text-ink-3 py-10 text-center border border-dashed border-warm-border rounded-[14px]">
-              No scenes yet. Add your first scene above.
+              No scenes yet. Add your first scene below.
             </div>
           ) : (
             <div className="space-y-3">
@@ -209,6 +208,14 @@ export default function StoryboardEditor({
               ))}
             </div>
           )}
+
+          <button
+            onClick={addCard}
+            disabled={addingCard}
+            className="mt-4 w-full py-2.5 border-2 border-dashed border-warm-border text-sm font-medium text-ink-3 rounded-[14px] hover:border-ink hover:text-ink transition-colors disabled:opacity-40"
+          >
+            {addingCard ? 'Adding…' : '+ Add scene'}
+          </button>
         </section>
       )}
     </main>
@@ -272,64 +279,31 @@ function SceneCard({
   const [description, setDescription] = useState(card.scene_description)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const activeRef = useRef(false)
 
-  const triggerImageGen = useCallback(async () => {
-    if (activeRef.current) return
-    await fetch(`/api/storyboard/use-cases/${useCaseId}/cards/${card.id}/generate-image`, {
-      method: 'POST',
-    }).catch(() => {})
-  }, [useCaseId, card.id])
-
-  async function saveCard(text: string) {
+  async function handleBlur() {
+    onDescriptionChange(description)
     setSaving(true)
     setSaveError(false)
     try {
       const res = await fetch(`/api/storyboard/use-cases/${useCaseId}/cards/${card.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scene_description: text }),
+        body: JSON.stringify({ scene_description: description }),
       })
       if (!res.ok) {
         // Retry once
         const retry = await fetch(`/api/storyboard/use-cases/${useCaseId}/cards/${card.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ scene_description: text }),
+          body: JSON.stringify({ scene_description: description }),
         })
         if (!retry.ok) setSaveError(true)
       }
+      // Image generation is triggered server-side on every save — no client timer needed
     } finally {
       setSaving(false)
     }
   }
-
-  function handleFocus() {
-    activeRef.current = true
-    if (timerRef.current) {
-      clearTimeout(timerRef.current)
-      timerRef.current = null
-    }
-  }
-
-  async function handleBlur() {
-    activeRef.current = false
-    onDescriptionChange(description)
-    await saveCard(description)
-
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => {
-      triggerImageGen()
-    }, 20000)
-  }
-
-  // Clear timer on unmount to prevent stale image gen after navigation
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-    }
-  }, [])
 
   return (
     <div className="bg-surface border border-warm-border rounded-[14px] p-4 space-y-3">
@@ -373,7 +347,6 @@ function SceneCard({
       <textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        onFocus={handleFocus}
         onBlur={handleBlur}
         rows={4}
         placeholder="Describe what is happening in this scene…"

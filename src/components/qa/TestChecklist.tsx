@@ -44,7 +44,7 @@ export function TestChecklist({
 
   const [failModalItemId, setFailModalItemId] = useState<string | null>(null)
   const [blockedModalItemId, setBlockedModalItemId] = useState<string | null>(null)
-  const [savingItemId, setSavingItemId] = useState<string | null>(null)
+  const [savingKey, setSavingKey] = useState<string | null>(null)
 
   // Stats
   const stats = useMemo(() => {
@@ -86,7 +86,7 @@ export function TestChecklist({
   }, [items])
 
   async function handleQuickStatus(item: QATestItem, status: 'pass' | 'skipped') {
-    setSavingItemId(item.id)
+    setSavingKey(`${item.id}:${status}`)
     try {
       const res = await fetch(`/api/qa/sessions/${qaSession.id}/results`, {
         method: 'POST',
@@ -99,7 +99,7 @@ export function TestChecklist({
         if (status === 'pass') setPassTrigger((n) => n + 1)
       }
     } finally {
-      setSavingItemId(null)
+      setSavingKey(null)
     }
   }
 
@@ -214,7 +214,9 @@ export function TestChecklist({
                   {sectionItems.map((item) => {
                     const result = results.get(item.id)
                     const status = result?.status as ResultStatus | undefined
-                    const isSaving = savingItemId === item.id
+                    const isSaving = savingKey?.startsWith(`${item.id}:`) ?? false
+                    const savingPass = savingKey === `${item.id}:pass`
+                    const savingSkipped = savingKey === `${item.id}:skipped`
 
                     return (
                       <div
@@ -241,12 +243,6 @@ export function TestChecklist({
                               {item.test_description}
                             </p>
                           </div>
-                          {isSaving && (
-                            <svg className="w-4 h-4 animate-spin text-ink-3 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                            </svg>
-                          )}
                         </div>
 
                         {/* Steps */}
@@ -284,13 +280,18 @@ export function TestChecklist({
                           <button
                             onClick={() => handleQuickStatus(item, 'pass')}
                             disabled={isSaving}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
                               status === 'pass'
                                 ? 'bg-status-pass-text text-white border-status-pass-text'
                                 : 'bg-canvas border-warm-border text-ink hover:bg-status-pass hover:border-status-pass-border hover:text-status-pass-text'
                             }`}
                           >
-                            ✅ Pass
+                            {savingPass ? (
+                              <svg className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                            ) : '✅'} Pass
                           </button>
                           <button
                             onClick={() => setFailModalItemId(item.id)}
@@ -317,13 +318,18 @@ export function TestChecklist({
                           <button
                             onClick={() => handleQuickStatus(item, 'skipped')}
                             disabled={isSaving}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
                               status === 'skipped'
                                 ? 'bg-status-skipped-text text-white border-status-skipped-text'
                                 : 'bg-canvas border-warm-border text-ink hover:bg-status-skipped hover:border-status-skipped-border hover:text-status-skipped-text'
                             }`}
                           >
-                            ⏭ Skip / N/A
+                            {savingSkipped ? (
+                              <svg className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                            ) : '⏭'} Skip / N/A
                           </button>
                         </div>
                       </div>

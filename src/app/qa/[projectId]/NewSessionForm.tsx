@@ -33,7 +33,7 @@ export function NewSessionForm({ project, testerCounts }: { project: QAProject; 
   const availableOs = effectiveViewport ? (OS_BY_VIEWPORT[effectiveViewport] ?? []) : []
   const availableBrowsers = BROWSERS
 
-  const isValid = userType && effectiveViewport && os && browser
+  const isValid = userType && effectiveViewport && os && (isMobileApp || browser)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -144,7 +144,7 @@ export function NewSessionForm({ project, testerCounts }: { project: QAProject; 
       {/* OS */}
       <div>
         <label className="block text-sm font-medium text-ink mb-1.5">Operating system</label>
-        {!viewport && <p className="text-xs text-ink-3 mb-2">Select a viewport first</p>}
+        {!isMobileApp && !viewport && <p className="text-xs text-ink-3 mb-2">Select a viewport first</p>}
         <div className="flex gap-2 flex-wrap">
           {availableOs.map((o) => (
             <button
@@ -163,26 +163,28 @@ export function NewSessionForm({ project, testerCounts }: { project: QAProject; 
         </div>
       </div>
 
-      {/* Browser */}
-      <div>
-        <label className="block text-sm font-medium text-ink mb-1.5">Browser</label>
-        <div className="flex gap-2 flex-wrap">
-          {availableBrowsers.map((b) => (
-            <button
-              key={b}
-              type="button"
-              onClick={() => setBrowser(b)}
-              className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-                browser === b
-                  ? 'bg-ink text-white border-ink'
-                  : 'bg-canvas border-warm-border text-ink hover:border-ink-2'
-              }`}
-            >
-              {b}
-            </button>
-          ))}
+      {/* Browser — not applicable for native mobile apps */}
+      {!isMobileApp && (
+        <div>
+          <label className="block text-sm font-medium text-ink mb-1.5">Browser</label>
+          <div className="flex gap-2 flex-wrap">
+            {availableBrowsers.map((b) => (
+              <button
+                key={b}
+                type="button"
+                onClick={() => setBrowser(b)}
+                className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+                  browser === b
+                    ? 'bg-ink text-white border-ink'
+                    : 'bg-canvas border-warm-border text-ink hover:border-ink-2'
+                }`}
+              >
+                {b}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {error && (
         <div className="p-3 bg-status-fail border border-status-fail-border rounded-[10px] text-status-fail-text text-sm">

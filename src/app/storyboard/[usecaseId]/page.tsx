@@ -1,13 +1,10 @@
 import { redirect, notFound } from 'next/navigation'
-import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
 import { getUseCaseById } from '@/lib/db/storyboard-use-cases'
 import { getStoryboard } from '@/lib/db/storyboards'
 import { getCardsForStoryboard } from '@/lib/db/storyboard-cards'
 import StoryboardEditor from './StoryboardEditor'
 import PresentationMode from './PresentationMode'
-import { AdminNav } from '@/components/AdminNav'
-
 export const dynamic = 'force-dynamic'
 
 export default async function StoryboardUseCasePage({
@@ -43,19 +40,6 @@ export default async function StoryboardUseCasePage({
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="bg-surface border-b border-warm-border sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link href="/storyboard" className="text-ink-3 hover:text-ink transition-colors text-sm shrink-0">
-              ← Storyboard
-            </Link>
-            <span className="text-ink-3 shrink-0">/</span>
-            <span className="font-semibold text-ink truncate">{useCase.name}</span>
-          </div>
-          <AdminNav role={session.user.role} />
-        </div>
-      </header>
-
       {useCase.status === 'present' ? (
         <PresentationMode
           useCase={{ id: useCase.id, name: useCase.name }}

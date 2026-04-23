@@ -149,6 +149,8 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
   const [deleting, setDeleting] = useState(false)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const itemsRef = useRef<EditableItem[]>(initialItems)
+  const savingRef = useRef(false)
+  const pendingSaveRef = useRef(false)
 
   // Save immediately when mounted after a CSV upload
   useEffect(() => {
@@ -248,7 +250,14 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
 
   async function handleSave(currentItems?: EditableItem[]) {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+
+    if (savingRef.current) {
+      pendingSaveRef.current = true
+      return
+    }
+
     const itemsToSave = currentItems ?? itemsRef.current
+    savingRef.current = true
     setSaving(true)
     setError(null)
     setSaved(false)
@@ -289,7 +298,12 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save. Please try again.')
     } finally {
+      savingRef.current = false
       setSaving(false)
+      if (pendingSaveRef.current) {
+        pendingSaveRef.current = false
+        handleSave()
+      }
     }
   }
 

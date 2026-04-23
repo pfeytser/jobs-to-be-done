@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { waitUntil } from '@vercel/functions'
 import { auth } from '@/lib/auth/config'
 import { getUseCaseById } from '@/lib/db/storyboard-use-cases'
 import { getStoryboard } from '@/lib/db/storyboards'
 import { getCardById, updateCard, deleteCard } from '@/lib/db/storyboard-cards'
+import { generateCardImage } from '@/lib/storyboard/generate-card-image'
 import { z } from 'zod'
 
 const UpdateSchema = z.object({
@@ -43,6 +45,14 @@ export async function PATCH(
     }
 
     const card = await updateCard(cardId, parsed.data)
+
+    // Fire image generation after the response is sent.
+    // waitUntil tells Vercel to keep this function alive until the promise resolves,
+    // even after the HTTP response is returned — so closing the browser tab is safe.
+    if (parsed.data.scene_description !== undefined) {
+      waitUntil(generateCardImage(id, cardId, session.user.userId))
+    }
+
     return NextResponse.json({ card: card ? { ...card, image_url: undefined } : null })
   } catch (error) {
     console.error('[cards/:cardId PATCH]', error)

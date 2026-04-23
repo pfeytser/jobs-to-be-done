@@ -20,6 +20,7 @@
     "@tiptap/react": "^3.22.3",
     "@tiptap/starter-kit": "^3.22.3",
     "@vercel/blob": "^2.3.3",
+    "@vercel/functions": "^3.4.4",
     "csv-parse": "^6.2.1",
     "jszip": "^3.10.1",
     "lottie-react": "^2.4.1",

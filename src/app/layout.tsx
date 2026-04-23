@@ -3,6 +3,7 @@ import './globals.css'
 import { SessionProvider } from 'next-auth/react'
 import { auth } from '@/lib/auth/config'
 import NextTopLoader from 'nextjs-toploader'
+import { Header } from '@/components/Header'
 
 export const metadata: Metadata = {
   title: 'Jobs to Bee Done 🐝',
@@ -21,6 +22,7 @@ export default async function RootLayout({
       <body className="bg-canvas min-h-screen">
         <NextTopLoader color="#1a1a1a" showSpinner={false} />
         <SessionProvider session={session}>
+          <Header />
           {children}
         </SessionProvider>
       </body>

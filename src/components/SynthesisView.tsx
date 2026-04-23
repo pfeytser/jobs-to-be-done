@@ -359,8 +359,8 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
         </section>
       )}
 
-      {/* Tensions */}
-      {synthesis.tensions.length > 0 && (
+      {/* Hidden: Strategic Tensions — restore by setting showTensions to true */}
+      {(false as boolean) && synthesis.tensions.length > 0 && (
         <section>
           <h3 className="text-sm font-semibold text-ink mb-3">Strategic Tensions</h3>
           <div className="space-y-3">
