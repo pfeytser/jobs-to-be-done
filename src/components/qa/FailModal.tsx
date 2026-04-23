@@ -59,6 +59,7 @@ export function FailModal({
 
       // Upload screenshot first if provided
       let screenshotFilename = existingScreenshot
+      let screenshotUrl: string | null = existingResult?.screenshot_url ?? null
       if (screenshotFile) {
         setUploading(true)
         const fd = new FormData()
@@ -72,6 +73,7 @@ export function FailModal({
         }
         const data = await res.json()
         screenshotFilename = data.filename
+        screenshotUrl = data.url
       }
 
       const res = await fetch(`/api/qa/sessions/${sessionId}/results`, {
@@ -85,6 +87,7 @@ export function FailModal({
           actual_behavior: actualBehavior || null,
           test_username: finalUsername || null,
           screenshot_filename: screenshotFilename,
+          screenshot_url: screenshotUrl,
         }),
       })
 

@@ -12,6 +12,8 @@ const ResultSchema = z.object({
   actual_behavior: z.string().nullable().optional(),
   blocked_note: z.string().nullable().optional(),
   test_username: z.string().nullable().optional(),
+  screenshot_filename: z.string().nullable().optional(),
+  screenshot_url: z.string().nullable().optional(),
 })
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -32,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
 
-    const { test_item_id, status, steps_taken, expected_behavior, actual_behavior, blocked_note, test_username } = parsed.data
+    const { test_item_id, status, steps_taken, expected_behavior, actual_behavior, blocked_note, test_username, screenshot_filename, screenshot_url } = parsed.data
     const result = await upsertResult({
       session_id: sessionId,
       project_id: qaSession.project_id,
@@ -44,6 +46,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       actual_behavior,
       blocked_note,
       test_username,
+      screenshot_filename,
+      screenshot_url,
     })
 
     // Save test username to history if provided
