@@ -142,15 +142,14 @@ interface TestSuiteEditorProps {
 
 export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, saveOnMount }: TestSuiteEditorProps) {
   const [items, setItems] = useState<EditableItem[]>(initialItems)
+  const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const itemsRef = useRef<EditableItem[]>(initialItems)
   const savingRef = useRef(false)
-  const pendingSaveRef = useRef(false)
 
   // Save immediately when mounted after a CSV upload
   useEffect(() => {
@@ -165,11 +164,6 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
-  function scheduleSave() {
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
-    saveTimeoutRef.current = setTimeout(() => handleSave(), 1500)
-  }
-
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
     if (over && active.id !== over.id) {
@@ -178,9 +172,8 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
         itemsRef.current = next
         return next
       })
-      scheduleSave()
+      setDirty(true)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleChange = useCallback((id: string, field: keyof EditableItem, value: unknown) => {
@@ -189,8 +182,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
       itemsRef.current = next
       return next
     })
-    scheduleSave()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setDirty(true)
   }, [])
 
   const handleDelete = useCallback((id: string) => {
@@ -199,8 +191,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
       itemsRef.current = next
       return next
     })
-    scheduleSave()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setDirty(true)
   }, [])
 
   const handleResolve = useCallback((id: string) => {
@@ -209,8 +200,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
       itemsRef.current = next
       return next
     })
-    scheduleSave()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setDirty(true)
   }, [])
 
   const handleAddRow = () => {
@@ -219,7 +209,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
       itemsRef.current = next
       return next
     })
-    scheduleSave()
+    setDirty(true)
   }
 
   const handleDeleteAll = async () => {
@@ -249,13 +239,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
   const pendingReviewCount = items.filter((i) => i.needs_review).length
 
   async function handleSave(currentItems?: EditableItem[]) {
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
-
-    if (savingRef.current) {
-      pendingSaveRef.current = true
-      return
-    }
-
+    if (savingRef.current) return
     const itemsToSave = currentItems ?? itemsRef.current
     savingRef.current = true
     setSaving(true)
@@ -292,6 +276,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
       const data = await res.json()
       itemsRef.current = data.items
       setItems(data.items)
+      setDirty(false)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
       onSaved?.()
@@ -300,10 +285,6 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
     } finally {
       savingRef.current = false
       setSaving(false)
-      if (pendingSaveRef.current) {
-        pendingSaveRef.current = false
-        handleSave()
-      }
     }
   }
 
@@ -320,13 +301,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
   ]
 
   return (
-    <div
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-          handleSave()
-        }
-      }}
-    >
+    <div>
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div className="flex items-center gap-3">
@@ -338,16 +313,23 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {saving && (
-            <span className="flex items-center gap-1 text-xs text-ink-3">
-              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Saving…
-            </span>
-          )}
-          {saved && <span className="text-xs text-status-pass-text">✓ Saved</span>}
+          {saved && !dirty && <span className="text-xs text-status-pass-text">✓ Saved</span>}
+          {dirty && <span className="text-xs text-ink-3">Unsaved changes</span>}
+          <button
+            onClick={() => handleSave()}
+            disabled={saving || !dirty}
+            className="flex items-center gap-1.5 px-3 py-2 bg-ink text-white text-sm font-medium rounded-[8px] hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          >
+            {saving ? (
+              <>
+                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Saving…
+              </>
+            ) : 'Save'}
+          </button>
           {items.length > 0 && (
             <>
               {deleteConfirm && (

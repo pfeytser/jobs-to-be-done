@@ -7,7 +7,7 @@ const CreateSessionSchema = z.object({
   user_type: z.string().min(1),
   viewport: z.string().min(1),
   operating_system: z.string().min(1),
-  browser: z.string().min(1),
+  browser: z.string().default(''),
 })
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
