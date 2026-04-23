@@ -289,6 +289,18 @@ export async function runMigrations(): Promise<void> {
       // Table may not exist on first run — safe to ignore
     }
 
+    // Add acknowledged columns to qa_results
+    try {
+      await turso.execute('ALTER TABLE qa_results ADD COLUMN acknowledged_at TEXT')
+    } catch {
+      // Column already exists
+    }
+    try {
+      await turso.execute('ALTER TABLE qa_results ADD COLUMN acknowledged_by TEXT')
+    } catch {
+      // Column already exists
+    }
+
     console.log('[migrations] Turso migrations completed successfully')
   } catch (error) {
     console.error('[migrations] Migration error:', error)

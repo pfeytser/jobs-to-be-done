@@ -275,6 +275,15 @@ export function TestChecklist({
                           </div>
                         )}
 
+                        {/* Acknowledged badge */}
+                        {status === 'fail' && result?.acknowledged_at && (
+                          <div className="mb-3 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-canvas border border-warm-border rounded-full text-xs text-ink-2">
+                              ✓ Seen by admin
+                            </span>
+                          </div>
+                        )}
+
                         {/* Action buttons */}
                         <div className="flex gap-2 flex-wrap">
                           <button

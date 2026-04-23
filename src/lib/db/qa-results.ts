@@ -16,6 +16,8 @@ export interface QAResult {
   screenshot_url: string | null
   screenshot_filename: string | null
   recorded_at: string | null
+  acknowledged_at: string | null
+  acknowledged_by: string | null
 }
 
 function parseResult(row: Record<string, unknown>): QAResult {
@@ -34,6 +36,8 @@ function parseResult(row: Record<string, unknown>): QAResult {
     screenshot_url: (row.screenshot_url as string) ?? null,
     screenshot_filename: (row.screenshot_filename as string) ?? null,
     recorded_at: (row.recorded_at as string) ?? null,
+    acknowledged_at: (row.acknowledged_at as string) ?? null,
+    acknowledged_by: (row.acknowledged_by as string) ?? null,
   }
 }
 
@@ -169,7 +173,7 @@ export async function getFailuresByProject(projectId: string): Promise<
       FROM qa_results r
       JOIN qa_sessions s ON s.id = r.session_id
       JOIN qa_test_items ti ON ti.id = r.test_item_id
-      WHERE r.project_id = ? AND r.status = 'fail'
+      WHERE r.project_id = ? AND r.status = 'fail' AND r.acknowledged_at IS NULL
       ORDER BY r.recorded_at DESC`,
     args: [projectId],
   })
@@ -187,6 +191,14 @@ export async function getFailuresByProject(projectId: string): Promise<
       session_os: (row.session_os as string) ?? '',
       user_type: (row.user_type as string) ?? '',
     }
+  })
+}
+
+export async function acknowledgeResult(resultId: string, adminUserId: string): Promise<void> {
+  await runMigrations()
+  await turso.execute({
+    sql: 'UPDATE qa_results SET acknowledged_at = ?, acknowledged_by = ? WHERE id = ?',
+    args: [new Date().toISOString(), adminUserId, resultId],
   })
 }
 
