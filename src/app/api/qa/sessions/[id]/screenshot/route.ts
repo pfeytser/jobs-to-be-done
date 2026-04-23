@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const filename = `${firstName}_${testerId}_${featureSlug}_${tcSlug}.${ext}`
 
     const blob = await put(`qa-screenshots/${qaSession.project_id}/${filename}`, file, {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: false,
     })
 

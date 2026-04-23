@@ -257,9 +257,9 @@ export default async function ProjectDashboard({
                   <div className="mt-2">
                     {f.screenshot_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <a href={f.screenshot_url} target="_blank" rel="noopener noreferrer">
+                      <a href={`/api/qa/blob-image?url=${encodeURIComponent(f.screenshot_url)}`} target="_blank" rel="noopener noreferrer">
                         <img
-                          src={f.screenshot_url}
+                          src={`/api/qa/blob-image?url=${encodeURIComponent(f.screenshot_url)}`}
                           alt={f.screenshot_filename}
                           className="max-h-32 rounded-[8px] border border-warm-border object-cover hover:opacity-80 transition-opacity"
                         />
