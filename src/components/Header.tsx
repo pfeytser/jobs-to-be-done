@@ -10,6 +10,7 @@ const SECTIONS: Array<{ prefix: string; label: string; href: string }> = [
   { prefix: '/qa', label: 'QA', href: '/qa' },
   { prefix: '/storyboard', label: 'Storyboard', href: '/storyboard' },
   { prefix: '/on-site', label: 'On-site', href: '/on-site' },
+  { prefix: '/code-review', label: 'Code Review', href: '/code-review' },
   { prefix: '/admin', label: 'Admin', href: '/admin' },
 ]
 
