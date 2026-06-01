@@ -13,7 +13,7 @@ interface AdminSession {
   status: Status
   created_at: string
   votes: number
-  statements: { text: string; is_lie: boolean }[]
+  statements: { text: string }[]
 }
 
 interface UserOption {
@@ -146,11 +146,6 @@ export function AdminTwoTruthsClient({
                   <span className={st.text.trim() ? 'text-ink-2' : 'text-ink-3 italic'}>
                     {st.text.trim() || 'not filled in yet'}
                   </span>
-                  {st.is_lie && (
-                    <span className="shrink-0 text-[10px] font-bold text-status-fail-text bg-status-fail px-1.5 py-0.5 rounded-full">
-                      LIE
-                    </span>
-                  )}
                 </li>
               ))}
             </ul>

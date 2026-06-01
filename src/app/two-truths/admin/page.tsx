@@ -32,7 +32,7 @@ export default async function TwoTruthsAdminPage() {
     statements: (detailMap[s.id]?.statements ?? [])
       .slice()
       .sort((a, b) => a.position - b.position)
-      .map((st) => ({ text: st.text, is_lie: st.is_lie })),
+      .map((st) => ({ text: st.text })),
   }))
 
   return (
