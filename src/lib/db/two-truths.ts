@@ -191,6 +191,17 @@ export async function archiveSession(id: string): Promise<TtSession | null> {
   return setStatus(id, 'archived', 'archived_at')
 }
 
+/** Restores an archived session to completed (its pre-archive state). */
+export async function unarchiveSession(id: string): Promise<TtSession | null> {
+  await runMigrations()
+  const now = new Date().toISOString()
+  await turso.execute({
+    sql: "UPDATE tt_sessions SET status = 'completed', archived_at = NULL, updated_at = ? WHERE id = ?",
+    args: [now, id],
+  })
+  return getSessionById(id)
+}
+
 // ── Statements ───────────────────────────────────────────────────────────────
 
 export async function getStatements(sessionId: string): Promise<TtStatement[]> {

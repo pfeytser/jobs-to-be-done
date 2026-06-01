@@ -82,7 +82,7 @@ export function AdminTwoTruthsClient({
     }
   }
 
-  async function act(id: string, action: 'activate' | 'reveal' | 'archive') {
+  async function act(id: string, action: 'activate' | 'reveal' | 'archive' | 'unarchive') {
     setBusy(id)
     setError(null)
     try {
@@ -186,6 +186,15 @@ export function AdminTwoTruthsClient({
               className="px-3 py-1.5 border border-warm-border text-ink-2 text-xs font-bold rounded-full hover:border-ink disabled:opacity-50"
             >
               Archive
+            </button>
+          )}
+          {s.status === 'archived' && (
+            <button
+              onClick={() => act(s.id, 'unarchive')}
+              disabled={isBusy}
+              className="px-3 py-1.5 border border-warm-border text-ink-2 text-xs font-bold rounded-full hover:border-ink disabled:opacity-50"
+            >
+              Unarchive
             </button>
           )}
         </div>
