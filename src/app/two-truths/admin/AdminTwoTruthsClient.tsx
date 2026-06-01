@@ -202,12 +202,12 @@ export function AdminTwoTruthsClient({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Game title (e.g. Friday Standup Round)"
               maxLength={200}
-              className="flex-1 px-4 py-2.5 bg-canvas border border-warm-border rounded-xl text-ink placeholder:text-ink-3 focus:outline-none focus:border-ink"
+              className="sm:flex-1 min-w-0 px-4 py-2.5 bg-canvas border border-warm-border rounded-xl text-ink placeholder:text-ink-3 focus:outline-none focus:border-ink"
             />
             <select
               value={authorId}
               onChange={(e) => setAuthorId(e.target.value)}
-              className="px-4 py-2.5 bg-canvas border border-warm-border rounded-xl text-ink focus:outline-none focus:border-ink"
+              className="sm:flex-1 min-w-0 px-4 py-2.5 bg-canvas border border-warm-border rounded-xl text-ink focus:outline-none focus:border-ink truncate"
             >
               <option value="">Assign author…</option>
               {users.map((u) => (
@@ -219,7 +219,7 @@ export function AdminTwoTruthsClient({
             <button
               type="submit"
               disabled={creating || !title.trim() || !authorId}
-              className="px-5 py-2.5 bg-ink text-white font-bold rounded-xl hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
+              className="shrink-0 px-5 py-2.5 bg-ink text-white font-bold rounded-xl hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
             >
               {creating ? 'Creating…' : 'Create'}
             </button>
