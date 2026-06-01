@@ -13,6 +13,7 @@ interface AdminSession {
   status: Status
   created_at: string
   votes: number
+  statements: { text: string; is_lie: boolean }[]
 }
 
 interface UserOption {
@@ -137,6 +138,23 @@ export function AdminTwoTruthsClient({
             by {s.author_name} · {new Date(s.created_at).toLocaleDateString()} ·{' '}
             {s.votes} {s.votes === 1 ? 'vote' : 'votes'}
           </p>
+          {s.statements.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {s.statements.map((st, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <span className="shrink-0 text-ink-3 font-mono">{i + 1}.</span>
+                  <span className={st.text.trim() ? 'text-ink-2' : 'text-ink-3 italic'}>
+                    {st.text.trim() || 'not filled in yet'}
+                  </span>
+                  {st.is_lie && (
+                    <span className="shrink-0 text-[10px] font-bold text-status-fail-text bg-status-fail px-1.5 py-0.5 rounded-full">
+                      LIE
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {s.status === 'draft' && (
