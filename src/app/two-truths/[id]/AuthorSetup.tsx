@@ -13,10 +13,12 @@ export function AuthorSetup({
   sessionId,
   title,
   initial,
+  canActivate,
 }: {
   sessionId: string
   title: string
   initial: InitialStatement[]
+  canActivate: boolean
 }) {
   const router = useRouter()
   const sorted = [...initial].sort((a, b) => a.position - b.position)
@@ -26,36 +28,64 @@ export function AuthorSetup({
     return idx >= 0 ? idx : 2
   })
   const [saving, setSaving] = useState(false)
+  const [activating, setActivating] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function save() {
+  // Persists the three statements. Returns true on success.
+  async function persist(): Promise<boolean> {
     setError(null)
     if (texts.some((t) => !t.trim())) {
-      setError('Fill in all three statements before saving.')
-      return
+      setError('Fill in all three statements first.')
+      return false
     }
+    const res = await fetch(`/api/two-truths/sessions/${sessionId}/statements`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        statements: texts.map((text, i) => ({ text: text.trim(), is_lie: i === lieIndex })),
+      }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || 'Could not save. Try again.')
+      return false
+    }
+    return true
+  }
+
+  async function save() {
     setSaving(true)
     setSaved(false)
     try {
-      const res = await fetch(`/api/two-truths/sessions/${sessionId}/statements`, {
-        method: 'PUT',
+      if (await persist()) {
+        setSaved(true)
+        router.refresh()
+        setTimeout(() => setSaved(false), 2500)
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function saveAndActivate() {
+    setActivating(true)
+    setSaved(false)
+    try {
+      if (!(await persist())) return
+      const res = await fetch(`/api/two-truths/sessions/${sessionId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          statements: texts.map((text, i) => ({ text: text.trim(), is_lie: i === lieIndex })),
-        }),
+        body: JSON.stringify({ action: 'activate' }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Could not save. Try again.')
+        setError(data.error || 'Could not activate the game.')
+        return
       }
-      setSaved(true)
       router.refresh()
-      setTimeout(() => setSaved(false), 2500)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save.')
     } finally {
-      setSaving(false)
+      setActivating(false)
     }
   }
 
@@ -67,7 +97,12 @@ export function AuthorSetup({
 
         <div className="mt-4 p-4 rounded-xl bg-mist border border-warm-border text-sm text-ink-2">
           Write two true statements and one lie. Mark which one is the lie — players won&apos;t see your
-          choice. <span className="font-semibold text-ink">You can keep editing until the host starts the game.</span>
+          choice.{' '}
+          <span className="font-semibold text-ink">
+            {canActivate
+              ? 'Save anytime, then Save & Activate when you’re ready to go live.'
+              : 'You can keep editing until the host starts the game.'}
+          </span>
         </div>
 
         <div className="mt-6 space-y-4">
@@ -113,16 +148,30 @@ export function AuthorSetup({
 
         {error && <p className="mt-4 text-sm text-status-fail-text font-medium">{error}</p>}
 
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center gap-3">
           <button
             onClick={save}
-            disabled={saving}
-            className="px-6 py-3 bg-ink text-white font-bold rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+            disabled={saving || activating}
+            className="px-6 py-3 bg-surface border border-ink text-ink font-bold rounded-full hover:bg-canvas disabled:opacity-50 transition-colors"
           >
-            {saving ? 'Saving…' : 'Save statements'}
+            {saving ? 'Saving…' : 'Save'}
           </button>
+          {canActivate && (
+            <button
+              onClick={saveAndActivate}
+              disabled={saving || activating}
+              className="px-6 py-3 bg-ink text-white font-bold rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              {activating ? 'Going live…' : 'Save & Activate 🚀'}
+            </button>
+          )}
           {saved && <span className="text-sm font-semibold text-status-pass-text">Saved ✓</span>}
         </div>
+        {canActivate && (
+          <p className="mt-2 text-xs text-ink-3">
+            Activating locks your statements and opens voting for everyone.
+          </p>
+        )}
       </div>
     </main>
   )

@@ -4,8 +4,12 @@ import { auth } from '@/lib/auth/config'
 import {
   getVisibleSessions,
   getDraftSessionsForAuthor,
+  getSessionsCreatedBy,
   getVotesForSession,
 } from '@/lib/db/two-truths'
+import { getAllUsers } from '@/lib/db/users'
+import { CreateGameForm } from './CreateGameForm'
+import { SessionRow } from './SessionRow'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,9 +20,11 @@ export default async function TwoTruthsDashboard() {
   const userId = session.user.userId
   const isAdmin = session.user.role === 'admin'
 
-  const [visible, pendingDrafts] = await Promise.all([
+  const [visible, pendingDrafts, myCreated, users] = await Promise.all([
     getVisibleSessions(),
     getDraftSessionsForAuthor(userId),
+    getSessionsCreatedBy(userId),
+    getAllUsers(),
   ])
 
   const active = visible.filter((s) => s.status === 'active')
@@ -28,10 +34,16 @@ export default async function TwoTruthsDashboard() {
   const voteChecks = await Promise.all(
     visible.map(async (s) => {
       const votes = await getVotesForSession(s.id)
-      return { id: s.id, voted: votes.some((v) => v.voter_id === userId), count: votes.length }
+      return { id: s.id, voted: votes.some((v) => v.voter_id === userId) }
     })
   )
   const voteMap = new Map(voteChecks.map((v) => [v.id, v]))
+
+  // Vote counts for the games this user created (for the management rows).
+  const myCounts = await Promise.all(
+    myCreated.map(async (s) => ({ id: s.id, count: (await getVotesForSession(s.id)).length }))
+  )
+  const myCountMap = new Map(myCounts.map((c) => [c.id, c.count]))
 
   return (
     <main className="min-h-screen bg-canvas">
@@ -52,10 +64,15 @@ export default async function TwoTruthsDashboard() {
               href="/two-truths/admin"
               className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity"
             >
-              <span>⚙️</span> Admin dashboard
+              <span>⚙️</span> Admin: all games
             </Link>
           )}
         </header>
+
+        {/* Anyone can start a game */}
+        <section className="mb-8">
+          <CreateGameForm users={users.map((u) => ({ user_id: u.user_id, name: u.name ?? u.email, email: u.email }))} />
+        </section>
 
         {pendingDrafts.length > 0 && (
           <section className="mb-8">
@@ -70,10 +87,33 @@ export default async function TwoTruthsDashboard() {
                 </p>
                 <p className="text-lg font-bold text-ink">{s.title}</p>
                 <p className="text-sm text-ink-2 mt-0.5">
-                  Write your three statements before the host kicks it off →
+                  Write your three statements, then save &amp; activate →
                 </p>
               </Link>
             ))}
+          </section>
+        )}
+
+        {myCreated.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-ink-3 mb-3">
+              🎛️ Your games
+            </h2>
+            <div className="space-y-2.5">
+              {myCreated.map((s) => (
+                <SessionRow
+                  key={s.id}
+                  s={{
+                    id: s.id,
+                    title: s.title,
+                    author_name: s.author_name,
+                    status: s.status,
+                    created_at: s.created_at,
+                    votes: myCountMap.get(s.id) ?? 0,
+                  }}
+                />
+              ))}
+            </div>
           </section>
         )}
 

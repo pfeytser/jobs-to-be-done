@@ -26,7 +26,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  // Any signed-in user may create a session and assign an author (incl. themselves).
 
   try {
     const parsed = CreateSchema.safeParse(await req.json())

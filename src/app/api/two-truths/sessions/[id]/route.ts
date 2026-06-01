@@ -50,7 +50,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   try {
     const { id } = await params
@@ -61,6 +60,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const gameSession = await getSessionById(id)
     if (!gameSession) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    // The admin can manage any session; everyone else only the sessions they created.
+    const canManage =
+      session.user.role === 'admin' || gameSession.created_by === session.user.userId
+    if (!canManage) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { action } = parsed.data
 
@@ -121,12 +125,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   try {
     const { id } = await params
     const gameSession = await getSessionById(id)
     if (!gameSession) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    const canManage =
+      session.user.role === 'admin' || gameSession.created_by === session.user.userId
+    if (!canManage) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     if (gameSession.status !== 'draft') {
       return NextResponse.json({ error: 'Only draft sessions can be deleted' }, { status: 409 })
     }

@@ -104,6 +104,16 @@ export async function getVisibleSessions(): Promise<TtSession[]> {
   return result.rows.map((r) => parseSession(r as Record<string, unknown>))
 }
 
+/** Every session created by a given user, newest first (any status). */
+export async function getSessionsCreatedBy(userId: string): Promise<TtSession[]> {
+  await runMigrations()
+  const result = await turso.execute({
+    sql: 'SELECT * FROM tt_sessions WHERE created_by = ? ORDER BY created_at DESC',
+    args: [userId],
+  })
+  return result.rows.map((r) => parseSession(r as Record<string, unknown>))
+}
+
 /** Draft sessions awaiting setup by a given author. */
 export async function getDraftSessionsForAuthor(authorId: string): Promise<TtSession[]> {
   await runMigrations()

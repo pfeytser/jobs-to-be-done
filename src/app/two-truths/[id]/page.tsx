@@ -39,6 +39,7 @@ export default async function TwoTruthsSessionPage({
       <AuthorSetup
         sessionId={id}
         title={game.title}
+        canActivate={isAdmin || game.created_by === userId}
         initial={statements.map((s) => ({ position: s.position, text: s.text, is_lie: s.is_lie }))}
       />
     )
