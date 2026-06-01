@@ -1,0 +1,146 @@
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { auth } from '@/lib/auth/config'
+import {
+  getVisibleSessions,
+  getDraftSessionsForAuthor,
+  getVotesForSession,
+} from '@/lib/db/two-truths'
+
+export const dynamic = 'force-dynamic'
+
+export default async function TwoTruthsDashboard() {
+  const session = await auth()
+  if (!session?.user) redirect('/auth/signin')
+
+  const userId = session.user.userId
+  const isAdmin = session.user.role === 'admin'
+
+  const [visible, pendingDrafts] = await Promise.all([
+    getVisibleSessions(),
+    getDraftSessionsForAuthor(userId),
+  ])
+
+  const active = visible.filter((s) => s.status === 'active')
+  const completed = visible.filter((s) => s.status === 'completed')
+
+  // Which active/completed sessions has this user already voted in?
+  const voteChecks = await Promise.all(
+    visible.map(async (s) => {
+      const votes = await getVotesForSession(s.id)
+      return { id: s.id, voted: votes.some((v) => v.voter_id === userId), count: votes.length }
+    })
+  )
+  const voteMap = new Map(voteChecks.map((v) => [v.id, v]))
+
+  return (
+    <main className="min-h-screen bg-canvas">
+      <div className="max-w-3xl mx-auto px-5 py-8 sm:py-12">
+        <header className="mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/20 border border-gold/40 mb-3">
+            <span className="text-base">🤥</span>
+            <span className="text-xs font-bold tracking-wide text-ink uppercase">Team Game</span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-black text-ink tracking-tight">
+            Two Truths <span className="text-ink-3 font-light">&amp;</span> A Lie
+          </h1>
+          <p className="text-ink-2 mt-2 text-base">
+            Can you spot the fib? Vote on which statement you think is the lie.
+          </p>
+          {isAdmin && (
+            <Link
+              href="/two-truths/admin"
+              className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity"
+            >
+              <span>⚙️</span> Admin dashboard
+            </Link>
+          )}
+        </header>
+
+        {pendingDrafts.length > 0 && (
+          <section className="mb-8">
+            {pendingDrafts.map((s) => (
+              <Link
+                key={s.id}
+                href={`/two-truths/${s.id}`}
+                className="block p-5 rounded-2xl bg-gold/15 border-2 border-dashed border-gold hover:bg-gold/25 transition-colors mb-3"
+              >
+                <p className="text-xs font-bold uppercase tracking-wide text-ink-2 mb-1">
+                  ✍️ Your turn to set up
+                </p>
+                <p className="text-lg font-bold text-ink">{s.title}</p>
+                <p className="text-sm text-ink-2 mt-0.5">
+                  Write your three statements before the host kicks it off →
+                </p>
+              </Link>
+            ))}
+          </section>
+        )}
+
+        <section className="mb-10">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-ink-3 mb-3">
+            🎯 Live now
+          </h2>
+          {active.length === 0 ? (
+            <p className="text-ink-3 text-sm py-6 text-center bg-surface rounded-2xl border border-warm-border">
+              No live games right now. Check back soon!
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {active.map((s) => {
+                const isAuthor = s.author_id === userId
+                const voted = voteMap.get(s.id)?.voted
+                return (
+                  <Link
+                    key={s.id}
+                    href={`/two-truths/${s.id}`}
+                    className="flex items-center justify-between gap-4 p-5 bg-surface border border-warm-border rounded-2xl hover:border-ink hover:shadow-sm transition-all group"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-lg font-bold text-ink truncate">{s.title}</p>
+                      <p className="text-sm text-ink-2 mt-0.5">by {s.author_name}</p>
+                    </div>
+                    <span
+                      className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
+                        isAuthor
+                          ? 'bg-mist text-ink'
+                          : voted
+                            ? 'bg-status-pass text-status-pass-text'
+                            : 'bg-gold text-ink group-hover:bg-ink group-hover:text-white'
+                      }`}
+                    >
+                      {isAuthor ? 'Your game' : voted ? 'Voted ✓' : 'Play →'}
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        {completed.length > 0 && (
+          <section>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-ink-3 mb-3">
+              🏁 Revealed
+            </h2>
+            <div className="space-y-2">
+              {completed.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/two-truths/${s.id}`}
+                  className="flex items-center justify-between gap-4 px-5 py-4 bg-surface/60 border border-warm-border rounded-xl hover:border-ink transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-ink truncate">{s.title}</p>
+                    <p className="text-xs text-ink-3 mt-0.5">by {s.author_name}</p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold text-ink-2">See results →</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </main>
+  )
+}

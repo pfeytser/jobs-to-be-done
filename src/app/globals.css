@@ -49,3 +49,18 @@ body {
 .prose li { margin-bottom: 0.25em; }
 .prose h3 { font-size: 0.95em; font-weight: 600; margin-bottom: 0.4em; margin-top: 0.75em; }
 .prose h3:first-child { margin-top: 0; }
+
+/* Two Truths & A Lie — reveal confetti */
+@keyframes tt-confetti-fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+.tt-confetti {
+  position: absolute;
+  top: -10vh;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  animation: tt-confetti-fall 2.6s linear forwards;
+}

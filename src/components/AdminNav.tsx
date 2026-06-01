@@ -8,12 +8,14 @@ const ADMIN_LINKS = [
   { href: '/admin/jtbd', label: 'JTBD Exercise', emoji: '🐝' },
   { href: '/qa/admin', label: 'QA Project', emoji: '🧪' },
   { href: '/admin/storyboard', label: 'Storyboard', emoji: '🎬' },
+  { href: '/two-truths/admin', label: 'Two Truths & A Lie', emoji: '🤥' },
 ]
 
 const BROWSE_LINKS = [
   { href: '/jtbd', label: 'JTBD' },
   { href: '/qa', label: 'QA' },
   { href: '/on-site', label: 'On-site' },
+  { href: '/two-truths', label: 'Two Truths' },
 ]
 
 export function AdminNav({ role }: { role: 'admin' | 'collaborator' }) {

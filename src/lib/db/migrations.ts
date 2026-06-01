@@ -282,6 +282,66 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_storyboard_cards_sort ON storyboard_cards(storyboard_id, sort_order);
     `)
 
+    // Users registry + Two Truths & A Lie feature tables
+    await turso.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS users (
+        user_id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        name TEXT,
+        image TEXT,
+        first_seen_at TEXT NOT NULL,
+        last_seen_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen_at);
+
+      CREATE TABLE IF NOT EXISTS tt_sessions (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        author_id TEXT NOT NULL,
+        author_name TEXT NOT NULL DEFAULT '',
+        author_email TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'draft',
+        created_by TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        activated_at TEXT,
+        revealed_at TEXT,
+        archived_at TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS tt_statements (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        text TEXT NOT NULL DEFAULT '',
+        is_lie INTEGER NOT NULL DEFAULT 0,
+        position INTEGER NOT NULL DEFAULT 0,
+        display_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (session_id) REFERENCES tt_sessions(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS tt_votes (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        statement_id TEXT NOT NULL,
+        voter_id TEXT NOT NULL,
+        voter_name TEXT NOT NULL DEFAULT '',
+        voter_email TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (session_id) REFERENCES tt_sessions(id) ON DELETE CASCADE,
+        FOREIGN KEY (statement_id) REFERENCES tt_statements(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_tt_sessions_status ON tt_sessions(status);
+      CREATE INDEX IF NOT EXISTS idx_tt_sessions_author ON tt_sessions(author_id);
+      CREATE INDEX IF NOT EXISTS idx_tt_statements_session ON tt_statements(session_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_tt_votes_unique ON tt_votes(session_id, voter_id);
+      CREATE INDEX IF NOT EXISTS idx_tt_votes_session ON tt_votes(session_id);
+    `)
+
     // Rename storyboard status 'edit' → 'create' (must run after storyboard tables are created)
     try {
       await turso.execute("UPDATE storyboard_use_cases SET status = 'create' WHERE status = 'edit'")

@@ -59,6 +59,19 @@ export default async function HomePage() {
             </svg>
           </Link>
 
+          <Link
+            href="/two-truths"
+            className="flex items-center justify-between w-full p-5 bg-surface border border-warm-border rounded-[16px] hover:border-ink transition-colors group"
+          >
+            <div>
+              <p className="text-base font-semibold text-ink">Two Truths &amp; A Lie 🤥</p>
+              <p className="text-sm text-ink-3 mt-0.5">Spot the fib in your teammates&apos; statements</p>
+            </div>
+            <svg className="w-5 h-5 text-ink-3 group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+
         </div>
       </div>
     </main>
