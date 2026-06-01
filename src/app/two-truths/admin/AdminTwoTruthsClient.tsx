@@ -82,7 +82,10 @@ export function AdminTwoTruthsClient({
     }
   }
 
-  async function act(id: string, action: 'activate' | 'reveal' | 'archive' | 'unarchive') {
+  async function act(
+    id: string,
+    action: 'activate' | 'reveal' | 'reopen' | 'archive' | 'unarchive'
+  ) {
     setBusy(id)
     setError(null)
     try {
@@ -180,13 +183,22 @@ export function AdminTwoTruthsClient({
             </button>
           )}
           {s.status === 'completed' && (
-            <button
-              onClick={() => act(s.id, 'archive')}
-              disabled={isBusy}
-              className="px-3 py-1.5 border border-warm-border text-ink-2 text-xs font-bold rounded-full hover:border-ink disabled:opacity-50"
-            >
-              Archive
-            </button>
+            <>
+              <button
+                onClick={() => act(s.id, 'reopen')}
+                disabled={isBusy}
+                className="px-3 py-1.5 bg-gold text-ink text-xs font-bold rounded-full hover:opacity-90 disabled:opacity-50"
+              >
+                Reopen voting
+              </button>
+              <button
+                onClick={() => act(s.id, 'archive')}
+                disabled={isBusy}
+                className="px-3 py-1.5 border border-warm-border text-ink-2 text-xs font-bold rounded-full hover:border-ink disabled:opacity-50"
+              >
+                Archive
+              </button>
+            </>
           )}
           {s.status === 'archived' && (
             <button

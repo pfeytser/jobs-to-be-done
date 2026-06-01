@@ -6,6 +6,7 @@ import {
   revealSession,
   archiveSession,
   unarchiveSession,
+  reopenSession,
   deleteSession,
   getStatements,
   getVoteForUser,
@@ -13,7 +14,7 @@ import {
 import { z } from 'zod'
 
 const PatchSchema = z.object({
-  action: z.enum(['activate', 'reveal', 'archive', 'unarchive']),
+  action: z.enum(['activate', 'reveal', 'reopen', 'archive', 'unarchive']),
 })
 
 /**
@@ -86,6 +87,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: 'Only active sessions can be revealed' }, { status: 409 })
       }
       const updated = await revealSession(id)
+      return NextResponse.json({ session: updated })
+    }
+
+    if (action === 'reopen') {
+      if (gameSession.status !== 'completed') {
+        return NextResponse.json({ error: 'Only revealed sessions can be reopened for voting' }, { status: 409 })
+      }
+      const updated = await reopenSession(id)
       return NextResponse.json({ session: updated })
     }
 
