@@ -168,8 +168,8 @@ export function ExpenseDetail({
                       <p className="text-xs text-ink-3 mt-1 leading-relaxed">{m.reason_summary}</p>
                     )}
                     <div className="flex items-center gap-3 mt-2">
-                      {m.file_storage_url ? (
-                        <a href={m.file_storage_url} target="_blank" rel="noreferrer" className="text-xs font-medium text-ink hover:underline">
+                      {m.receipt_file_id ? (
+                        <a href={`/api/expenses/receipt-file/${m.receipt_file_id}`} target="_blank" rel="noreferrer" className="text-xs font-medium text-ink hover:underline">
                           View receipt PDF ↗
                         </a>
                       ) : (

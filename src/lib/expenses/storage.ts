@@ -23,8 +23,11 @@ export async function storeReceiptBlob(
   const hash = sha256(buf)
   const safeName = fileName.replace(/[^\w.\-]+/g, '_').slice(-80) || 'receipt.pdf'
   const pathname = `expense-receipts/${hash.slice(0, 16)}-${safeName}`
+  // The project's Blob store is configured for private access; match it (same as
+  // QA screenshots). The returned url is an unguessable capability URL the owner-only
+  // detail view links to.
   const blob = await put(pathname, buf, {
-    access: 'public',
+    access: 'private',
     contentType: mimeType,
     addRandomSuffix: false,
     allowOverwrite: true,
