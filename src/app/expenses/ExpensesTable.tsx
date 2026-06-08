@@ -123,12 +123,20 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
             {money(totalAmount)} total (USD)
           </p>
         </div>
-        <Link
-          href="/expenses/import"
-          className="px-4 py-2 text-sm font-semibold bg-ink text-white rounded-[10px] hover:opacity-90 transition-opacity"
-        >
-          Import CSV
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/expenses/accounts"
+            className="px-4 py-2 text-sm font-medium bg-surface border border-warm-border text-ink rounded-[10px] hover:border-ink transition-colors"
+          >
+            Gmail accounts
+          </Link>
+          <Link
+            href="/expenses/import"
+            className="px-4 py-2 text-sm font-semibold bg-ink text-white rounded-[10px] hover:opacity-90 transition-opacity"
+          >
+            Import CSV
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
@@ -239,7 +247,11 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
                 transactions.map((t) => (
                   <tr key={t.id} className="border-b border-warm-border last:border-0 hover:bg-canvas/60">
                     <td className="px-3 py-2.5 whitespace-nowrap text-ink">{date(t.expense_date)}</td>
-                    <td className="px-3 py-2.5 text-ink font-medium">{t.merchant || '—'}</td>
+                    <td className="px-3 py-2.5 text-ink font-medium">
+                      <Link href={`/expenses/${t.id}`} className="hover:underline">
+                        {t.merchant || '—'}
+                      </Link>
+                    </td>
                     <td className="px-3 py-2.5 text-ink-2 whitespace-nowrap">{t.category || '—'}</td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap text-ink tabular-nums">{money(t.amount_usd)}</td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap text-ink tabular-nums font-medium">{money(t.receipt_amount_original)}</td>
@@ -253,7 +265,7 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-ink-2 whitespace-nowrap tabular-nums">
-                      {t.confidence_score == null ? '—' : `${Math.round(t.confidence_score * 100)}%`}
+                      {t.confidence_score == null ? '—' : `${Math.round(t.confidence_score)}%`}
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
                       {t.matched_receipt_file_id ? (

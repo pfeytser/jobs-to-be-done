@@ -42,6 +42,7 @@ export interface ExpenseTransaction {
   match_status: MatchStatus
   matched_receipt_file_id: string | null
   confidence_score: number | null
+  last_searched_at: string | null
   created_at: string
   updated_at: string
 }
@@ -86,6 +87,7 @@ function parseRow(row: Record<string, unknown>): ExpenseTransaction {
     match_status: (row.match_status as MatchStatus) ?? 'unmatched',
     matched_receipt_file_id: (row.matched_receipt_file_id as string) ?? null,
     confidence_score: num(row.confidence_score),
+    last_searched_at: (row.last_searched_at as string) ?? null,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
   }
@@ -320,4 +322,78 @@ export async function upsertPreparedRows(
   }
 
   return summary
+}
+
+// ── Phase 2: receipt-matching support ────────────────────────────────────────
+
+export async function getExpenseById(id: string): Promise<ExpenseTransaction | null> {
+  await runMigrations()
+  const result = await turso.execute({
+    sql: 'SELECT * FROM expense_transactions WHERE id = ?',
+    args: [id],
+  })
+  if (!result.rows[0]) return null
+  return parseRow(result.rows[0] as Record<string, unknown>)
+}
+
+// Pulls expenses the worker should (re)search: unmatched or possible_match/needs_review,
+// excluding terminal states (matched/no_receipt_required/ignored). Optionally throttles
+// rows searched within `staleAfterMs` and caps the batch.
+export async function getExpensesToSearch(opts: {
+  limit?: number
+  staleAfterMs?: number
+} = {}): Promise<ExpenseTransaction[]> {
+  await runMigrations()
+  const result = await turso.execute({
+    sql: `SELECT * FROM expense_transactions
+          WHERE match_status IN ('unmatched','possible_match','needs_review')
+          ORDER BY expense_date DESC, created_at DESC`,
+    args: [],
+  })
+  let rows = result.rows.map((r) => parseRow(r as Record<string, unknown>))
+  if (opts.staleAfterMs && opts.staleAfterMs > 0) {
+    const cutoff = Date.now() - opts.staleAfterMs
+    rows = rows.filter((r) => {
+      if (!r.last_searched_at) return true
+      const t = Date.parse(r.last_searched_at)
+      return Number.isNaN(t) || t < cutoff
+    })
+  }
+  if (opts.limit && opts.limit > 0) rows = rows.slice(0, opts.limit)
+  return rows
+}
+
+export async function markExpenseSearched(id: string): Promise<void> {
+  await runMigrations()
+  const now = new Date().toISOString()
+  await turso.execute({
+    sql: 'UPDATE expense_transactions SET last_searched_at = ?, updated_at = ? WHERE id = ?',
+    args: [now, now, id],
+  })
+}
+
+// Applies the canonical match state to an expense row (see the state-machine table
+// in docs/phase2-gmail-receipt-matching.md).
+export async function setExpenseMatchState(
+  id: string,
+  data: {
+    match_status: MatchStatus
+    matched_receipt_file_id?: string | null
+    confidence_score?: number | null
+  }
+): Promise<void> {
+  await runMigrations()
+  const now = new Date().toISOString()
+  await turso.execute({
+    sql: `UPDATE expense_transactions
+          SET match_status = ?, matched_receipt_file_id = ?, confidence_score = ?, updated_at = ?
+          WHERE id = ?`,
+    args: [
+      data.match_status,
+      data.matched_receipt_file_id ?? null,
+      data.confidence_score ?? null,
+      now,
+      id,
+    ],
+  })
 }

@@ -386,6 +386,81 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_expense_tx_source_file ON expense_transactions(source_file_name);
     `)
 
+    // Expense Reports Phase 2 — Gmail receipt matching
+    await turso.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS connected_email_accounts (
+        id TEXT PRIMARY KEY,
+        account_label TEXT NOT NULL DEFAULT '',
+        email_address TEXT NOT NULL DEFAULT '',
+        provider TEXT NOT NULL DEFAULT 'gmail',
+        oauth_token_reference TEXT,
+        token_scope TEXT NOT NULL DEFAULT '',
+        is_active INTEGER NOT NULL DEFAULT 1,
+        last_authorized_at TEXT,
+        last_synced_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_cea_email ON connected_email_accounts(email_address);
+      CREATE INDEX IF NOT EXISTS idx_cea_active ON connected_email_accounts(is_active);
+
+      CREATE TABLE IF NOT EXISTS receipt_files (
+        id TEXT PRIMARY KEY,
+        source_type TEXT NOT NULL DEFAULT 'manual_upload',
+        storage_provider TEXT NOT NULL DEFAULT 'vercel_blob',
+        storage_url TEXT,
+        storage_file_id TEXT,
+        file_name TEXT NOT NULL DEFAULT '',
+        mime_type TEXT NOT NULL DEFAULT '',
+        sha256_hash TEXT NOT NULL,
+        email_account_id TEXT,
+        gmail_message_id TEXT,
+        gmail_thread_id TEXT,
+        gmail_subject TEXT,
+        gmail_from TEXT,
+        gmail_to TEXT,
+        gmail_date TEXT,
+        original_source_url TEXT,
+        extracted_text TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (email_account_id) REFERENCES connected_email_accounts(id) ON DELETE SET NULL
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_receipt_files_sha ON receipt_files(sha256_hash);
+      CREATE INDEX IF NOT EXISTS idx_receipt_files_msg ON receipt_files(email_account_id, gmail_message_id);
+
+      CREATE TABLE IF NOT EXISTS receipt_matches (
+        id TEXT PRIMARY KEY,
+        expense_transaction_id TEXT NOT NULL,
+        receipt_file_id TEXT,
+        confidence_score REAL NOT NULL DEFAULT 0,
+        match_method TEXT NOT NULL DEFAULT '',
+        match_status TEXT NOT NULL DEFAULT 'candidate',
+        matched_amount_type TEXT NOT NULL DEFAULT 'unknown',
+        matched_amount_value REAL,
+        matched_email_account_id TEXT,
+        reason_summary TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (expense_transaction_id) REFERENCES expense_transactions(id) ON DELETE CASCADE,
+        FOREIGN KEY (receipt_file_id) REFERENCES receipt_files(id) ON DELETE SET NULL,
+        FOREIGN KEY (matched_email_account_id) REFERENCES connected_email_accounts(id) ON DELETE SET NULL
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_receipt_matches_unique ON receipt_matches(expense_transaction_id, receipt_file_id);
+      CREATE INDEX IF NOT EXISTS idx_receipt_matches_expense ON receipt_matches(expense_transaction_id);
+      CREATE INDEX IF NOT EXISTS idx_receipt_matches_status ON receipt_matches(match_status);
+    `)
+
+    // Phase 2 column on expense_transactions — throttle re-search
+    try {
+      await turso.execute('ALTER TABLE expense_transactions ADD COLUMN last_searched_at TEXT')
+    } catch {
+      // Column already exists
+    }
+
     // Rename storyboard status 'edit' → 'create' (must run after storyboard tables are created)
     try {
       await turso.execute("UPDATE storyboard_use_cases SET status = 'create' WHERE status = 'edit'")
