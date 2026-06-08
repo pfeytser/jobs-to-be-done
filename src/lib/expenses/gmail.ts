@@ -18,20 +18,24 @@ function gmailClient(auth: ReceiptAuthClient): gmail_v1.Gmail {
   return google.gmail({ version: 'v1', auth })
 }
 
-// Builds a Gmail search query: date window + an OR-group of merchant tokens / vendor
-// names / transactional keywords. Amounts are intentionally NOT in the query (Gmail
-// can't filter numbers reliably) — they're scored after fetching the body.
+// Builds a Gmail search query: date window + an OR-group identifying the MERCHANT —
+// its name tokens plus `from:` clauses for known sender domains. Transactional
+// keywords are deliberately NOT in the query: OR-ing "receipt/invoice/order/…" matches
+// almost every email and floods results with noise. Keywords (and amounts, which
+// Gmail can't filter reliably) are applied during scoring after fetching the body.
 export function buildGmailQuery(params: {
   tokens: string[]
+  fromDomains?: string[]
   afterIso: string // inclusive
   beforeIso: string // exclusive (Gmail before: semantics)
 }): string {
   const after = gmailDate(params.afterIso)
   const before = gmailDate(params.beforeIso)
-  const terms = Array.from(new Set(params.tokens.filter(Boolean)))
-    .map((t) => (t.includes(' ') ? `"${t}"` : t))
+  const terms = Array.from(new Set(params.tokens.filter(Boolean))).map((t) =>
+    t.includes(' ') ? `"${t}"` : t
+  )
+  for (const d of params.fromDomains ?? []) terms.push(`from:${d}`)
   const orGroup = terms.length ? `(${terms.join(' OR ')})` : ''
-  // Exclude obvious chaff; keep it permissive so we don't miss receipts.
   return `${orGroup} after:${after} before:${before} -in:chats`.trim()
 }
 

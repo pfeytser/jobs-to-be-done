@@ -34,7 +34,6 @@ import {
   scoreCandidate,
   shouldSkip,
   DEFAULT_SKIP_RULES,
-  TRANSACTIONAL_KEYWORDS,
   LINK_KEYWORDS,
   type SkipRules,
   type ScorableExpense,
@@ -111,14 +110,23 @@ interface AuthedAccount {
   client: ReceiptAuthClient
 }
 
-// Builds the per-expense Gmail search tokens.
-function queryTokens(expense: ExpenseTransaction): string[] {
+// Builds the per-expense Gmail search filter: merchant identity only (tokens +
+// sender domains). Keywords are used for scoring, never for filtering.
+//
+// When a vendor's sender domain is known, trust `from:domain` for precision and
+// drop bare single-word tokens (e.g. "united" matches "United States" and floods
+// results). Keep a multi-word canonical phrase ("united airlines") since it's
+// specific. For unknown vendors, fall back to the merchant's name tokens.
+function queryParts(expense: ExpenseTransaction): { tokens: string[]; fromDomains: string[] } {
   const profile = buildMerchantProfile(expense.merchant)
-  return [
-    ...profile.tokens,
-    profile.canonical,
-    ...TRANSACTIONAL_KEYWORDS.slice(0, 5),
-  ].filter(Boolean)
+  if (profile.senderDomains.length > 0) {
+    const phrase = profile.canonical.includes(' ') ? [profile.canonical] : []
+    return { tokens: phrase, fromDomains: profile.senderDomains }
+  }
+  return {
+    tokens: Array.from(new Set([...profile.tokens, profile.canonical].filter(Boolean))),
+    fromDomains: [],
+  }
 }
 
 function toScorable(e: ExpenseTransaction): ScorableExpense {
@@ -347,8 +355,8 @@ export async function runMatching(cfg: MatchConfig): Promise<RunSummary> {
     summary.searched++
     const afterIso = addDays(expense.expense_date, -cfg.dateWindowBeforeDays)
     const beforeIso = addDays(expense.expense_date, cfg.dateWindowAfterDays + 1)
-    const tokens = queryTokens(expense)
-    const query = buildGmailQuery({ tokens, afterIso, beforeIso })
+    const { tokens, fromDomains } = queryParts(expense)
+    const query = buildGmailQuery({ tokens, fromDomains, afterIso, beforeIso })
 
     for (const a of authed) {
       let messages: { id: string; threadId: string }[] = []
