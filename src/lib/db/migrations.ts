@@ -342,6 +342,50 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_tt_votes_session ON tt_votes(session_id);
     `)
 
+    // Expense Reports feature — Coupa expense transaction imports
+    await turso.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS expense_transactions (
+        id TEXT PRIMARY KEY,
+        report_number TEXT NOT NULL DEFAULT '',
+        report_name TEXT NOT NULL DEFAULT '',
+        statement_date TEXT,
+        card_id TEXT NOT NULL DEFAULT '',
+        expensed_by TEXT NOT NULL DEFAULT '',
+        expense_date TEXT,
+        category TEXT NOT NULL DEFAULT '',
+        item_name TEXT NOT NULL DEFAULT '',
+        merchant TEXT NOT NULL DEFAULT '',
+        amount_usd REAL,
+        receipt_amount_original REAL,
+        gl_code TEXT NOT NULL DEFAULT '',
+        account_full TEXT NOT NULL DEFAULT '',
+        reimburse_to_employee TEXT NOT NULL DEFAULT '',
+        reason TEXT NOT NULL DEFAULT '',
+        bill_back TEXT NOT NULL DEFAULT '',
+        billed_back_to TEXT NOT NULL DEFAULT '',
+        price_per_unit REAL,
+        arrival_date TEXT,
+        report_total_usd REAL,
+        report_reimburse_total_usd REAL,
+        source_file_name TEXT NOT NULL DEFAULT '',
+        source_row_hash TEXT NOT NULL,
+        raw_row_json TEXT NOT NULL DEFAULT '{}',
+        match_status TEXT NOT NULL DEFAULT 'unmatched',
+        matched_receipt_file_id TEXT,
+        confidence_score REAL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_expense_tx_hash ON expense_transactions(source_row_hash);
+      CREATE INDEX IF NOT EXISTS idx_expense_tx_expense_date ON expense_transactions(expense_date);
+      CREATE INDEX IF NOT EXISTS idx_expense_tx_statement_date ON expense_transactions(statement_date);
+      CREATE INDEX IF NOT EXISTS idx_expense_tx_match_status ON expense_transactions(match_status);
+      CREATE INDEX IF NOT EXISTS idx_expense_tx_merchant ON expense_transactions(merchant);
+      CREATE INDEX IF NOT EXISTS idx_expense_tx_report ON expense_transactions(report_number);
+      CREATE INDEX IF NOT EXISTS idx_expense_tx_source_file ON expense_transactions(source_file_name);
+    `)
+
     // Rename storyboard status 'edit' → 'create' (must run after storyboard tables are created)
     try {
       await turso.execute("UPDATE storyboard_use_cases SET status = 'create' WHERE status = 'edit'")

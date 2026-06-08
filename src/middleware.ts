@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth/config'
 import { NextResponse } from 'next/server'
 import type { NextAuthRequest } from 'next-auth'
+import { isExpenseOwner } from '@/lib/expenses/access'
 
 const PUBLIC_PATTERNS = [
   /^\/api\/auth\/.*/,
@@ -12,6 +13,12 @@ const ADMIN_PATTERNS = [
   /^\/admin(\/.*)?$/,
   /^\/qa\/admin(\/.*)?$/,
   /^\/admin\/storyboard(\/.*)?$/,
+]
+
+// Private single-owner workspace — only the owner email may reach these routes.
+const EXPENSE_OWNER_PATTERNS = [
+  /^\/expenses(\/.*)?$/,
+  /^\/api\/expenses(\/.*)?$/,
 ]
 
 export default auth(function middleware(req: NextAuthRequest) {
@@ -38,6 +45,16 @@ export default auth(function middleware(req: NextAuthRequest) {
       const role = (session.user as { role?: string }).role
       if (role !== 'admin') {
         return NextResponse.redirect(new URL('/jtbd', req.url))
+      }
+    }
+  }
+
+  // Check owner-only Expense Reports routes
+  for (const pattern of EXPENSE_OWNER_PATTERNS) {
+    if (pattern.test(pathname)) {
+      const email = (session.user as { email?: string | null }).email
+      if (!isExpenseOwner(email)) {
+        return NextResponse.redirect(new URL('/', req.url))
       }
     }
   }

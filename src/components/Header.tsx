@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { AdminNav } from './AdminNav'
+import { isExpenseOwner } from '@/lib/expenses/access'
 
 const SECTIONS: Array<{ prefix: string; label: string; href: string }> = [
   { prefix: '/jtbd', label: 'JTBD', href: '/jtbd' },
@@ -15,6 +16,9 @@ const SECTIONS: Array<{ prefix: string; label: string; href: string }> = [
   { prefix: '/admin', label: 'Admin', href: '/admin' },
 ]
 
+// Expense Reports is a private workspace visible only to its owner.
+const EXPENSE_SECTION = { prefix: '/expenses', label: 'Expense Reports', href: '/expenses' }
+
 export function Header() {
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -22,7 +26,11 @@ export function Header() {
   if (pathname.startsWith('/auth')) return null
   if (!session?.user) return null
 
-  const section = SECTIONS.find(
+  const sections = isExpenseOwner(session.user.email)
+    ? [...SECTIONS, EXPENSE_SECTION]
+    : SECTIONS
+
+  const section = sections.find(
     ({ prefix }) => pathname === prefix || pathname.startsWith(prefix + '/')
   )
 

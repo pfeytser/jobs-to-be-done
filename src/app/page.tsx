@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
+import { isExpenseOwner } from '@/lib/expenses/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +11,8 @@ export default async function HomePage() {
   if (!session?.user) {
     redirect('/auth/signin')
   }
+
+  const showExpenses = isExpenseOwner(session.user.email)
 
   return (
     <main className="min-h-screen bg-canvas flex items-center justify-center p-6">
@@ -71,6 +74,21 @@ export default async function HomePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
+
+          {showExpenses && (
+            <Link
+              href="/expenses"
+              className="flex items-center justify-between w-full p-5 bg-surface border border-warm-border rounded-[16px] hover:border-ink transition-colors group"
+            >
+              <div>
+                <p className="text-base font-semibold text-ink">Expense Reports 🧾</p>
+                <p className="text-sm text-ink-3 mt-0.5">Import Coupa exports and match receipts</p>
+              </div>
+              <svg className="w-5 h-5 text-ink-3 group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          )}
 
         </div>
       </div>
