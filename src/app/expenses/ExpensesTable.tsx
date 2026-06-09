@@ -55,6 +55,15 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>('expense_date')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const firstRender = useRef(true)
+  const [running, setRunning] = useState(false)
+  const [runResult, setRunResult] = useState<{
+    autoMatched: number
+    needsReview: number
+    skipped: number
+    filesSaved: number
+    remaining: number
+    errors: number
+  } | null>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -84,6 +93,36 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
     }
     fetchData()
   }, [fetchData])
+
+  async function runMatcher() {
+    setRunning(true)
+    try {
+      const res = await fetch('/api/expenses/match/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ max: 25 }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setRunResult({
+          autoMatched: data.summary.autoMatched,
+          needsReview: data.summary.needsReview,
+          skipped: data.summary.skipped,
+          filesSaved: data.summary.filesSaved,
+          remaining: data.remaining,
+          errors: data.summary.errors?.length ?? 0,
+        })
+        await fetchData()
+      } else {
+        setRunResult(null)
+        alert(data.error ?? 'Run failed')
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Run failed')
+    } finally {
+      setRunning(false)
+    }
+  }
 
   function setFilter(key: keyof ExpenseFilters, value: string) {
     setFilters((prev) => {
@@ -124,6 +163,19 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={runMatcher}
+            disabled={running}
+            className="px-4 py-2 text-sm font-semibold bg-gold text-ink rounded-[10px] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+          >
+            {running && (
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            )}
+            {running ? 'Searching Gmail…' : 'Run matcher'}
+          </button>
           <Link
             href="/expenses/accounts"
             className="px-4 py-2 text-sm font-medium bg-surface border border-warm-border text-ink rounded-[10px] hover:border-ink transition-colors"
@@ -138,6 +190,29 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
           </Link>
         </div>
       </div>
+
+      {/* Run result banner */}
+      {runResult && (
+        <div className="mb-4 p-3 bg-surface border border-warm-border rounded-[12px] flex items-center justify-between gap-3 text-sm">
+          <span className="text-ink">
+            Run complete: <strong>{runResult.autoMatched}</strong> auto-matched,{' '}
+            <strong>{runResult.needsReview}</strong> to review,{' '}
+            <strong>{runResult.skipped}</strong> skipped, <strong>{runResult.filesSaved}</strong> receipts saved
+            {runResult.errors > 0 && <span className="text-status-blocked-text"> · {runResult.errors} errors</span>}
+            {' · '}
+            <span className="text-ink-2">{runResult.remaining} expense{runResult.remaining !== 1 ? 's' : ''} still to process</span>
+          </span>
+          {runResult.remaining > 0 && (
+            <button
+              onClick={runMatcher}
+              disabled={running}
+              className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-ink text-white rounded-[8px] hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              Run again
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-surface border border-warm-border rounded-[14px] p-4 mb-4">

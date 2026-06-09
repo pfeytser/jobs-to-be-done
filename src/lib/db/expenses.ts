@@ -363,6 +363,16 @@ export async function getExpensesToSearch(opts: {
   return rows
 }
 
+// Count of expenses still eligible for matching (the worker's work list size).
+export async function countExpensesToSearch(): Promise<number> {
+  await runMigrations()
+  const result = await turso.execute(
+    `SELECT COUNT(*) AS c FROM expense_transactions
+     WHERE match_status IN ('unmatched','possible_match','needs_review')`
+  )
+  return Number((result.rows[0] as Record<string, unknown>).c ?? 0)
+}
+
 export async function markExpenseSearched(id: string): Promise<void> {
   await runMigrations()
   const now = new Date().toISOString()

@@ -395,7 +395,22 @@ export async function runMatching(cfg: MatchConfig): Promise<RunSummary> {
 
         if (cfg.dryRun) continue
 
-        const { receiptFileId, method } = await acquireReceiptFile(a, parsed, candidate, cfg, summary)
+        // A single failed acquisition (e.g. Playwright unavailable on serverless,
+        // or a flaky download) must not abort the whole run — fall back to a
+        // metadata-only candidate and keep going.
+        let receiptFileId: string | null = null
+        let method: MatchMethod = candidate.hasPdfAttachment
+          ? 'gmail_pdf_attachment'
+          : 'gmail_email_body_pdf'
+        try {
+          const acq = await acquireReceiptFile(a, parsed, candidate, cfg, summary)
+          receiptFileId = acq.receiptFileId
+          method = acq.method
+        } catch (e) {
+          summary.errors.push(
+            `acquire ${parsed.messageId}: ${e instanceof Error ? e.message : e}`
+          )
+        }
         await upsertReceiptMatch({
           expense_transaction_id: expense.id,
           receipt_file_id: receiptFileId,
