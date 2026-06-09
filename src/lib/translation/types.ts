@@ -48,6 +48,14 @@ export interface TranslationDataset {
   created_at: string
 }
 
+// Dataset metadata sent to the client (without the bulky source text).
+export interface DatasetMeta {
+  id: string
+  kind: DatasetKind
+  name: string
+  config: UiDatasetConfig | CsvDatasetConfig
+}
+
 export interface TranslationEdit {
   dataset_id: string
   lang: string

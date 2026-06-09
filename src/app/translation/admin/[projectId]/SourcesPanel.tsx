@@ -1,8 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import type { DatasetMeta } from './Editor'
-import type { UiDatasetConfig, CsvDatasetConfig } from '@/lib/translation/types'
+import type { DatasetMeta, UiDatasetConfig, CsvDatasetConfig } from '@/lib/translation/types'
 
 interface CsvDetect {
   fileName: string
