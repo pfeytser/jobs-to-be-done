@@ -502,6 +502,13 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_flight_trips_category ON flight_trips(category);
     `)
 
+    // RFC822 Message-ID for reliable Gmail deep links (added after initial release)
+    try {
+      await turso.execute('ALTER TABLE flight_emails ADD COLUMN rfc822_message_id TEXT')
+    } catch {
+      // Column already exists
+    }
+
     // Rename storyboard status 'edit' → 'create' (must run after storyboard tables are created)
     try {
       await turso.execute("UPDATE storyboard_use_cases SET status = 'create' WHERE status = 'edit'")

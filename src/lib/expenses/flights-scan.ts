@@ -84,6 +84,7 @@ export async function scanFlights(cfg: FlightScanConfig): Promise<FlightScanSumm
             email_account_id: account.id,
             gmail_message_id: parsed.messageId,
             gmail_thread_id: parsed.threadId,
+            rfc822_message_id: parsed.rfc822MessageId || null,
             airline: ex.airline,
             confirmation_code: ex.confirmationCode,
             travel_date: ex.travelDate,

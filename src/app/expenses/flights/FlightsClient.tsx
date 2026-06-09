@@ -17,9 +17,15 @@ function money(n: number | null): string {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 }
 
-function gmailLink(email: string, messageId: string): string {
-  // Best-effort deep link; opens the message in the right account's Gmail.
-  return `https://mail.google.com/mail/u/${encodeURIComponent(email)}/#all/${messageId}`
+function gmailLink(accountEmail: string, e: { rfc822_message_id?: string | null; gmail_subject: string | null }): string {
+  // `authuser=<email>` selects the right logged-in account by address (the /u/<index>
+  // path needs a numeric index, not an email). Searching by the RFC822 Message-ID
+  // opens the exact message reliably; fall back to a subject search.
+  const base = `https://mail.google.com/mail/?authuser=${encodeURIComponent(accountEmail)}`
+  const query = e.rfc822_message_id
+    ? `rfc822msgid:${e.rfc822_message_id}`
+    : (e.gmail_subject ?? '').slice(0, 80)
+  return `${base}#search/${encodeURIComponent(query)}`
 }
 
 export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[] }) {
@@ -174,9 +180,9 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
                             {' '}· {e.gmail_date ? new Date(e.gmail_date).toLocaleDateString() : '—'}
                             {e.amount != null && ` · ${money(e.amount)}`}
                           </span>
-                          {e.account_email && e.gmail_message_id && (
+                          {e.account_email && (
                             <a
-                              href={gmailLink(e.account_email, e.gmail_message_id)}
+                              href={gmailLink(e.account_email, e)}
                               target="_blank"
                               rel="noreferrer"
                               className="ml-2 text-ink-3 hover:text-ink hover:underline"

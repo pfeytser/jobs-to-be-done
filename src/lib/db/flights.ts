@@ -9,6 +9,7 @@ export interface FlightEmail {
   email_account_id: string
   gmail_message_id: string
   gmail_thread_id: string | null
+  rfc822_message_id: string | null
   airline: string
   confirmation_code: string | null
   travel_date: string | null
@@ -48,6 +49,7 @@ function parseEmail(r: Record<string, unknown>): FlightEmail {
     email_account_id: r.email_account_id as string,
     gmail_message_id: r.gmail_message_id as string,
     gmail_thread_id: (r.gmail_thread_id as string) ?? null,
+    rfc822_message_id: (r.rfc822_message_id as string) ?? null,
     airline: (r.airline as string) ?? '',
     confirmation_code: (r.confirmation_code as string) ?? null,
     travel_date: (r.travel_date as string) ?? null,
@@ -86,6 +88,7 @@ export async function upsertFlightEmail(data: {
   email_account_id: string
   gmail_message_id: string
   gmail_thread_id: string | null
+  rfc822_message_id: string | null
   airline: string
   confirmation_code: string | null
   travel_date: string | null
@@ -106,11 +109,13 @@ export async function upsertFlightEmail(data: {
   if (existing.rows[0]) {
     await turso.execute({
       sql: `UPDATE flight_emails SET airline=?, confirmation_code=?, travel_date=?, route=?,
-            amount=?, currency=?, gmail_subject=?, gmail_from=?, gmail_date=?, trip_key=?, updated_at=?
+            amount=?, currency=?, gmail_subject=?, gmail_from=?, gmail_date=?, trip_key=?,
+            rfc822_message_id=?, updated_at=?
             WHERE id=?`,
       args: [
         data.airline, data.confirmation_code, data.travel_date, data.route, data.amount,
-        data.currency, data.gmail_subject, data.gmail_from, data.gmail_date, data.trip_key, now,
+        data.currency, data.gmail_subject, data.gmail_from, data.gmail_date, data.trip_key,
+        data.rfc822_message_id, now,
         (existing.rows[0] as Record<string, unknown>).id as string,
       ],
     })
@@ -119,12 +124,12 @@ export async function upsertFlightEmail(data: {
   await turso.execute({
     sql: `INSERT INTO flight_emails (id, email_account_id, gmail_message_id, gmail_thread_id,
           airline, confirmation_code, travel_date, route, amount, currency, gmail_subject,
-          gmail_from, gmail_date, trip_key, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          gmail_from, gmail_date, trip_key, rfc822_message_id, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id('fe'), data.email_account_id, data.gmail_message_id, data.gmail_thread_id, data.airline,
       data.confirmation_code, data.travel_date, data.route, data.amount, data.currency,
-      data.gmail_subject, data.gmail_from, data.gmail_date, data.trip_key, now, now,
+      data.gmail_subject, data.gmail_from, data.gmail_date, data.trip_key, data.rfc822_message_id, now, now,
     ],
   })
   return true

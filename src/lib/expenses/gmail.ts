@@ -10,6 +10,7 @@ export interface GmailAttachment extends EmailAttachmentMeta {
 export interface ParsedGmailMessage extends ScorableEmail {
   messageId: string
   threadId: string
+  rfc822MessageId: string // the email's Message-ID header, for reliable Gmail deep links
   attachments: GmailAttachment[]
   links: string[]
 }
@@ -113,6 +114,7 @@ export async function getMessage(
   return {
     messageId: msg.id ?? messageId,
     threadId: msg.threadId ?? '',
+    rfc822MessageId: header(headers, 'Message-ID').replace(/^<|>$/g, ''),
     subject: header(headers, 'Subject'),
     from: header(headers, 'From'),
     to: header(headers, 'To'),
