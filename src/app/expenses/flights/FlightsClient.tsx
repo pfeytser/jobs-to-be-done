@@ -40,7 +40,6 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
   const [trips, setTrips] = useState(initialTrips)
   const [filter, setFilter] = useState<Filter>('all')
   const [scanning, setScanning] = useState(false)
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [scanMsg, setScanMsg] = useState<string | null>(null)
 
   async function refresh(cat: Filter = filter) {
@@ -81,15 +80,6 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
   function applyFilter(f: Filter) {
     setFilter(f)
     refresh(f)
-  }
-
-  function toggle(id: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
   }
 
   const shown = filter === 'all' ? trips : trips.filter((t) => t.category === filter)
@@ -145,85 +135,94 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
         </div>
       ) : (
         <div className="space-y-3">
-          {shown.map((t) => (
-            <div key={t.id} className="bg-surface border border-warm-border rounded-[14px] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-ink">{t.airlines || 'Flight'}</span>
-                    {distinctRoutes(t).map((r) => (
-                      <span key={r} className="text-xs text-ink-2">{r}</span>
-                    ))}
-                    {distinctCodes(t).map((c) => (
-                      <span key={c} className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-canvas text-ink-2">{c}</span>
-                    ))}
-                  </div>
-                  <p className="text-xs text-ink-3 mt-0.5">
-                    {t.start_date ?? '—'}
-                    {t.end_date && t.end_date !== t.start_date ? ` → ${t.end_date}` : ''}
-                    {' · '}
-                    {t.booking_count} booking{t.booking_count !== 1 ? 's' : ''} · {t.emails.length} email{t.emails.length !== 1 ? 's' : ''}
-                    {t.total_amount != null && <> · {money(t.total_amount)}</>}
-                  </p>
-
-                  {/* Expense-report status (business only) */}
-                  {t.category === 'business' && (
-                    <p className="text-xs mt-1.5">
-                      {t.has_expense ? (
-                        <span className="text-status-pass-text">✓ Expense report found: {t.matched_reports.join(', ')}</span>
-                      ) : (
-                        <span className="text-status-fail-text font-medium">✗ No expense report found — may need submitting</span>
-                      )}
-                    </p>
-                  )}
-
-                  <button onClick={() => toggle(t.id)} className="text-xs text-ink-3 hover:text-ink mt-1.5">
-                    {expanded.has(t.id) ? 'Hide emails ▴' : 'Show emails ▾'}
-                  </button>
-                  {expanded.has(t.id) && (
-                    <div className="mt-2 space-y-1.5 border-t border-warm-border pt-2">
-                      {t.emails.map((e) => (
-                        <div key={e.id} className="text-xs">
-                          <span className="text-ink">{e.gmail_subject || '(no subject)'}</span>
-                          <span className="text-ink-3">
-                            {' '}· {e.gmail_date ? new Date(e.gmail_date).toLocaleDateString() : '—'}
-                            {e.amount != null && ` · ${money(e.amount)}`}
-                          </span>
-                          {e.account_email && (
-                            <a
-                              href={gmailLink(e.account_email, e)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="ml-2 text-ink-3 hover:text-ink hover:underline"
-                            >
-                              open in Gmail ↗
-                            </a>
-                          )}
-                        </div>
-                      ))}
+          {shown.map((t) => {
+            const routes = distinctRoutes(t)
+            const codes = distinctCodes(t)
+            return (
+              <div key={t.id} className="bg-surface border border-warm-border rounded-[14px] p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    {/* Headline: date · route · airline */}
+                    <div className="text-base font-bold text-ink">
+                      {t.start_date ?? 'Date unknown'}
+                      {t.end_date && t.end_date !== t.start_date ? ` – ${t.end_date}` : ''}
                     </div>
-                  )}
+                    <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                      <span className="text-sm font-semibold text-ink">{t.airlines || 'Flight'}</span>
+                      {routes.length > 0 ? (
+                        routes.map((r) => (
+                          <span key={r} className="text-sm text-ink-2">{r}</span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-ink-3">route n/a</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap mt-1 text-xs text-ink-3">
+                      {codes.map((c) => (
+                        <span key={c} className="font-mono px-1.5 py-0.5 rounded bg-canvas text-ink-2">{c}</span>
+                      ))}
+                      <span>
+                        {t.booking_count} booking{t.booking_count !== 1 ? 's' : ''} · {t.emails.length} email{t.emails.length !== 1 ? 's' : ''}
+                        {t.total_amount != null && <> · {money(t.total_amount)}</>}
+                      </span>
+                    </div>
+                    {t.category === 'business' && (
+                      <p className="text-xs mt-1.5">
+                        {t.has_expense ? (
+                          <span className="text-status-pass-text">✓ Expense report found: {t.matched_reports.join(', ')}</span>
+                        ) : (
+                          <span className="text-status-fail-text font-medium">✗ No expense report found — may need submitting</span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Exposed category buttons */}
+                  <div className="shrink-0 flex gap-1">
+                    {(['personal', 'business', 'uncategorized'] as TripCategory[]).map((c) => {
+                      const active = t.category === c
+                      return (
+                        <button
+                          key={c}
+                          onClick={() => setCategory(t.id, c)}
+                          className={`px-2.5 py-1.5 text-xs font-medium rounded-[8px] border transition-colors ${
+                            active
+                              ? 'bg-ink text-white border-ink'
+                              : 'bg-surface text-ink-2 border-warm-border hover:border-ink'
+                          }`}
+                        >
+                          {CATEGORY_LABELS[c]}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
-                {/* Category selector */}
-                <select
-                  value={t.category}
-                  onChange={(e) => setCategory(t.id, e.target.value as TripCategory)}
-                  className={`shrink-0 px-2.5 py-1.5 text-xs font-medium border rounded-[8px] outline-none focus:border-ink ${
-                    t.category === 'business'
-                      ? 'bg-mist border-warm-border text-ink'
-                      : t.category === 'personal'
-                      ? 'bg-canvas border-warm-border text-ink-2'
-                      : 'bg-surface border-warm-border text-ink-3'
-                  }`}
-                >
-                  <option value="uncategorized">Uncategorized</option>
-                  <option value="business">Business</option>
-                  <option value="personal">Personal</option>
-                </select>
+                {/* Supporting emails — always visible */}
+                <div className="mt-3 border-t border-warm-border pt-2 space-y-1.5">
+                  {t.emails.map((e) => (
+                    <div key={e.id} className="text-xs flex items-baseline gap-2 flex-wrap">
+                      <span className="text-ink-3 tabular-nums shrink-0">
+                        {e.gmail_date ? new Date(e.gmail_date).toLocaleDateString() : '—'}
+                      </span>
+                      <span className="text-ink min-w-0">{e.gmail_subject || '(no subject)'}</span>
+                      {e.amount != null && <span className="text-ink-3 shrink-0">{money(e.amount)}</span>}
+                      {e.account_email && (
+                        <a
+                          href={gmailLink(e.account_email, e)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-ink-3 hover:text-ink hover:underline shrink-0"
+                        >
+                          open in Gmail ↗
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
