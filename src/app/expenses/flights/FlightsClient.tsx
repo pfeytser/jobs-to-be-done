@@ -17,6 +17,13 @@ function money(n: number | null): string {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 }
 
+function distinctRoutes(t: TripWithEmails): string[] {
+  return Array.from(new Set(t.emails.map((e) => e.route).filter((r): r is string => !!r)))
+}
+function distinctCodes(t: TripWithEmails): string[] {
+  return Array.from(new Set(t.emails.map((e) => e.confirmation_code).filter((c): c is string => !!c)))
+}
+
 function gmailLink(accountEmail: string, e: { rfc822_message_id?: string | null; gmail_subject: string | null }): string {
   // `authuser=<email>` selects the right logged-in account by address (the /u/<index>
   // path needs a numeric index, not an email). Searching by the RFC822 Message-ID
@@ -144,16 +151,18 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-semibold text-ink">{t.airlines || 'Flight'}</span>
-                    {t.emails[0]?.route && <span className="text-xs text-ink-2">{t.emails[0].route}</span>}
-                    {t.emails[0]?.confirmation_code && (
-                      <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-canvas text-ink-2">{t.emails[0].confirmation_code}</span>
-                    )}
+                    {distinctRoutes(t).map((r) => (
+                      <span key={r} className="text-xs text-ink-2">{r}</span>
+                    ))}
+                    {distinctCodes(t).map((c) => (
+                      <span key={c} className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-canvas text-ink-2">{c}</span>
+                    ))}
                   </div>
                   <p className="text-xs text-ink-3 mt-0.5">
                     {t.start_date ?? '—'}
                     {t.end_date && t.end_date !== t.start_date ? ` → ${t.end_date}` : ''}
                     {' · '}
-                    {t.emails.length} email{t.emails.length !== 1 ? 's' : ''}
+                    {t.booking_count} booking{t.booking_count !== 1 ? 's' : ''} · {t.emails.length} email{t.emails.length !== 1 ? 's' : ''}
                     {t.total_amount != null && <> · {money(t.total_amount)}</>}
                   </p>
 

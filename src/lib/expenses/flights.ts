@@ -65,16 +65,18 @@ const MARKETING_MARKERS = [
 const CONFIRMATION_RE =
   /(?:confirmation(?:\s*(?:number|code|#))?|record locator|booking reference|reservation code|pnr)\s*[:#-]?\s*([A-Z0-9]{5,7})\b/i
 const ROUTE_RE = /\b([A-Z]{3})\b\s*(?:to|-|–|—|→|>|✈)\s*\b([A-Z]{3})\b/
-// Only currency-prefixed amounts — bare numbers in airline emails are confirmation
-// codes, mileage balances, ticket numbers, times, etc., not fares.
-const CURRENCY_AMOUNT_RE = /(?:US\$|USD|CA\$|CAD|\$|€|£)\s?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?|\d+(?:\.\d{2})?)/gi
+// Fare extraction: only trust a currency amount that sits next to a fare label
+// ("total", "fare", "amount paid", etc.). Airline emails are full of large numbers
+// (travel credits, points, ticket numbers) that aren't the fare, so we do NOT take
+// the max of all currency amounts — only labeled ones, capped to a plausible range.
+const LABELED_FARE_RE =
+  /(?:fare\s*total|trip\s*(?:cost|total)|grand\s*total|amount\s*(?:paid|charged|due)|total\s*(?:cost|charged|paid|fare|price)?|you\s*paid|total)\b[^$€£\d]{0,40}(?:US\$|USD|CA\$|CAD|\$|€|£)\s?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?|\d+(?:\.\d{2})?)/gi
 
-// Best-effort fare: the largest currency-prefixed amount within a plausible range.
 function fareAmount(text: string): number | null {
   const vals: number[] = []
-  for (const m of text.matchAll(CURRENCY_AMOUNT_RE)) {
+  for (const m of text.matchAll(LABELED_FARE_RE)) {
     const n = parseFloat(m[1].replace(/,/g, ''))
-    if (!Number.isNaN(n) && n > 0 && n <= 15000) vals.push(n)
+    if (!Number.isNaN(n) && n > 0 && n <= 10000) vals.push(n)
   }
   return vals.length ? Math.max(...vals) : null
 }
