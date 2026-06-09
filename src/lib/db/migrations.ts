@@ -461,6 +461,47 @@ export async function runMigrations(): Promise<void> {
       // Column already exists
     }
 
+    // Expense Reports — Flights tracker (airline emails grouped into trips)
+    await turso.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS flight_emails (
+        id TEXT PRIMARY KEY,
+        email_account_id TEXT NOT NULL,
+        gmail_message_id TEXT NOT NULL,
+        gmail_thread_id TEXT,
+        airline TEXT NOT NULL DEFAULT '',
+        confirmation_code TEXT,
+        travel_date TEXT,
+        route TEXT,
+        amount REAL,
+        currency TEXT,
+        gmail_subject TEXT,
+        gmail_from TEXT,
+        gmail_date TEXT,
+        trip_key TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (email_account_id) REFERENCES connected_email_accounts(id) ON DELETE CASCADE
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_flight_emails_msg ON flight_emails(email_account_id, gmail_message_id);
+      CREATE INDEX IF NOT EXISTS idx_flight_emails_trip ON flight_emails(trip_key);
+
+      CREATE TABLE IF NOT EXISTS flight_trips (
+        id TEXT PRIMARY KEY,
+        trip_key TEXT NOT NULL,
+        label TEXT NOT NULL DEFAULT '',
+        start_date TEXT,
+        end_date TEXT,
+        airlines TEXT NOT NULL DEFAULT '',
+        category TEXT NOT NULL DEFAULT 'uncategorized',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_flight_trips_key ON flight_trips(trip_key);
+      CREATE INDEX IF NOT EXISTS idx_flight_trips_category ON flight_trips(category);
+    `)
+
     // Rename storyboard status 'edit' → 'create' (must run after storyboard tables are created)
     try {
       await turso.execute("UPDATE storyboard_use_cases SET status = 'create' WHERE status = 'edit'")

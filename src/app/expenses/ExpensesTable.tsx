@@ -177,6 +177,12 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
             {running ? 'Searching Gmail…' : 'Run matcher'}
           </button>
           <Link
+            href="/expenses/flights"
+            className="px-4 py-2 text-sm font-medium bg-surface border border-warm-border text-ink rounded-[10px] hover:border-ink transition-colors"
+          >
+            ✈ Flights
+          </Link>
+          <Link
             href="/expenses/accounts"
             className="px-4 py-2 text-sm font-medium bg-surface border border-warm-border text-ink rounded-[10px] hover:border-ink transition-colors"
           >
