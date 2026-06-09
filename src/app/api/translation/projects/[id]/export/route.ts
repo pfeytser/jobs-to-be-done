@@ -3,7 +3,7 @@ import JSZip from 'jszip'
 import { auth } from '@/lib/auth/config'
 import { getProject, listDatasets, getDatasetEdits } from '@/lib/db/translation'
 import { projectLanguages } from '@/lib/translation/entries'
-import { rebuildTargetJson, targetValueMap, flattenStrings } from '@/lib/translation/json'
+import { rebuildTargetJson, targetValueMap, flattenStrings, buildChangesPatch } from '@/lib/translation/json'
 import { parseCsv, rebuildCsvMultiLang, isTrivialValue } from '@/lib/translation/csv'
 import { missingTokens } from '@/lib/translation/placeholders'
 import type { UiDatasetConfig, CsvDatasetConfig, TranslationDataset } from '@/lib/translation/types'
@@ -20,6 +20,33 @@ interface OutFile {
 
 function sanitize(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'export'
+}
+
+// Build a changes-only patch file per language for a UI dataset (Devin handoff).
+async function buildUiPatchFiles(ds: TranslationDataset, langs: string[]): Promise<OutFile[]> {
+  const config = ds.config as UiDatasetConfig
+  const enMap = new Map(flattenStrings(JSON.parse(ds.english_source)).map((l) => [l.path, l.value]))
+  const out: OutFile[] = []
+  for (const lang of langs) {
+    const target = config.targets[lang]
+    if (!target) continue
+    const original = targetValueMap(target.text)
+    const edits = await getDatasetEdits(ds.id, lang)
+    const built = buildChangesPatch(ds.english_source, original, edits)
+    if (!built) continue
+    let warnings = 0
+    for (const [path, value] of edits) {
+      if ((original.get(path) ?? '') !== value && missingTokens(enMap.get(path) ?? '', value).length > 0) warnings++
+    }
+    out.push({
+      path: `${sanitize(ds.name)}/${lang}.changes.json`,
+      content: JSON.stringify(built.patch, null, 2) + '\n',
+      edited: built.changedCount,
+      blank: 0,
+      warnings,
+    })
+  }
+  return out
 }
 
 // Count edited / blank / placeholder-warning strings for a UI target (brief FR-21).
@@ -106,15 +133,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const langParam = req.nextUrl.searchParams.get('lang')
   const langs = langParam ? [langParam] : allLangs
   const fillEnglish = req.nextUrl.searchParams.get('fillEnglish') === '1'
+  const patchMode = req.nextUrl.searchParams.get('format') === 'patch'
 
   if (langs.length === 0) {
     return NextResponse.json({ error: 'No languages to export.' }, { status: 400 })
   }
 
   const files: OutFile[] = []
+  const notes: string[] = []
   for (const ds of datasets) {
     if (ds.kind === 'ui') {
-      files.push(...(await buildUiFiles(ds, langs, fillEnglish)))
+      files.push(...(patchMode ? await buildUiPatchFiles(ds, langs) : await buildUiFiles(ds, langs, fillEnglish)))
+    } else if (patchMode) {
+      // The changes-only JSON patch is for UI dictionaries; CSV/DB content uses the
+      // column-stable CSV export instead.
+      notes.push(`Skipped CSV source "${ds.name}" — use the full CSV export for DB content.`)
     } else {
       const f = await buildCsvFile(ds, langs)
       if (f) files.push(f)
@@ -122,11 +155,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   if (files.length === 0) {
-    return NextResponse.json({ error: 'Nothing to export for the selected language(s).' }, { status: 400 })
+    const msg = patchMode
+      ? 'No edited UI strings to export for the selected language(s).'
+      : 'Nothing to export for the selected language(s).'
+    return NextResponse.json({ error: msg, notes }, { status: 400 })
   }
 
   const summary = {
     files: files.map((f) => ({ name: f.path, edited: f.edited, blank: f.blank, warnings: f.warnings })),
+    notes,
   }
   const summaryHeader = encodeURIComponent(JSON.stringify(summary))
 
@@ -147,7 +184,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const zip = new JSZip()
   for (const f of files) zip.file(f.path, f.content)
   const blob = await zip.generateAsync({ type: 'uint8array' })
-  const zipName = `${sanitize(project.name)}${langParam ? '-' + sanitize(langParam) : ''}-translations.zip`
+  const zipName = `${sanitize(project.name)}${langParam ? '-' + sanitize(langParam) : ''}-${patchMode ? 'translation-changes' : 'translations'}.zip`
   return new NextResponse(blob as unknown as BodyInit, {
     headers: {
       'Content-Type': 'application/zip',

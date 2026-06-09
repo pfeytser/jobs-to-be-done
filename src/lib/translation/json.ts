@@ -117,6 +117,65 @@ export function rebuildTargetJson(
   return JSON.stringify(clone, null, 2) + '\n'
 }
 
+// Build a minimal "changes-only" patch for handoff to a coding agent (e.g. Devin):
+// a nested partial of the target file containing ONLY the keys whose value was edited
+// (differs from the originally loaded target). It mirrors the English structure so it
+// deep-merges cleanly into the repo's locale file, and — because untranslated keys are
+// never included — it can't introduce blank strings. An array that contains any change
+// is emitted whole (valid JSON, never sparse). Returns null if nothing changed.
+export function buildChangesPatch(
+  englishText: string,
+  originalTarget: Map<string, string>,
+  edits: Map<string, string>,
+): { patch: Json; changedCount: number } | null {
+  const changed = new Set<string>()
+  for (const [path, value] of edits) {
+    if ((originalTarget.get(path) ?? '') !== value) changed.add(path)
+  }
+  if (changed.size === 0) return null
+
+  const english: Json = JSON.parse(englishText)
+  const currentVal = (path: string): string => (edits.has(path) ? edits.get(path)! : originalTarget.get(path) ?? '')
+  const changedUnder = (prefix: string): boolean => {
+    for (const c of changed) if (c === prefix || c.startsWith(prefix + '.')) return true
+    return false
+  }
+
+  // Rebuild an entire subtree with current values (used when an array has a change).
+  const buildSubtree = (node: Json, path: string): Json => {
+    if (typeof node === 'string') return currentVal(path)
+    if (Array.isArray(node)) return node.map((c, i) => buildSubtree(c, path ? `${path}.${i}` : String(i)))
+    if (isPlainObject(node)) {
+      const o: { [k: string]: Json } = {}
+      for (const k of Object.keys(node)) o[k] = buildSubtree(node[k], path ? `${path}.${k}` : k)
+      return o
+    }
+    return node
+  }
+
+  const prune = (node: Json, path: string): { include: boolean; value: Json } => {
+    if (typeof node === 'string') return { include: changed.has(path), value: currentVal(path) }
+    if (Array.isArray(node)) {
+      return changedUnder(path) ? { include: true, value: buildSubtree(node, path) } : { include: false, value: null }
+    }
+    if (isPlainObject(node)) {
+      const o: { [k: string]: Json } = {}
+      let any = false
+      for (const k of Object.keys(node)) {
+        const r = prune(node[k], path ? `${path}.${k}` : k)
+        if (r.include) {
+          o[k] = r.value
+          any = true
+        }
+      }
+      return { include: any, value: o }
+    }
+    return { include: false, value: null }
+  }
+
+  return { patch: prune(english, '').value, changedCount: changed.size }
+}
+
 // Parse a target file into a path->string map of its string leaves.
 export function targetValueMap(targetText: string): Map<string, string> {
   const map = new Map<string, string>()
