@@ -3,10 +3,13 @@ import type { ParsedGmailMessage } from './gmail'
 
 // Known airlines: sender domains (for precise Gmail search) + a name regex (to label
 // emails that arrive via an OTA or a domain we didn't list).
+// `re` is the fallback name match for emails NOT from a known airline domain. It must
+// be airline-specific — bare words like "united"/"delta" match "United States",
+// "Delta Dental", etc., so require the full carrier name.
 export const AIRLINES: { name: string; domains: string[]; re: RegExp }[] = [
-  { name: 'United', domains: ['united.com'], re: /\bunited airlines\b|\bunited\b/i },
+  { name: 'United', domains: ['united.com'], re: /united airlines/i },
   { name: 'American Airlines', domains: ['aa.com', 'americanairlines.com'], re: /american airlines/i },
-  { name: 'Delta', domains: ['delta.com'], re: /\bdelta air|delta\b/i },
+  { name: 'Delta', domains: ['delta.com'], re: /delta air\s?lines/i },
   { name: 'Southwest', domains: ['southwest.com'], re: /southwest/i },
   { name: 'Air Canada', domains: ['aircanada.com', 'aircanada.ca'], re: /air canada/i },
   { name: 'JetBlue', domains: ['jetblue.com'], re: /jetblue/i },
@@ -109,14 +112,21 @@ function fromDomain(from: string): string {
   return m ? m[1] : ''
 }
 
-function detectAirline(from: string, text: string): string | null {
+// Airline identified by the SENDER domain — high confidence the email is from the
+// airline itself.
+function airlineFromDomain(from: string): string | null {
   const domain = fromDomain(from)
   for (const a of AIRLINES) {
     if (a.domains.some((d) => domain.endsWith(d))) return a.name
   }
-  const hay = `${from}\n${text}`
+  return null
+}
+
+// Airline identified by name in the text — used for OTA/forwarded mail not sent
+// from an airline domain. Requires the full carrier name (see AIRLINES.re).
+function airlineFromName(text: string): string | null {
   for (const a of AIRLINES) {
-    if (a.re.test(hay)) return a.name
+    if (a.re.test(text)) return a.name
   }
   return null
 }
@@ -144,7 +154,9 @@ export function extractFlight(msg: ParsedGmailMessage): FlightExtract {
   const hay = `${msg.subject}\n${body}`
   const lower = hay.toLowerCase()
 
-  const airline = detectAirline(msg.from, hay)
+  const airlineDom = airlineFromDomain(msg.from)
+  const airlineName = airlineFromName(hay)
+  const airline = airlineDom ?? airlineName
   const code = hay.match(CONFIRMATION_RE)?.[1]?.toUpperCase() ?? null
   const route = extractRoute(hay)
   const travelDate = extractTravelDate(body) ?? (msg.dateIso ? msg.dateIso.slice(0, 10) : null)
@@ -152,22 +164,24 @@ export function extractFlight(msg: ParsedGmailMessage): FlightExtract {
 
   const looksMarketing = MARKETING_MARKERS.some((k) => lower.includes(k))
   const subjectLower = msg.subject.toLowerCase()
-  // Subjects that are airline mail but NOT a flight itinerary — explicitly excluded.
+  // Airline mail that is NOT a flight itinerary — explicitly excluded (seat changes,
+  // aircraft-info notices, wifi, miles statements, surveys, etc.).
   const NEGATIVE_SUBJECT =
-    /account information|mileageplus|skymiles|rapid rewards (statement|account)|tell us how|how did we do|wi-?fi|entertainment options|what to know|travel tips|trusted travel|miles? (expir|balance)|points? (expir|balance)|survey|feedback|newsletter|don'?t miss the bus|offsite (registration|transportation)/i
-  // A strong itinerary signal in the subject line.
-  const STRONG_SUBJECT =
-    /itinerary|e-?ticket|boarding pass|booking confirmation|trip confirmation|reservation confirmation|flight .*confirmation|booking reference|you'?re going to|check in/i
-  const strongSubject = STRONG_SUBJECT.test(subjectLower)
+    /account information|mileageplus|skymiles|rapid rewards (statement|account)|tell us how|how did we do|wi-?fi|entertainment options|what to know|travel tips|trusted travel|miles? (expir|balance)|points? (expir|balance)|survey|feedback|newsletter|don'?t miss the bus|offsite (registration|transportation)|seat change|aircraft information|plan ahead|construction/i
+  const strongSubject =
+    /itinerary|e-?ticket|boarding pass|booking confirmation|trip confirmation|reservation confirmation|flight .*confirmation|booking reference|you'?re going to|check in/i.test(
+      subjectLower
+    )
 
-  // A real flight email: names an airline (or has a route), is clearly a booking
-  // (has a confirmation code, a route, or a strong itinerary subject), is not an
-  // excluded airline-newsletter/account subject, and isn't purely promotional.
+  // A real flight email: it's airline-related (named airline or airport route) AND
+  // it's actually a booking (a confirmation code, a route, or a strong itinerary
+  // subject). With airline detection requiring the full carrier name, a conference-
+  // room "Booking Confirmation" that merely says "United States" no longer qualifies.
   const isFlight =
-    (!!airline || !!route) &&
-    (!!code || !!route || strongSubject) &&
     !NEGATIVE_SUBJECT.test(subjectLower) &&
-    !(looksMarketing && !code && !route)
+    !(looksMarketing && !code) &&
+    (!!airline || !!route) &&
+    (!!code || !!route || strongSubject)
 
   return {
     airline: airline ?? 'Unknown airline',
