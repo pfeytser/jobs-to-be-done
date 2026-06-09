@@ -22,7 +22,10 @@ const PROCESSOR_PREFIXES = [
 const ALIASES: { match: RegExp; canonical: string; domains: string[]; tokens?: string[] }[] = [
   { match: /\buber\s*eats|ubereats\b/i, canonical: 'uber eats', domains: ['uber.com'], tokens: ['uber', 'eats'] },
   { match: /\buber\b|uber\s*\*?trip|uber canada/i, canonical: 'uber', domains: ['uber.com'] },
-  { match: /\blyft\b/i, canonical: 'lyft', domains: ['lyft.com'] },
+  // Lyft sends ride receipts from lyftmail.com, not lyft.com — the original miss.
+  { match: /\blyft\b/i, canonical: 'lyft', domains: ['lyftmail.com', 'lyft.com', 'email.lyft.com'] },
+  { match: /\bamtrak\b/i, canonical: 'amtrak', domains: ['amtrak.com'] },
+  { match: /\balamo\b/i, canonical: 'alamo', domains: ['goalamo.com'] },
   { match: /air\s*can|air canada/i, canonical: 'air canada', domains: ['aircanada.com', 'aircanada.ca'] },
   { match: /\bunited\b|ua inflt|ua\b/i, canonical: 'united airlines', domains: ['united.com'] },
   { match: /\bsouthwest\b|swa inflight|swa\b/i, canonical: 'southwest', domains: ['southwest.com'] },

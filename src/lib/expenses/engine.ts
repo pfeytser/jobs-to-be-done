@@ -110,23 +110,38 @@ interface AuthedAccount {
   client: ReceiptAuthClient
 }
 
-// Builds the per-expense Gmail search filter: merchant identity only (tokens +
-// sender domains). Keywords are used for scoring, never for filtering.
-//
-// When a vendor's sender domain is known, trust `from:domain` for precision and
-// drop bare single-word tokens (e.g. "united" matches "United States" and floods
-// results). Keep a multi-word canonical phrase ("united airlines") since it's
-// specific. For unknown vendors, fall back to the merchant's name tokens.
-function queryParts(expense: ExpenseTransaction): { tokens: string[]; fromDomains: string[] } {
+// Common single words that are too generic to use as a Gmail search token on their
+// own (they match unrelated mail). When a token is generic we lean on the sender
+// domain and/or a multi-word canonical phrase instead.
+const GENERIC_TOKENS = new Set([
+  'united', 'national', 'general', 'american', 'air', 'can', 'store', 'card',
+  'office', 'group', 'the', 'order', 'noodle',
+])
+
+// Builds up to two complementary Gmail queries per expense, for maximum recall:
+//   1. A precise `from:domain` query (when the vendor's sender domain is known) —
+//      guarantees the vendor's own receipts are in the result set.
+//   2. A name-token query — catches receipts sent by a billing PROCESSOR (e.g.
+//      Stripe/Paddle for OpenAI/LottieLab) whose body mentions the merchant, and
+//      vendors with no known domain. Generic single words are dropped to avoid noise.
+// Running them separately means generic-word noise can't crowd the domain hits out
+// of a single capped result set. Results are merged + deduped by the caller.
+function buildQueries(expense: ExpenseTransaction, afterIso: string, beforeIso: string): string[] {
   const profile = buildMerchantProfile(expense.merchant)
+  const queries: string[] = []
+
   if (profile.senderDomains.length > 0) {
-    const phrase = profile.canonical.includes(' ') ? [profile.canonical] : []
-    return { tokens: phrase, fromDomains: profile.senderDomains }
+    queries.push(buildGmailQuery({ tokens: [], fromDomains: profile.senderDomains, afterIso, beforeIso }))
   }
-  return {
-    tokens: Array.from(new Set([...profile.tokens, profile.canonical].filter(Boolean))),
-    fromDomains: [],
+
+  const distinctive = Array.from(
+    new Set([...profile.tokens, profile.canonical].filter((t) => t && !GENERIC_TOKENS.has(t)))
+  )
+  if (distinctive.length > 0) {
+    queries.push(buildGmailQuery({ tokens: distinctive, afterIso, beforeIso }))
   }
+
+  return Array.from(new Set(queries)) // dedupe identical query strings
 }
 
 function toScorable(e: ExpenseTransaction): ScorableExpense {
@@ -355,20 +370,29 @@ export async function runMatching(cfg: MatchConfig): Promise<RunSummary> {
     summary.searched++
     const afterIso = addDays(expense.expense_date, -cfg.dateWindowBeforeDays)
     const beforeIso = addDays(expense.expense_date, cfg.dateWindowAfterDays + 1)
-    const { tokens, fromDomains } = queryParts(expense)
-    const query = buildGmailQuery({ tokens, fromDomains, afterIso, beforeIso })
+    const queries = buildQueries(expense, afterIso, beforeIso)
 
     for (const a of authed) {
-      let messages: { id: string; threadId: string }[] = []
-      try {
-        messages = await withRetry(
-          () => searchMessages(a.client, query, cfg.messagesPerQuery),
-          'search',
-          cfg.log
-        )
-      } catch (e) {
-        summary.errors.push(`search ${a.account.email_address}: ${e instanceof Error ? e.message : e}`)
-        continue
+      // Run each query and merge unique messages so a domain hit and a body/token
+      // hit are both considered, scored once each.
+      const seen = new Set<string>()
+      const messages: { id: string; threadId: string }[] = []
+      for (const query of queries) {
+        try {
+          const found = await withRetry(
+            () => searchMessages(a.client, query, cfg.messagesPerQuery),
+            'search',
+            cfg.log
+          )
+          for (const m of found) {
+            if (!seen.has(m.id)) {
+              seen.add(m.id)
+              messages.push(m)
+            }
+          }
+        } catch (e) {
+          summary.errors.push(`search ${a.account.email_address}: ${e instanceof Error ? e.message : e}`)
+        }
       }
 
       for (const m of messages) {
