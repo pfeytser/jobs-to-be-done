@@ -500,6 +500,48 @@ export async function runMigrations(): Promise<void> {
 
       CREATE UNIQUE INDEX IF NOT EXISTS idx_flight_trips_key ON flight_trips(trip_key);
       CREATE INDEX IF NOT EXISTS idx_flight_trips_category ON flight_trips(category);
+
+      -- Translation Review & Editing tool --------------------------------------
+      CREATE TABLE IF NOT EXISTS translation_projects (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      -- One loaded body of copy. Kind is 'ui' (JSON dictionaries) or 'csv' (DB export).
+      -- english_source holds the ORIGINAL source artifact verbatim: the en.json text
+      -- for UI datasets, or the full CSV text for DB datasets. config_json holds the
+      -- per-language target files (UI) or the column mapping (CSV). Exports are always
+      -- rebuilt from these originals, so structure can never drift (see brief §8).
+      CREATE TABLE IF NOT EXISTS translation_datasets (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        name TEXT NOT NULL,
+        english_source TEXT NOT NULL,
+        config_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (project_id) REFERENCES translation_projects(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_translation_datasets_project ON translation_datasets(project_id);
+
+      -- An edit is a single target-language string value, stored as a diff against the
+      -- originally loaded value. entry_key is the JSON key-path (UI) or row index (CSV).
+      CREATE TABLE IF NOT EXISTS translation_edits (
+        id TEXT PRIMARY KEY,
+        dataset_id TEXT NOT NULL,
+        lang TEXT NOT NULL,
+        entry_key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        updated_by TEXT,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (dataset_id) REFERENCES translation_datasets(id) ON DELETE CASCADE
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_translation_edits_unique
+        ON translation_edits(dataset_id, lang, entry_key);
     `)
 
     // RFC822 Message-ID for reliable Gmail deep links (added after initial release)
@@ -526,6 +568,19 @@ export async function runMigrations(): Promise<void> {
       await turso.execute('ALTER TABLE qa_results ADD COLUMN acknowledged_by TEXT')
     } catch {
       // Column already exists
+    }
+
+    // Seed the two default translation projects. Fixed ids + INSERT OR IGNORE means a
+    // rename sticks and re-runs never duplicate; only ever inserted when absent.
+    {
+      const now = new Date().toISOString()
+      await turso.batch(
+        [
+          { sql: 'INSERT OR IGNORE INTO translation_projects (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)', args: ['web', 'Web', now, now] },
+          { sql: 'INSERT OR IGNORE INTO translation_projects (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)', args: ['mobile', 'Mobile app', now, now] },
+        ],
+        'write',
+      )
     }
 
     console.log('[migrations] Turso migrations completed successfully')
