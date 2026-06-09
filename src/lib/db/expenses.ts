@@ -324,6 +324,71 @@ export async function upsertPreparedRows(
   return summary
 }
 
+// ── Coupa upload worklist ────────────────────────────────────────────────────
+
+export interface CoupaUploadItem {
+  expense_id: string
+  report_number: string
+  report_name: string
+  expense_date: string | null
+  merchant: string
+  amount_usd: number | null
+  receipt_amount_original: number | null
+  confidence_score: number | null
+  receipt_file_id: string
+  mime_type: string
+  suggested_filename: string
+}
+
+// Filename a receipt should take when uploaded to Coupa: report_merchant_amount.ext.
+export function coupaReceiptFilename(
+  report: string,
+  merchant: string,
+  amount: number | null,
+  mime: string
+): string {
+  const m = (merchant || 'receipt').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'receipt'
+  const a = amount != null ? Math.abs(amount).toFixed(2) : 'na'
+  const ext = mime === 'image/png' ? 'png' : mime === 'image/jpeg' ? 'jpg' : 'pdf'
+  return `${report || 'noreport'}_${m}_${a}.${ext}`
+}
+
+// Every confirmed (matched) expense joined to its receipt file — the worklist for
+// uploading receipts to Coupa. Only confirmed matches appear; possible/unmatched
+// rows are excluded until confirmed on the transactions page.
+export async function listCoupaUploadItems(): Promise<CoupaUploadItem[]> {
+  await runMigrations()
+  const res = await turso.execute(`
+    SELECT e.id AS expense_id, e.report_number, e.report_name, e.expense_date, e.merchant,
+           e.amount_usd, e.receipt_amount_original, e.confidence_score,
+           f.id AS receipt_file_id, f.mime_type AS mime_type
+    FROM expense_transactions e
+    JOIN receipt_files f ON e.matched_receipt_file_id = f.id
+    WHERE e.match_status = 'matched' AND e.matched_receipt_file_id IS NOT NULL
+    ORDER BY e.report_number DESC, e.expense_date ASC
+  `)
+  return res.rows.map((r) => {
+    const x = r as Record<string, unknown>
+    const report = str(x.report_number)
+    const merchant = str(x.merchant)
+    const amount = num(x.amount_usd)
+    const mime = str(x.mime_type) || 'application/pdf'
+    return {
+      expense_id: x.expense_id as string,
+      report_number: report,
+      report_name: str(x.report_name),
+      expense_date: (x.expense_date as string) ?? null,
+      merchant,
+      amount_usd: amount,
+      receipt_amount_original: num(x.receipt_amount_original),
+      confidence_score: num(x.confidence_score),
+      receipt_file_id: x.receipt_file_id as string,
+      mime_type: mime,
+      suggested_filename: coupaReceiptFilename(report, merchant, amount, mime),
+    }
+  })
+}
+
 // ── Phase 2: receipt-matching support ────────────────────────────────────────
 
 export async function getExpenseById(id: string): Promise<ExpenseTransaction | null> {

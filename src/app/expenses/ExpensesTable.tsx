@@ -183,6 +183,12 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
             ✈ Flights
           </Link>
           <Link
+            href="/expenses/coupa-upload"
+            className="px-4 py-2 text-sm font-medium bg-surface border border-warm-border text-ink rounded-[10px] hover:border-ink transition-colors"
+          >
+            Coupa upload
+          </Link>
+          <Link
             href="/expenses/accounts"
             className="px-4 py-2 text-sm font-medium bg-surface border border-warm-border text-ink rounded-[10px] hover:border-ink transition-colors"
           >
