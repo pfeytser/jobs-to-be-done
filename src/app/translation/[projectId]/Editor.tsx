@@ -3,6 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { missingTokens } from '@/lib/translation/placeholders'
+import {
+  tokenizeMarkup,
+  tagTokens,
+  tagLabel,
+  availableFormats,
+  validateMarkup,
+  type TagToken,
+  type FormatOption,
+} from '@/lib/translation/markup'
 import type { TranslationProject, Entry, DatasetMeta } from '@/lib/translation/types'
 
 const PAGE_SIZE = 50
@@ -26,8 +35,21 @@ function recompute(entry: Entry, value: string): Entry {
     identical: value.trim() !== '' && value === entry.english,
     placeholderWarning: missing.length > 0,
     missingTokens: missing,
+    tagError: validateMarkup(entry.english, value).error,
   }
 }
+
+// Friendly chip text: open → "italic", close → "/italic", void → "line break".
+function chipText(token: TagToken): string {
+  const label = tagLabel(token.name)
+  return token.kind === 'close' ? `/${label}` : label
+}
+
+const CHIP_CLASS =
+  'inline-flex items-center gap-0.5 align-middle mx-[1px] px-1 rounded border text-[11px] font-medium text-ink-2 bg-mist border-warm-border select-none cursor-default'
+const CHIP_X_CLASS = 'ml-0.5 text-ink-3 hover:text-status-fail-text cursor-pointer leading-none'
+const CHIP_RO_CLASS =
+  'inline-flex items-center align-middle mx-[1px] px-1 rounded border text-[11px] font-medium text-ink-3 bg-canvas border-warm-border select-none'
 
 export function Editor({
   project,
@@ -128,10 +150,16 @@ export function Editor({
     })
 
   function onEdit(entry: Entry, value: string) {
-    setEntries((prev) => prev.map((e) => (e.id === entry.id ? recompute(e, value) : e)))
+    const updated = recompute(entry, value)
+    setEntries((prev) => prev.map((e) => (e.id === entry.id ? updated : e)))
     const timers = saveTimers.current
     const existing = timers.get(entry.id)
     if (existing) clearTimeout(existing)
+    // Never autosave broken markup — the row shows the error until it's fixed.
+    if (updated.tagError) {
+      markSaving(entry.id, false)
+      return
+    }
     timers.set(
       entry.id,
       setTimeout(async () => {
@@ -145,11 +173,15 @@ export function Editor({
               body: JSON.stringify({ datasetId: entry.datasetId, lang: activeLang, entryKey: entry.entryKey }),
             })
           } else {
-            await fetch(`/api/translation/projects/${project.id}/edits`, {
+            const res = await fetch(`/api/translation/projects/${project.id}/edits`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ datasetId: entry.datasetId, lang: activeLang, entryKey: entry.entryKey, value }),
             })
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}))
+              setError(data.error ?? 'Could not save an edit.')
+            }
           }
         } catch {
           setError('Could not save an edit — check your connection.')
@@ -397,15 +429,7 @@ function Row({
   onEdit: (value: string) => void
   onRevert: () => void
 }) {
-  const taRef = useRef<HTMLTextAreaElement>(null)
-
-  // Auto-grow the textarea to fit content.
-  useEffect(() => {
-    const el = taRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }, [entry.value])
+  const formats = useMemo(() => availableFormats(entry.english), [entry.english])
 
   return (
     <div className="grid grid-cols-[minmax(220px,1fr)_minmax(220px,1.3fr)_minmax(220px,1.3fr)] border-b border-warm-border last:border-b-0">
@@ -416,6 +440,7 @@ function Row({
           {entry.empty && <Badge tone="warn">empty</Badge>}
           {entry.edited && <Badge tone="accent">edited</Badge>}
           {entry.identical && <Badge tone="neutral">= English</Badge>}
+          {entry.tagError && <Badge tone="warn">⚠ tags</Badge>}
           {entry.placeholderWarning && <Badge tone="warn">⚠ placeholder</Badge>}
           {entry.edited && (
             <button onClick={onRevert} className="text-[10px] text-ink-3 underline hover:text-ink">
@@ -424,26 +449,285 @@ function Row({
           )}
         </div>
       </div>
-      <div className="px-4 py-3 border-l border-warm-border text-sm text-ink select-text whitespace-pre-wrap break-words">
-        {entry.english}
+      <div className="px-4 py-3 border-l border-warm-border text-sm text-ink select-text leading-relaxed">
+        <ReadOnlyMarkup text={entry.english} />
       </div>
       <div className="px-4 py-3 border-l border-warm-border">
-        <textarea
-          ref={taRef}
+        <ChipEditor
           value={entry.value}
-          onChange={(e) => onEdit(e.target.value)}
-          rows={1}
-          className={`w-full resize-none text-sm bg-canvas rounded-[8px] px-2.5 py-2 border focus:outline-none focus:border-ink overflow-hidden ${
-            entry.edited ? 'border-ink' : 'border-warm-border'
-          } ${entry.empty ? 'bg-[#FCF6EC]' : ''} ${entry.placeholderWarning ? 'bg-[#FEF3C7]' : ''}`}
+          invalid={!!entry.tagError}
+          empty={entry.empty}
+          formats={formats}
+          onChange={onEdit}
         />
-        {entry.placeholderWarning && (
+        {entry.tagError ? (
+          <p className="text-[10px] text-status-fail-text mt-1">{entry.tagError}</p>
+        ) : entry.placeholderWarning ? (
           <p className="text-[10px] text-status-blocked-text mt-1">Missing: {entry.missingTokens.join(' ')}</p>
-        )}
-        <p className="text-[10px] text-ink-3 mt-1 h-3">{saving ? 'saving…' : entry.edited ? 'saved' : ''}</p>
+        ) : null}
+        <p className="text-[10px] text-ink-3 mt-1 h-3">
+          {entry.tagError ? (
+            <span className="text-status-fail-text">Fix the formatting tags to save.</span>
+          ) : saving ? (
+            'saving…'
+          ) : entry.edited ? (
+            'saved'
+          ) : (
+            ''
+          )}
+        </p>
       </div>
     </div>
   )
+}
+
+// Read-only render of an English value: words plus protected tag chips, so reviewers
+// can see exactly which tags their translation must keep.
+function ReadOnlyMarkup({ text }: { text: string }) {
+  const segs = useMemo(() => tokenizeMarkup(text), [text])
+  return (
+    <span className="whitespace-pre-wrap break-words">
+      {segs.map((seg, i) =>
+        seg.type === 'text' ? (
+          <span key={i}>{seg.value}</span>
+        ) : (
+          <span key={i} title={seg.token.raw} className={CHIP_RO_CLASS}>
+            {chipText(seg.token)}
+          </span>
+        ),
+      )}
+    </span>
+  )
+}
+
+// Chip editor: tags render as protected, non-editable chips; reviewers type only the
+// words between them. The editable DOM is managed imperatively (uncontrolled) so React
+// re-renders don't reset the caret — we render from `value` only when it changes
+// externally (e.g. a revert), and serialize back to a string on every input.
+function ChipEditor({
+  value,
+  invalid,
+  empty,
+  formats,
+  onChange,
+}: {
+  value: string
+  invalid: boolean
+  empty: boolean
+  formats: FormatOption[]
+  onChange: (value: string) => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const lastEmitted = useRef<string | null>(null)
+
+  const buildChip = useCallback((token: TagToken): HTMLSpanElement => {
+    const span = document.createElement('span')
+    span.dataset.token = token.raw
+    span.dataset.name = token.name
+    span.dataset.kind = token.kind
+    span.contentEditable = 'false'
+    span.className = CHIP_CLASS
+    span.title = token.raw
+    const label = document.createElement('span')
+    label.textContent = chipText(token)
+    span.appendChild(label)
+    const x = document.createElement('span')
+    x.className = CHIP_X_CLASS
+    x.dataset.del = '1'
+    x.textContent = '×'
+    x.title = 'Remove this tag'
+    span.appendChild(x)
+    return span
+  }, [])
+
+  const renderInto = useCallback(
+    (el: HTMLDivElement, text: string) => {
+      el.textContent = ''
+      for (const seg of tokenizeMarkup(text)) {
+        if (seg.type === 'text') el.appendChild(document.createTextNode(seg.value))
+        else el.appendChild(buildChip(seg.token))
+      }
+    },
+    [buildChip],
+  )
+
+  const serialize = useCallback((el: HTMLDivElement): string => {
+    let out = ''
+    el.childNodes.forEach((n) => {
+      if (n.nodeType === Node.TEXT_NODE) out += n.textContent ?? ''
+      else if (n instanceof HTMLElement) {
+        if (n.dataset.token !== undefined) out += n.dataset.token
+        else if (n.tagName === 'BR') out += '\n'
+        else out += n.textContent ?? ''
+      }
+    })
+    return out
+  }, [])
+
+  const emit = useCallback(() => {
+    const el = ref.current
+    if (!el) return
+    const v = serialize(el)
+    lastEmitted.current = v
+    onChange(v)
+  }, [serialize, onChange])
+
+  // (Re)render the DOM only when `value` arrives different from what we last emitted.
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (lastEmitted.current === value) return
+    renderInto(el, value)
+    lastEmitted.current = value
+  }, [value, renderInto])
+
+  // Block accidental chip deletion with a collapsed caret; turn Enter into a newline.
+  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      document.execCommand('insertText', false, '\n')
+      emit()
+      return
+    }
+    if (e.key !== 'Backspace' && e.key !== 'Delete') return
+    const sel = window.getSelection()
+    if (!sel || sel.rangeCount === 0) return
+    const r = sel.getRangeAt(0)
+    if (!r.collapsed) return
+    const node = adjacentNode(r, e.key === 'Backspace' ? 'before' : 'after')
+    if (node instanceof HTMLElement && node.dataset.token !== undefined) e.preventDefault()
+  }
+
+  // Paste as plain text only — never let pasted HTML inject untracked tags/markup.
+  function onPaste(e: React.ClipboardEvent<HTMLDivElement>) {
+    e.preventDefault()
+    const text = e.clipboardData.getData('text/plain')
+    document.execCommand('insertText', false, text)
+    emit()
+  }
+
+  function onClick(e: React.MouseEvent<HTMLDivElement>) {
+    const t = e.target
+    if (t instanceof HTMLElement && t.dataset.del === '1') {
+      e.preventDefault()
+      const chip = t.closest('[data-token]')
+      const el = ref.current
+      if (chip instanceof HTMLElement && el) {
+        removeChipPair(el, chip)
+        emit()
+      }
+    }
+  }
+
+  function applyFormat(fmt: FormatOption) {
+    const el = ref.current
+    if (!el) return
+    const sel = window.getSelection()
+    if (!sel || sel.rangeCount === 0) return
+    const r = sel.getRangeAt(0)
+    // Only wrap a non-empty selection inside a single text node (never across chips).
+    if (r.collapsed || r.startContainer !== r.endContainer || r.startContainer.nodeType !== Node.TEXT_NODE) return
+    if (!el.contains(r.startContainer)) return
+    const text = r.toString()
+    if (!text) return
+    r.deleteContents()
+    const frag = document.createDocumentFragment()
+    frag.appendChild(buildChip(tagTokens(fmt.openRaw)[0]))
+    frag.appendChild(document.createTextNode(text))
+    frag.appendChild(buildChip(tagTokens(fmt.closeRaw)[0]))
+    r.insertNode(frag)
+    sel.removeAllRanges()
+    emit()
+  }
+
+  return (
+    <div>
+      {formats.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-1.5">
+          {formats.map((f) => (
+            <button
+              key={f.name}
+              type="button"
+              // preventDefault on mousedown keeps the editor's text selection alive
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => applyFormat(f)}
+              title={`Wrap the selected words in ${f.label.toLowerCase()}`}
+              className="px-1.5 py-0.5 text-[11px] font-medium border border-warm-border rounded bg-surface hover:border-ink text-ink-2"
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        role="textbox"
+        aria-multiline="true"
+        onInput={emit}
+        onKeyDown={onKeyDown}
+        onPaste={onPaste}
+        onClick={onClick}
+        className={`min-h-[38px] w-full text-sm rounded-[8px] px-2.5 py-2 border focus:outline-none focus:border-ink whitespace-pre-wrap break-words leading-relaxed ${
+          invalid ? 'border-status-fail-text bg-[#FEF2F2]' : empty ? 'border-warm-border bg-[#FCF6EC]' : 'border-warm-border bg-canvas'
+        }`}
+      />
+    </div>
+  )
+}
+
+// The chip node immediately before/after a collapsed caret, if any.
+function adjacentNode(r: Range, dir: 'before' | 'after'): Node | null {
+  const c = r.startContainer
+  if (c.nodeType === Node.TEXT_NODE) {
+    if (dir === 'before') return r.startOffset === 0 ? c.previousSibling : null
+    return r.startOffset === (c.textContent?.length ?? 0) ? c.nextSibling : null
+  }
+  const kids = c.childNodes
+  return dir === 'before' ? kids[r.startOffset - 1] ?? null : kids[r.startOffset] ?? null
+}
+
+// Remove a chip and (for a paired tag) its matching partner, so pairs stay balanced.
+function removeChipPair(el: HTMLElement, chip: HTMLElement) {
+  const kind = chip.dataset.kind
+  const name = chip.dataset.name
+  if (kind === 'void' || !name) {
+    chip.remove()
+    return
+  }
+  const chips = [...el.querySelectorAll<HTMLElement>('[data-token]')]
+  const idx = chips.indexOf(chip)
+  if (kind === 'open') {
+    let depth = 0
+    for (let i = idx + 1; i < chips.length; i++) {
+      const c = chips[i]
+      if (c.dataset.name !== name) continue
+      if (c.dataset.kind === 'open') depth++
+      else if (c.dataset.kind === 'close') {
+        if (depth === 0) {
+          c.remove()
+          break
+        }
+        depth--
+      }
+    }
+  } else {
+    let depth = 0
+    for (let i = idx - 1; i >= 0; i--) {
+      const c = chips[i]
+      if (c.dataset.name !== name) continue
+      if (c.dataset.kind === 'close') depth++
+      else if (c.dataset.kind === 'open') {
+        if (depth === 0) {
+          c.remove()
+          break
+        }
+        depth--
+      }
+    }
+  }
+  chip.remove()
 }
 
 function Badge({ children, tone }: { children: React.ReactNode; tone: 'neutral' | 'accent' | 'warn' }) {

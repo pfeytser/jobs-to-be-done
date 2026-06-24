@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auth } from '@/lib/auth/config'
 import { getDataset, upsertEdit, deleteEdit } from '@/lib/db/translation'
+import { englishForEntry } from '@/lib/translation/entries'
+import { validateMarkup } from '@/lib/translation/markup'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +27,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!dataset || dataset.project_id !== id) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
+
+  // Never persist broken markup: the translation's tags must match the English's.
+  const english = englishForEntry(dataset, entryKey)
+  const markup = validateMarkup(english ?? '', value)
+  if (!markup.ok) {
+    return NextResponse.json({ error: markup.error ?? 'Formatting tags do not match the English.' }, { status: 422 })
+  }
+
   await upsertEdit(datasetId, lang, entryKey, value, session.user.email ?? null)
   return NextResponse.json({ ok: true })
 }

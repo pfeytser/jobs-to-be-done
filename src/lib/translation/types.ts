@@ -85,6 +85,8 @@ export interface Entry {
   identical: boolean
   placeholderWarning: boolean
   missingTokens: string[]
+  // Non-null when the translation's tags don't match the English (blocks saving).
+  tagError: string | null
 }
 
 export interface LangProgress {

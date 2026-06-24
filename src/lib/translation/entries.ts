@@ -4,6 +4,7 @@ import type { Entry, TranslationDataset, UiDatasetConfig, CsvDatasetConfig } fro
 import { flattenStrings, targetValueMap } from './json'
 import { parseCsv, isTrivialValue } from './csv'
 import { missingTokens } from './placeholders'
+import { validateMarkup } from './markup'
 
 // All locale codes present across a project's datasets, in stable order.
 export function projectLanguages(datasets: TranslationDataset[]): string[] {
@@ -19,7 +20,7 @@ export function projectLanguages(datasets: TranslationDataset[]): string[] {
 }
 
 function finishEntry(
-  base: Omit<Entry, 'edited' | 'empty' | 'identical' | 'placeholderWarning' | 'missingTokens'>,
+  base: Omit<Entry, 'edited' | 'empty' | 'identical' | 'placeholderWarning' | 'missingTokens' | 'tagError'>,
 ): Entry {
   const value = base.value
   const english = base.english
@@ -31,7 +32,23 @@ function finishEntry(
     identical: value.trim() !== '' && value === english,
     placeholderWarning: missing.length > 0,
     missingTokens: missing,
+    tagError: validateMarkup(english, value).error,
   }
+}
+
+// The English value for a single entry, for server-side validation of an incoming edit.
+export function englishForEntry(ds: TranslationDataset, entryKey: string): string | null {
+  if (ds.kind === 'ui') {
+    for (const leaf of flattenStrings(JSON.parse(ds.english_source))) {
+      if (leaf.path === entryKey) return leaf.value
+    }
+    return null
+  }
+  const config = ds.config as CsvDatasetConfig
+  const parsed = parseCsv(ds.english_source)
+  const englishIdx = parsed.headers.indexOf(config.englishColumn)
+  const row = parsed.rows[Number(entryKey)]
+  return row?.[englishIdx] ?? null
 }
 
 // Build the merged entry list for one language. `editsByDataset` maps a dataset id to
