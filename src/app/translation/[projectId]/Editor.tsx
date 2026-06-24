@@ -3,17 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { missingTokens } from '@/lib/translation/placeholders'
-import type {
-  TranslationProject,
-  Entry,
-  DatasetMeta,
-  UiDatasetConfig,
-  CsvDatasetConfig,
-} from '@/lib/translation/types'
+import type { TranslationProject, Entry, DatasetMeta } from '@/lib/translation/types'
 
 const PAGE_SIZE = 50
 
-// Which side of a dataset the search box matches against.
+// Which side the search box matches against (across all sources).
 type ScopeSide = 'target' | 'english'
 
 // The reviewer's workflow is find-and-fix: they spot a translation on the live
@@ -35,26 +29,9 @@ function recompute(entry: Entry, value: string): Entry {
   }
 }
 
-// File/column labels for a dataset's English and target sides, for the given language.
-function sideLabels(d: DatasetMeta, lang: string): { english: string; target: string } {
-  if (d.kind === 'ui') {
-    const cfg = d.config as UiDatasetConfig
-    return {
-      english: cfg.englishFileName || 'English',
-      target: cfg.targets?.[lang]?.fileName || lang,
-    }
-  }
-  const cfg = d.config as CsvDatasetConfig
-  return {
-    english: cfg.englishColumn || 'English',
-    target: cfg.langColumns?.[lang] || lang,
-  }
-}
-
 export function Editor({
   project,
   isOwner,
-  initialDatasets,
   initialLanguages,
 }: {
   project: TranslationProject
@@ -63,7 +40,6 @@ export function Editor({
   initialLanguages: string[]
 }) {
   // Sources are managed in /translation/admin; the editor only reads them.
-  const datasets = initialDatasets
   const languages = initialLanguages
   const [activeLang, setActiveLang] = useState(initialLanguages[0] ?? '')
   const [entries, setEntries] = useState<Entry[]>([])
@@ -74,15 +50,10 @@ export function Editor({
 
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  // Scope: `${datasetId | 'all'}::${'target' | 'english'}` — defaults to the target language.
-  const [scope, setScope] = useState('all::target')
+  // Which side to match — the translation (default) or English. Spans all sources.
+  const [scope, setScope] = useState<ScopeSide>('target')
   const [page, setPage] = useState(0)
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
-
-  const [scopeDataset, scopeSide] = useMemo(() => {
-    const [d, s] = scope.split('::')
-    return [d, (s as ScopeSide) ?? 'target'] as const
-  }, [scope])
 
   // Debounce search so a paste doesn't fire a fetch / refilter on every keystroke.
   useEffect(() => {
@@ -137,11 +108,10 @@ export function Editor({
     const q = debouncedSearch.trim().toLowerCase()
     if (!q) return []
     return entries.filter((e) => {
-      if (scopeDataset !== 'all' && e.datasetId !== scopeDataset) return false
-      const hay = (scopeSide === 'english' ? e.english : e.value).toLowerCase()
+      const hay = (scope === 'english' ? e.english : e.value).toLowerCase()
       return hay.includes(q)
     })
-  }, [entries, debouncedSearch, scopeDataset, scopeSide])
+  }, [entries, debouncedSearch, scope])
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const pageItems = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
@@ -325,29 +295,18 @@ export function Editor({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={`Paste a phrase you saw on the site to find it — searching ${
-                scopeSide === 'english' ? 'English' : 'the translation'
+                scope === 'english' ? 'English' : 'the translation'
               }.`}
               className="flex-1 min-w-[280px] px-3.5 py-2 text-sm border border-warm-border rounded-[10px] bg-surface focus:outline-none focus:border-ink"
             />
             <select
               value={scope}
-              onChange={(e) => setScope(e.target.value)}
-              title="Choose which file and side to search"
+              onChange={(e) => setScope(e.target.value as ScopeSide)}
+              title="Choose which side to search"
               className="px-3 py-2 text-sm border border-warm-border rounded-[10px] bg-surface focus:outline-none focus:border-ink"
             >
-              <optgroup label="All sources">
-                <option value="all::target">{activeLang} (translation)</option>
-                <option value="all::english">English</option>
-              </optgroup>
-              {datasets.map((d) => {
-                const l = sideLabels(d, activeLang)
-                return (
-                  <optgroup key={d.id} label={d.name}>
-                    <option value={`${d.id}::target`}>{l.target} (translation)</option>
-                    <option value={`${d.id}::english`}>{l.english} (English)</option>
-                  </optgroup>
-                )
-              })}
+              <option value="target">Search {activeLang} (translation)</option>
+              <option value="english">Search English</option>
             </select>
           </div>
 
