@@ -126,14 +126,32 @@ export function Editor({
 
   // --- filtering ----------------------------------------------------------
   const hasQuery = debouncedSearch.trim() !== ''
-  const filtered = useMemo(() => {
+
+  // The visible result set is snapshotted when the SEARCH changes, not on every edit.
+  // Otherwise editing a translation (the default search scope) would shrink the match
+  // and make the row you're editing vanish mid-keystroke.
+  const [matchedIds, setMatchedIds] = useState<string[]>([])
+  useEffect(() => {
     const q = debouncedSearch.trim().toLowerCase()
-    if (!q) return []
-    return entries.filter((e) => {
-      const hay = (scope === 'english' ? e.english : e.value).toLowerCase()
-      return hay.includes(q)
-    })
-  }, [entries, debouncedSearch, scope])
+    if (!q) {
+      setMatchedIds([])
+      return
+    }
+    setMatchedIds(
+      entries
+        .filter((e) => (scope === 'english' ? e.english : e.value).toLowerCase().includes(q))
+        .map((e) => e.id),
+    )
+    // Intentionally excludes `entries`: recompute only when the query/scope/loaded set
+    // changes, never on an in-place value edit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, scope, loadedLang])
+
+  const filtered = useMemo(() => {
+    if (matchedIds.length === 0) return []
+    const byId = new Map(entries.map((e) => [e.id, e]))
+    return matchedIds.map((id) => byId.get(id)).filter((e): e is Entry => e !== undefined)
+  }, [entries, matchedIds])
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const pageItems = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
