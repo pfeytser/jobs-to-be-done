@@ -70,8 +70,8 @@ export function JTBDCard({
             disabled={deleting}
             className={`shrink-0 p-2 rounded-lg transition-all ${
               confirmDelete
-                ? 'bg-red-500 text-white hover:bg-red-600'
-                : 'text-ink-muted hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100'
+                ? 'bg-fail text-white hover:bg-fail'
+                : 'text-ink-muted hover:text-fail hover:bg-fail-soft opacity-0 group-hover:opacity-100'
             }`}
             title={confirmDelete ? 'Click again to confirm' : 'Delete'}
           >
@@ -90,7 +90,7 @@ export function JTBDCard({
       </div>
 
       {confirmDelete && (
-        <div className="mt-3 text-xs text-red-600 font-medium text-right">
+        <div className="mt-3 text-xs text-fail font-medium text-right">
           Click trash again to confirm deletion
         </div>
       )}

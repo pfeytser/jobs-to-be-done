@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Suspense } from 'react'
+import { Bee } from '@/components/ui'
 
 function ErrorContent() {
   const searchParams = useSearchParams()
@@ -18,14 +19,14 @@ function ErrorContent() {
   const message = error ? (errorMessages[error] ?? errorMessages.Default) : errorMessages.Default
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-prose text-center">
-        <div className="text-5xl mb-4">🐝</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Oops!</h1>
-        <p className="text-gray-600 mb-6">{message}</p>
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+      <div className="bg-surface rounded-xl border border-line shadow-md p-8 w-full max-w-prose text-center">
+        <Bee size={44} className="mx-auto mb-4 text-ink" />
+        <h1 className="font-display text-3xl font-bold tracking-tight text-ink mb-2">Oops!</h1>
+        <p className="text-ink-soft mb-6">{message}</p>
         <Link
           href="/auth/signin"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 text-on-inverse rounded-md font-semibold hover:bg-teal-900 transition-colors"
         >
           Back to Sign In
         </Link>

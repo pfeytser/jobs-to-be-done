@@ -266,7 +266,7 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
                         showAll ? 'border-white' : 'border-ink-muted'
                       }`}
                     >
-                      {showAll && <span className="w-1.5 h-1.5 rounded-full bg-white block" />}
+                      {showAll && <span className="w-1.5 h-1.5 rounded-full bg-surface block" />}
                     </span>
                     Display all statements
                   </button>

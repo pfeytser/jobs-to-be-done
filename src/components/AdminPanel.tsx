@@ -328,7 +328,7 @@ export function AdminPanel() {
           </div>
         </form>
         {createError && (
-          <p className="mt-2 text-red-600 text-sm">{createError}</p>
+          <p className="mt-2 text-fail text-sm">{createError}</p>
         )}
       </section>
 
@@ -338,7 +338,7 @@ export function AdminPanel() {
           <div className="flex items-start justify-between mb-5">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="w-2 h-2 bg-pass rounded-full animate-pulse" />
                 <h2 className="text-base font-semibold text-ink">Active: {activeExercise.name}</h2>
               </div>
               <div className="flex items-center gap-3">
@@ -348,7 +348,7 @@ export function AdminPanel() {
             </div>
             <button
               onClick={() => handlePatch(activeExercise.id, { isActive: false })}
-              className="text-xs text-ink-muted hover:text-red-600 transition-colors"
+              className="text-xs text-ink-muted hover:text-fail transition-colors"
             >
               Deactivate
             </button>
@@ -453,7 +453,7 @@ export function AdminPanel() {
               </div>
             )}
             {synthesisError && (
-              <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-sm px-3 py-2">
+              <div className="mt-2 text-xs text-fail bg-fail-soft border border-fail-line rounded-sm px-3 py-2">
                 {synthesisError}
               </div>
             )}
@@ -497,7 +497,7 @@ export function AdminPanel() {
           )}
           {activeExercise.type === 'sentiment' && activeExercise.sentimentAnalysis && (
             <div className="mb-5 flex items-center gap-2 text-sm text-ink-soft">
-              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-pass" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               Analysis complete — visible to participants
@@ -586,7 +586,7 @@ export function AdminPanel() {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {ex.isActive && (
-                    <span className="w-2 h-2 bg-green-500 rounded-full shrink-0 animate-pulse" />
+                    <span className="w-2 h-2 bg-pass rounded-full shrink-0 animate-pulse" />
                   )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-ink truncate">{ex.name}</p>

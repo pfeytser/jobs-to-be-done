@@ -118,7 +118,7 @@ export default function PresentationMode({
                 i === currentIndex
                   ? 'bg-ink'
                   : hasIssue
-                  ? 'bg-red-300 hover:bg-red-400'
+                  ? 'bg-fail hover:bg-fail'
                   : 'bg-line hover:bg-ink-muted'
               }`}
             />

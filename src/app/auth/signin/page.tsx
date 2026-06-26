@@ -3,6 +3,7 @@
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { Bee } from '@/components/ui'
 
 function SignInContent() {
   const searchParams = useSearchParams()
@@ -10,18 +11,18 @@ function SignInContent() {
   const error = searchParams.get('error')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-prose">
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+      <div className="bg-surface rounded-xl border border-line shadow-md p-8 w-full max-w-prose">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">🐝</div>
-          <h1 className="text-2xl font-bold text-gray-900">Jobs to Bee Done</h1>
-          <p className="text-gray-500 mt-2 text-sm">
+          <Bee size={44} className="mx-auto mb-4 text-ink" />
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ink">Jobs to Bee Done</h1>
+          <p className="text-ink-muted mt-2 text-sm">
             Sign in to join the workshop
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="mb-4 p-3 bg-fail-soft border border-fail-line rounded-lg text-fail text-sm">
             {error === 'AccessDenied'
               ? 'Your email is not authorized to access this app.'
               : 'An error occurred. Please try again.'}
@@ -30,7 +31,7 @@ function SignInContent() {
 
         <button
           onClick={() => signIn('google', { callbackUrl })}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 shadow-sm"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-surface border-2 border-line rounded-xl text-ink-soft font-medium hover:bg-canvas hover:border-line transition-all duration-200 shadow-sm"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -53,7 +54,7 @@ function SignInContent() {
           Continue with Google
         </button>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-ink-muted mt-6">
           Access restricted to @industriousoffice.com accounts
         </p>
       </div>

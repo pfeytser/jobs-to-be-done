@@ -65,7 +65,7 @@ export function SentimentForm({ onSubmit }: SentimentFormProps) {
       </form>
 
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+        <div className="mt-3 p-3 bg-fail-soft border border-fail-line rounded-md text-fail text-sm">
           {error}
         </div>
       )}

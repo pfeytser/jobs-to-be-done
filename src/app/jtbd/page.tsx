@@ -20,7 +20,7 @@ export default async function JTBDPage() {
       <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
         <div className="text-center max-w-prose">
           <div className="text-7xl mb-6 animate-bounce">🐝</div>
-          <h1 className="text-3xl font-bold text-ink mb-3">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ink mb-3">
             Jobs to Bee Done
           </h1>
           <p className="text-lg text-ink-soft font-medium mb-4">

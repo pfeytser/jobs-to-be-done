@@ -14,7 +14,7 @@ export function SentimentCard({ id, term, isOwn, onDelete }: SentimentCardProps)
       {isOwn && onDelete && (
         <button
           onClick={() => onDelete(id)}
-          className="ml-3 shrink-0 text-ink-muted hover:text-red-500 transition-colors"
+          className="ml-3 shrink-0 text-ink-muted hover:text-fail transition-colors"
           aria-label="Delete"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

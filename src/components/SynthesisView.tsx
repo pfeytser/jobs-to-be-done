@@ -224,7 +224,7 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
     return (
       <div className="text-center py-16 text-ink-muted">
         <p className="text-sm">Failed to load synthesis.</p>
-        <p className="text-xs mt-1 font-mono text-red-500">{String(error)}</p>
+        <p className="text-xs mt-1 font-mono text-fail">{String(error)}</p>
       </div>
     )
   }
@@ -270,7 +270,7 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
           >
             {copied ? (
               <>
-                <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5 text-pass" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Copied!
@@ -476,7 +476,7 @@ function JobCard({
           </span>
           <span className="text-xs text-ink-muted">{CONFIDENCE_LABELS[job.confidence]}</span>
           {job.qualityFlags.length > 0 && (
-            <span className="text-xs text-amber-600 border border-amber-200 bg-amber-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs text-blocked border border-blocked-line bg-blocked-soft px-2 py-0.5 rounded-full">
               {job.qualityFlags[0]}{job.qualityFlags.length > 1 ? ` +${job.qualityFlags.length - 1}` : ''}
             </span>
           )}

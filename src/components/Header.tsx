@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { AdminNav } from './AdminNav'
+import { Bee } from '@/components/ui'
 import { isExpenseOwner } from '@/lib/expenses/access'
 
 const SECTIONS: Array<{ prefix: string; label: string; href: string }> = [
@@ -38,8 +39,8 @@ export function Header() {
     <header className="bg-surface border-b border-line sticky top-0 z-40">
       <div className="max-w-wide mx-auto px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center hover:opacity-75 transition-opacity">
-            <span className="text-xl">🐝</span>
+          <Link href="/" className="flex items-center text-ink hover:opacity-75 transition-opacity">
+            <Bee size={22} />
           </Link>
           {section && (
             <>

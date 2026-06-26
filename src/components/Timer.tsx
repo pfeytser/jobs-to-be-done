@@ -45,10 +45,10 @@ export function Timer({ endsAt }: TimerProps) {
     <div
       className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-lg font-bold shadow-sm ${
         isExpired
-          ? 'bg-gray-100 text-gray-400'
+          ? 'bg-sunken text-ink-muted'
           : isUrgent
-          ? 'bg-red-50 text-red-600 border border-red-200 animate-pulse'
-          : 'bg-amber-50 text-amber-700 border border-amber-200'
+          ? 'bg-fail-soft text-fail border border-fail-line animate-pulse'
+          : 'bg-blocked-soft text-blocked border border-blocked-line'
       }`}
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

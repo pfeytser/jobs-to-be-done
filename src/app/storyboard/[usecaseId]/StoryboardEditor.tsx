@@ -127,7 +127,7 @@ export default function StoryboardEditor({
   return (
     <main className="max-w-content mx-auto px-6 py-10 space-y-10">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
+        <div className="p-3 bg-fail-soft border border-fail-line rounded-lg text-sm text-fail">{error}</div>
       )}
 
       {/* Use case context */}
@@ -334,7 +334,7 @@ function SceneCard({
           </button>
           <button
             onClick={onDelete}
-            className="p-1 text-ink-muted hover:text-red-500 transition-colors ml-1"
+            className="p-1 text-ink-muted hover:text-fail transition-colors ml-1"
             title="Delete scene"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -354,7 +354,7 @@ function SceneCard({
       />
 
       {saving && <p className="text-xs text-ink-muted">Saving…</p>}
-      {saveError && <p className="text-xs text-red-500">Failed to save. Please try again.</p>}
+      {saveError && <p className="text-xs text-fail">Failed to save. Please try again.</p>}
     </div>
   )
 }

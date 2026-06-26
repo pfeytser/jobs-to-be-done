@@ -12,10 +12,10 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-yellow-100 text-yellow-800',
-  create: 'bg-blue-100 text-blue-800',
-  present: 'bg-green-100 text-green-800',
-  archive: 'bg-gray-100 text-gray-500',
+  draft: 'bg-blocked-soft text-blocked',
+  create: 'bg-info text-ink-soft',
+  present: 'bg-pass-soft text-pass',
+  archive: 'bg-sunken text-ink-muted',
 }
 
 export default async function StoryboardPage() {
