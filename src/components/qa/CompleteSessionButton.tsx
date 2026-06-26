@@ -34,7 +34,7 @@ export function CompleteSessionButton({
     <button
       onClick={handleComplete}
       disabled={loading}
-      className={className ?? 'px-3 py-1.5 text-xs font-semibold rounded-full border border-warm-border bg-canvas text-ink hover:bg-status-pass hover:border-status-pass-border hover:text-status-pass-text transition-all disabled:opacity-50'}
+      className={className ?? 'px-3 py-1.5 text-xs font-semibold rounded-full border border-line bg-canvas text-ink hover:bg-pass-soft hover:border-pass-line hover:text-pass transition-all disabled:opacity-50'}
     >
       {loading ? (
         <span className="flex items-center gap-1.5">

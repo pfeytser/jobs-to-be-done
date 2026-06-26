@@ -230,7 +230,7 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
             <Timer endsAt={exercise.timerEndsAt} />
           )}
         </div>
-        <div className="text-sm text-ink-3">
+        <div className="text-sm text-ink-muted">
           {exercise.name}
         </div>
       </div>
@@ -258,12 +258,12 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
                     className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
                       showAll
                         ? 'bg-ink text-white border-ink'
-                        : 'bg-canvas text-ink-2 border-warm-border hover:border-ink hover:text-ink'
+                        : 'bg-canvas text-ink-soft border-line hover:border-ink hover:text-ink'
                     }`}
                   >
                     <span
                       className={`w-3 h-3 rounded-full border flex items-center justify-center shrink-0 ${
-                        showAll ? 'border-white' : 'border-ink-3'
+                        showAll ? 'border-white' : 'border-ink-muted'
                       }`}
                     >
                       {showAll && <span className="w-1.5 h-1.5 rounded-full bg-white block" />}
@@ -287,7 +287,7 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
           )}
 
           {entries.length === 0 && (
-            <div className="text-center py-10 text-ink-3">
+            <div className="text-center py-10 text-ink-muted">
               <div className="text-3xl mb-2">✍️</div>
               <p className="text-sm">Your submitted statements will appear here</p>
             </div>
@@ -299,34 +299,34 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
       {exercise.currentPhase === 2 && (
         <div className="space-y-5">
           {voteData && (
-            <div className="bg-surface rounded-[14px] border border-warm-border p-4" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+            <div className="bg-surface rounded-md border border-line p-4" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-8">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-ink">
                       {voteData.maxVotes}
                     </div>
-                    <div className="text-xs text-ink-3 mt-0.5">Total</div>
+                    <div className="text-xs text-ink-muted mt-0.5">Total</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-ink">
                       {voteData.usedVotes}
                     </div>
-                    <div className="text-xs text-ink-3 mt-0.5">Used</div>
+                    <div className="text-xs text-ink-muted mt-0.5">Used</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-ink">
                       {voteData.remainingVotes}
                     </div>
-                    <div className="text-xs text-ink-3 mt-0.5">Remaining</div>
+                    <div className="text-xs text-ink-muted mt-0.5">Remaining</div>
                   </div>
                 </div>
                 <div className="w-32">
-                  <div className="flex justify-between text-xs text-ink-3 mb-1.5">
+                  <div className="flex justify-between text-xs text-ink-muted mb-1.5">
                     <span>Progress</span>
                     <span>{voteData.usedVotes}/{voteData.maxVotes}</span>
                   </div>
-                  <div className="h-1.5 bg-canvas rounded-full overflow-hidden border border-warm-border">
+                  <div className="h-1.5 bg-canvas rounded-full overflow-hidden border border-line">
                     <div
                       className="h-full bg-ink rounded-full transition-all"
                       style={{ width: `${(voteData.usedVotes / voteData.maxVotes) * 100}%` }}
@@ -378,7 +378,7 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
               })}
             </div>
           ) : (
-            <div className="text-center py-10 text-ink-3">
+            <div className="text-center py-10 text-ink-muted">
               <svg className="w-5 h-5 animate-spin mx-auto mb-2" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -388,7 +388,7 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
           )}
 
           {dedupeGroups && dedupeGroups.length === 0 && (
-            <div className="text-center py-10 text-ink-3">
+            <div className="text-center py-10 text-ink-muted">
               <div className="text-3xl mb-2">🗳️</div>
               <p className="text-sm">No entries to vote on yet</p>
             </div>
@@ -404,7 +404,7 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
             initialAnalysis={exercise.jtbdDiscussionAnalysis}
           />
 
-          <div className="bg-sand rounded-[14px] border border-warm-border p-4 text-sm text-ink">
+          <div className="bg-almond-400 rounded-md border border-line p-4 text-sm text-ink">
             <strong>Discussion phase:</strong> Cards are sorted by votes. Use these to guide your conversation.
           </div>
 
@@ -464,7 +464,7 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
           )}
 
           {entries.length === 0 && (
-            <div className="text-center py-10 text-ink-3">
+            <div className="text-center py-10 text-ink-muted">
               <div className="text-3xl mb-2">💬</div>
               <p className="text-sm">No entries yet</p>
             </div>
@@ -492,10 +492,10 @@ function SupportingAccordion({
   const interactive = !!(onBreakOut && onMove)
 
   return (
-    <div className="mt-1 ml-3 border-l-2 border-warm-border pl-3">
+    <div className="mt-1 ml-3 border-l-2 border-line pl-3">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-xs text-ink-3 hover:text-ink transition-colors py-1"
+        className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink transition-colors py-1"
       >
         <svg
           className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`}
@@ -566,13 +566,13 @@ function SupportingEntryCard({
   }
 
   return (
-    <div className="bg-canvas rounded-[10px] border border-warm-border px-4 py-3">
+    <div className="bg-canvas rounded-sm border border-line px-4 py-3">
       {mode === 'hiring' ? (
-        <p className="text-xs text-ink-2 leading-relaxed">
+        <p className="text-xs text-ink-soft leading-relaxed">
           <strong>I am hiring it to</strong> {entry.situation}.
         </p>
       ) : (
-        <p className="text-xs text-ink-2 leading-relaxed">
+        <p className="text-xs text-ink-soft leading-relaxed">
           <strong>When</strong> {entry.situation},{' '}
           <strong>I want to</strong> {entry.motivation},{' '}
           <strong>so I can</strong> {entry.expectedOutcome}.
@@ -584,7 +584,7 @@ function SupportingEntryCard({
           <button
             onClick={handleBreakOut}
             disabled={loading}
-            className="text-xs text-ink-3 hover:text-ink border border-warm-border rounded-full px-2.5 py-1 hover:border-ink transition-all disabled:opacity-40"
+            className="text-xs text-ink-muted hover:text-ink border border-line rounded-full px-2.5 py-1 hover:border-ink transition-all disabled:opacity-40"
           >
             Break out
           </button>
@@ -595,7 +595,7 @@ function SupportingEntryCard({
               handleMoveSelect(e.target.value)
             }}
             disabled={loading || canonicalEntries.length === 0}
-            className="text-xs text-ink-3 border border-warm-border rounded-full px-2.5 py-1 bg-canvas hover:border-ink focus:outline-none focus:border-ink cursor-pointer disabled:opacity-40 max-w-[220px]"
+            className="text-xs text-ink-muted border border-line rounded-full px-2.5 py-1 bg-canvas hover:border-ink focus:outline-none focus:border-ink cursor-pointer disabled:opacity-40 max-w-[220px]"
           >
             <option value="" disabled>Move statement…</option>
             {canonicalEntries.map((c) => (
@@ -619,7 +619,7 @@ function PhaseBadge({ phase }: { phase: 1 | 2 | 3 | 4 | 5 }) {
     5: 'Phase 5: Synthesis',
   }
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-sand text-ink border border-warm-border">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-almond-400 text-ink border border-line">
       <span className="w-1.5 h-1.5 rounded-full bg-ink opacity-50" />
       {labels[phase]}
     </span>

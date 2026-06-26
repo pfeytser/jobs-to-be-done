@@ -102,11 +102,11 @@ export default function AdminStoryboardPage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <main className="max-w-3xl mx-auto px-6 py-10">
+      <main className="max-w-content mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-ink">Storyboard Use Cases</h1>
-            <p className="text-sm text-ink-3 mt-1">Create and manage use cases for collaborator storyboards.</p>
+            <p className="text-sm text-ink-muted mt-1">Create and manage use cases for collaborator storyboards.</p>
           </div>
           <button
             onClick={() => setShowForm(true)}
@@ -119,27 +119,27 @@ export default function AdminStoryboardPage() {
         {showForm && (
           <form
             onSubmit={handleCreate}
-            className="mb-8 p-5 bg-surface border border-warm-border rounded-[14px] space-y-4"
+            className="mb-8 p-5 bg-surface border border-line rounded-md space-y-4"
           >
             <h2 className="text-base font-semibold text-ink">New use case</h2>
             <div>
-              <label className="block text-xs font-medium text-ink-3 mb-1">Name</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1">Name</label>
               <input
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="w-full px-3 py-2 border border-warm-border rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink"
+                className="w-full px-3 py-2 border border-line rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink"
                 placeholder="e.g. Event planning onboarding"
                 autoFocus
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-ink-3 mb-1">Description</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1">Description</label>
               <textarea
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-warm-border rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink resize-none"
+                className="w-full px-3 py-2 border border-line rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink resize-none"
                 placeholder="Describe the use case scenario..."
               />
             </div>
@@ -154,7 +154,7 @@ export default function AdminStoryboardPage() {
               <button
                 type="button"
                 onClick={() => { setShowForm(false); setNewName(''); setNewDesc('') }}
-                className="px-4 py-2 text-sm text-ink-3 hover:text-ink transition-colors"
+                className="px-4 py-2 text-sm text-ink-muted hover:text-ink transition-colors"
               >
                 Cancel
               </button>
@@ -163,9 +163,9 @@ export default function AdminStoryboardPage() {
         )}
 
         {loading ? (
-          <div className="text-sm text-ink-3 py-12 text-center">Loading…</div>
+          <div className="text-sm text-ink-muted py-12 text-center">Loading…</div>
         ) : useCases.length === 0 ? (
-          <div className="text-sm text-ink-3 py-12 text-center">No use cases yet. Create one above.</div>
+          <div className="text-sm text-ink-muted py-12 text-center">No use cases yet. Create one above.</div>
         ) : (
           <div className="space-y-3">
             {useCases.map((uc) => (
@@ -200,7 +200,7 @@ function UseCaseRow({
   const [description, setDescription] = useState(useCase.description)
 
   return (
-    <div className="bg-surface border border-warm-border rounded-[14px] overflow-hidden">
+    <div className="bg-surface border border-line rounded-md overflow-hidden">
       <div
         className="flex items-center gap-4 p-4 cursor-pointer"
         onClick={() => setExpanded((v) => !v)}
@@ -208,14 +208,14 @@ function UseCaseRow({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-ink truncate">{useCase.name}</p>
           {useCase.description && (
-            <p className="text-xs text-ink-3 mt-0.5 truncate">{useCase.description}</p>
+            <p className="text-xs text-ink-muted mt-0.5 truncate">{useCase.description}</p>
           )}
         </div>
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLORS[useCase.status]}`}>
           {STATUS_LABELS[useCase.status]}
         </span>
         <svg
-          className={`w-4 h-4 text-ink-3 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-ink-muted shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -223,29 +223,29 @@ function UseCaseRow({
       </div>
 
       {expanded && (
-        <div className="px-4 pb-4 border-t border-warm-border pt-4 space-y-4">
+        <div className="px-4 pb-4 border-t border-line pt-4 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-ink-3 mb-1">Name</label>
+            <label className="block text-xs font-medium text-ink-muted mb-1">Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onBlur={() => onSave(name, description)}
-              className="w-full px-3 py-2 border border-warm-border rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink"
+              className="w-full px-3 py-2 border border-line rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-ink-3 mb-1">Description</label>
+            <label className="block text-xs font-medium text-ink-muted mb-1">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               onBlur={() => onSave(name, description)}
               rows={3}
-              className="w-full px-3 py-2 border border-warm-border rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink resize-none"
+              className="w-full px-3 py-2 border border-line rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink resize-none"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-ink-3 mb-2">Status</label>
+            <label className="block text-xs font-medium text-ink-muted mb-2">Status</label>
             <div className="flex flex-wrap gap-2">
               {STATUS_ORDER.map((s) => (
                 <button
@@ -255,7 +255,7 @@ function UseCaseRow({
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 ${
                     useCase.status === s
                       ? 'bg-ink text-white border-ink'
-                      : 'bg-canvas text-ink-3 border-warm-border hover:border-ink hover:text-ink'
+                      : 'bg-canvas text-ink-muted border-line hover:border-ink hover:text-ink'
                   }`}
                 >
                   {STATUS_LABELS[s]}
@@ -263,7 +263,7 @@ function UseCaseRow({
               ))}
             </div>
           </div>
-          {saving && <p className="text-xs text-ink-3">Saving…</p>}
+          {saving && <p className="text-xs text-ink-muted">Saving…</p>}
         </div>
       )}
     </div>

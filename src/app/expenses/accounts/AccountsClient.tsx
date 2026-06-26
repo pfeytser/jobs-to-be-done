@@ -65,10 +65,10 @@ export function AccountsClient({
     <div>
       {banner && (
         <div
-          className={`p-3 mb-4 rounded-[10px] text-sm border ${
+          className={`p-3 mb-4 rounded-sm text-sm border ${
             banner.ok
-              ? 'bg-status-pass border-status-pass-border text-status-pass-text'
-              : 'bg-status-fail border-status-fail-border text-status-fail-text'
+              ? 'bg-pass-soft border-pass-line text-pass'
+              : 'bg-fail-soft border-fail-line text-fail'
           }`}
         >
           {banner.text}
@@ -76,7 +76,7 @@ export function AccountsClient({
       )}
 
       {!configured && (
-        <div className="p-3 mb-4 rounded-[10px] text-sm bg-status-blocked border border-status-blocked-border text-status-blocked-text">
+        <div className="p-3 mb-4 rounded-sm text-sm bg-blocked-soft border border-blocked-line text-blocked">
           Gmail connect isn’t configured yet. Set <code>GOOGLE_RECEIPT_CLIENT_ID</code>,{' '}
           <code>GOOGLE_RECEIPT_CLIENT_SECRET</code>, and <code>GOOGLE_RECEIPT_REDIRECT_URI</code> in
           your environment, then reload.
@@ -85,29 +85,29 @@ export function AccountsClient({
 
       <div className="space-y-2 mb-5">
         {accounts.length === 0 ? (
-          <div className="bg-surface border border-warm-border rounded-[14px] p-6 text-center text-sm text-ink-3">
+          <div className="bg-surface border border-line rounded-md p-6 text-center text-sm text-ink-muted">
             No accounts connected yet.
           </div>
         ) : (
           accounts.map((a) => (
             <div
               key={a.id}
-              className="bg-surface border border-warm-border rounded-[14px] p-4 flex items-center justify-between gap-3"
+              className="bg-surface border border-line rounded-md p-4 flex items-center justify-between gap-3"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-ink">{a.account_label}</span>
                   {a.is_active ? (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-status-pass text-status-pass-text">active</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-pass-soft text-pass">active</span>
                   ) : (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-status-skipped text-ink-3">paused</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-skipped-soft text-ink-muted">paused</span>
                   )}
                   {!a.has_token && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-status-fail text-status-fail-text">reconnect needed</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-fail-soft text-fail">reconnect needed</span>
                   )}
                 </div>
-                <p className="text-sm text-ink-2 truncate">{a.email_address}</p>
-                <p className="text-xs text-ink-3">
+                <p className="text-sm text-ink-soft truncate">{a.email_address}</p>
+                <p className="text-xs text-ink-muted">
                   {a.last_synced_at
                     ? `Last searched ${new Date(a.last_synced_at).toLocaleString()}`
                     : 'Never searched'}
@@ -117,14 +117,14 @@ export function AccountsClient({
                 <button
                   onClick={() => toggle(a.id, a.is_active)}
                   disabled={busy === a.id}
-                  className="px-3 py-1.5 text-xs font-medium bg-canvas border border-warm-border text-ink rounded-[8px] hover:border-ink disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium bg-canvas border border-line text-ink rounded-xs hover:border-ink disabled:opacity-40 transition-colors"
                 >
                   {a.is_active ? 'Pause' : 'Activate'}
                 </button>
                 <button
                   onClick={() => disconnect(a.id)}
                   disabled={busy === a.id}
-                  className="px-3 py-1.5 text-xs font-medium text-status-fail-text hover:underline disabled:opacity-40"
+                  className="px-3 py-1.5 text-xs font-medium text-fail hover:underline disabled:opacity-40"
                 >
                   Disconnect
                 </button>
@@ -137,7 +137,7 @@ export function AccountsClient({
       <div className="flex gap-2">
         <a
           href="/api/expenses/accounts/connect?label=work"
-          className={`px-4 py-2 text-sm font-semibold rounded-[10px] transition-opacity ${
+          className={`px-4 py-2 text-sm font-semibold rounded-sm transition-opacity ${
             configured ? 'bg-ink text-white hover:opacity-90' : 'bg-ink/40 text-white pointer-events-none'
           }`}
         >
@@ -145,10 +145,10 @@ export function AccountsClient({
         </a>
         <a
           href="/api/expenses/accounts/connect?label=personal"
-          className={`px-4 py-2 text-sm font-semibold rounded-[10px] border transition-colors ${
+          className={`px-4 py-2 text-sm font-semibold rounded-sm border transition-colors ${
             configured
-              ? 'bg-surface border-warm-border text-ink hover:border-ink'
-              : 'bg-surface border-warm-border text-ink-3 pointer-events-none'
+              ? 'bg-surface border-line text-ink hover:border-ink'
+              : 'bg-surface border-line text-ink-muted pointer-events-none'
           }`}
         >
           Connect personal Gmail

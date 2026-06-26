@@ -28,14 +28,14 @@ export default async function StoryboardPage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <main className="max-w-2xl mx-auto px-6 py-12">
+      <main className="max-w-content mx-auto px-6 py-12">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-ink mb-1">Storyboards</h1>
-          <p className="text-sm text-ink-3">Select a use case to create or view your storyboard.</p>
+          <p className="text-sm text-ink-muted">Select a use case to create or view your storyboard.</p>
         </div>
 
         {useCases.length === 0 ? (
-          <div className="text-sm text-ink-3 py-12 text-center">
+          <div className="text-sm text-ink-muted py-12 text-center">
             No storyboard use cases are available yet.
             {session.user.role === 'admin' && (
               <> <Link href="/admin/storyboard" className="underline hover:text-ink">Create one in admin.</Link></>
@@ -47,18 +47,18 @@ export default async function StoryboardPage() {
               <Link
                 key={uc.id}
                 href={`/storyboard/${uc.id}`}
-                className="flex items-center gap-4 p-5 bg-surface border border-warm-border rounded-[14px] hover:border-ink transition-colors group"
+                className="flex items-center gap-4 p-5 bg-surface border border-line rounded-md hover:border-ink transition-colors group"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-base font-semibold text-ink">{uc.name}</p>
                   {uc.description && (
-                    <p className="text-sm text-ink-3 mt-0.5 line-clamp-2">{uc.description}</p>
+                    <p className="text-sm text-ink-muted mt-0.5 line-clamp-2">{uc.description}</p>
                   )}
                 </div>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLORS[uc.status]}`}>
                   {STATUS_LABELS[uc.status]}
                 </span>
-                <svg className="w-5 h-5 text-ink-3 group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-ink-muted group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>

@@ -29,14 +29,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
   const completedSessions = allSessions.filter((s) => s.status === 'complete')
 
   return (
-    <main className="max-w-2xl mx-auto px-6 py-8">
+    <main className="max-w-content mx-auto px-6 py-8">
       <div className="mb-6">
-        <Link href="/qa" className="text-xs text-ink-3 hover:text-ink transition-colors">
+        <Link href="/qa" className="text-xs text-ink-muted hover:text-ink transition-colors">
           ← All projects
         </Link>
         <h1 className="text-2xl font-bold text-ink mt-2 mb-1">{project.name}</h1>
         {project.description && (
-          <p className="text-sm text-ink-2">{project.description}</p>
+          <p className="text-sm text-ink-soft">{project.description}</p>
         )}
       </div>
 
@@ -48,28 +48,28 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
             {existingSessions.map((s) => {
               const pct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0
               return (
-                <div key={s.id} className="bg-surface border border-warm-border rounded-[12px] p-4">
+                <div key={s.id} className="bg-surface border border-line rounded-md p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap text-xs text-ink-2 mb-1">
+                      <div className="flex items-center gap-2 flex-wrap text-xs text-ink-soft mb-1">
                         <span className="font-medium text-ink">{s.user_type}</span>
-                        <span className="text-ink-3">·</span>
+                        <span className="text-ink-muted">·</span>
                         <span>{s.viewport}</span>
-                        <span className="text-ink-3">·</span>
+                        <span className="text-ink-muted">·</span>
                         <span>{s.operating_system}</span>
-                        <span className="text-ink-3">·</span>
+                        <span className="text-ink-muted">·</span>
                         <span>{s.browser}</span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-ink-2 mt-2">
+                      <div className="flex items-center gap-3 text-xs text-ink-soft mt-2">
                         <span><strong className="text-ink">{s.done}</strong> / {s.total} done ({pct}%)</span>
-                        <span className="text-status-pass-text">✅ {s.passed}</span>
-                        <span className="text-status-fail-text">❌ {s.failed}</span>
-                        <span className="text-status-blocked-text">🚧 {s.blocked}</span>
+                        <span className="text-pass">✅ {s.passed}</span>
+                        <span className="text-fail">❌ {s.failed}</span>
+                        <span className="text-blocked">🚧 {s.blocked}</span>
                       </div>
                       <div className="mt-2 h-1 bg-canvas rounded-full overflow-hidden">
                         <div className="h-full bg-ink rounded-full" style={{ width: `${pct}%` }} />
                       </div>
-                      <p className="text-xs text-ink-3 mt-1.5">
+                      <p className="text-xs text-ink-muted mt-1.5">
                         Last active: {new Date(s.last_active_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -82,7 +82,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
                       </Link>
                       <CompleteSessionButton
                         sessionId={s.id}
-                        className="px-3 py-1.5 text-xs font-medium rounded-full border border-warm-border bg-canvas text-ink-2 hover:text-ink hover:border-ink transition-all"
+                        className="px-3 py-1.5 text-xs font-medium rounded-full border border-line bg-canvas text-ink-soft hover:text-ink hover:border-ink transition-all"
                       />
                     </div>
                   </div>
@@ -101,29 +101,29 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
             {completedSessions.map((s) => {
               const pct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0
               return (
-                <div key={s.id} className="bg-surface border border-warm-border rounded-[12px] p-4 opacity-70">
+                <div key={s.id} className="bg-surface border border-line rounded-md p-4 opacity-70">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap text-xs text-ink-2 mb-1">
+                      <div className="flex items-center gap-2 flex-wrap text-xs text-ink-soft mb-1">
                         <span className="font-medium text-ink">{s.user_type}</span>
-                        <span className="text-ink-3">·</span>
+                        <span className="text-ink-muted">·</span>
                         <span>{s.viewport}</span>
-                        <span className="text-ink-3">·</span>
+                        <span className="text-ink-muted">·</span>
                         <span>{s.operating_system}</span>
-                        <span className="text-ink-3">·</span>
+                        <span className="text-ink-muted">·</span>
                         <span>{s.browser}</span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-ink-2 mt-2">
+                      <div className="flex items-center gap-3 text-xs text-ink-soft mt-2">
                         <span><strong className="text-ink">{s.done}</strong> / {s.total} done ({pct}%)</span>
-                        <span className="text-status-pass-text">✅ {s.passed}</span>
-                        <span className="text-status-fail-text">❌ {s.failed}</span>
-                        <span className="text-status-blocked-text">🚧 {s.blocked}</span>
+                        <span className="text-pass">✅ {s.passed}</span>
+                        <span className="text-fail">❌ {s.failed}</span>
+                        <span className="text-blocked">🚧 {s.blocked}</span>
                       </div>
                       <div className="mt-2 h-1 bg-canvas rounded-full overflow-hidden">
                         <div className="h-full bg-ink rounded-full" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
-                    <span className="text-xs font-medium text-ink-3 bg-canvas border border-warm-border px-2.5 py-1 rounded-full shrink-0">
+                    <span className="text-xs font-medium text-ink-muted bg-canvas border border-line px-2.5 py-1 rounded-full shrink-0">
                       Complete
                     </span>
                   </div>
@@ -139,7 +139,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
         <h2 className="text-base font-semibold text-ink mb-3">
           {allSessions.length > 0 ? 'Start a new session' : 'Start a QA session'}
         </h2>
-        <div className="bg-surface border border-warm-border rounded-[14px] p-6">
+        <div className="bg-surface border border-line rounded-md p-6">
           <NewSessionForm project={project} testerCounts={testerCounts} />
         </div>
       </section>

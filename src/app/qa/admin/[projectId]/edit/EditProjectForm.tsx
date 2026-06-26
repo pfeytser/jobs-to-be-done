@@ -33,7 +33,7 @@ function MultiSelect({
             className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
               selected.includes(opt)
                 ? 'bg-ink text-white border-ink'
-                : 'bg-canvas border-warm-border text-ink hover:border-ink-2'
+                : 'bg-canvas border-line text-ink hover:border-ink-soft'
             }`}
           >
             {opt}
@@ -99,7 +99,7 @@ export function EditProjectForm({ project }: { project: QAProject }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+          className="w-full px-3 py-2.5 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
         />
       </div>
 
@@ -109,7 +109,7 @@ export function EditProjectForm({ project }: { project: QAProject }) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+          className="w-full px-3 py-2.5 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
         />
       </div>
 
@@ -122,7 +122,7 @@ export function EditProjectForm({ project }: { project: QAProject }) {
               type="button"
               onClick={() => setPlatform(p)}
               className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-                platform === p ? 'bg-ink text-white border-ink' : 'bg-canvas border-warm-border text-ink hover:border-ink-2'
+                platform === p ? 'bg-ink text-white border-ink' : 'bg-canvas border-line text-ink hover:border-ink-soft'
               }`}
             >
               {p}
@@ -142,12 +142,12 @@ export function EditProjectForm({ project }: { project: QAProject }) {
             onChange={(e) => setNewUserType(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addUserType() } }}
             placeholder="Add a user type…"
-            className="flex-1 px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+            className="flex-1 px-3 py-2.5 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
           />
           <button
             type="button"
             onClick={addUserType}
-            className="px-4 py-2.5 bg-canvas border border-warm-border text-sm font-medium text-ink rounded-[10px] hover:border-ink transition-colors"
+            className="px-4 py-2.5 bg-canvas border border-line text-sm font-medium text-ink rounded-sm hover:border-ink transition-colors"
           >
             Add
           </button>
@@ -157,13 +157,13 @@ export function EditProjectForm({ project }: { project: QAProject }) {
             {userTypes.map((ut) => (
               <span
                 key={ut}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-canvas border border-warm-border text-sm text-ink rounded-full"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-canvas border border-line text-sm text-ink rounded-full"
               >
                 {ut}
                 <button
                   type="button"
                   onClick={() => setUserTypes((prev) => prev.filter((u) => u !== ut))}
-                  className="text-ink-3 hover:text-ink transition-colors"
+                  className="text-ink-muted hover:text-ink transition-colors"
                 >
                   ×
                 </button>
@@ -174,7 +174,7 @@ export function EditProjectForm({ project }: { project: QAProject }) {
       </div>
 
       {error && (
-        <div className="p-3 bg-status-fail border border-status-fail-border rounded-[10px] text-status-fail-text text-sm">
+        <div className="p-3 bg-fail-soft border border-fail-line rounded-sm text-fail text-sm">
           {error}
         </div>
       )}
@@ -183,7 +183,7 @@ export function EditProjectForm({ project }: { project: QAProject }) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2.5 bg-canvas border border-warm-border text-ink-2 text-sm font-medium rounded-full hover:border-ink hover:text-ink transition-all"
+          className="px-4 py-2.5 bg-canvas border border-line text-ink-soft text-sm font-medium rounded-full hover:border-ink hover:text-ink transition-all"
         >
           Cancel
         </button>

@@ -55,28 +55,28 @@ export function InstructionsEditor({ projectId, userType, initialHtml }: Instruc
   if (!editor) return null
 
   const btnClass = (active: boolean) =>
-    `px-2 py-1 text-xs rounded border transition-colors ${active ? 'bg-ink text-white border-ink' : 'bg-canvas border-warm-border text-ink hover:border-ink-2'}`
+    `px-2 py-1 text-xs rounded border transition-colors ${active ? 'bg-ink text-white border-ink' : 'bg-canvas border-line text-ink hover:border-ink-soft'}`
 
   return (
     <div
-      className="border border-warm-border rounded-[10px] overflow-hidden bg-canvas"
+      className="border border-line rounded-sm overflow-hidden bg-canvas"
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) {
           handleSave()
         }
       }}
     >
-      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-warm-border bg-surface flex-wrap">
+      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-line bg-surface flex-wrap">
         <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={btnClass(editor.isActive('bold'))}>B</button>
         <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={btnClass(editor.isActive('italic'))}><em>I</em></button>
-        <div className="w-px h-4 bg-warm-border mx-1" />
+        <div className="w-px h-4 bg-line mx-1" />
         <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={btnClass(editor.isActive('bulletList'))}>• List</button>
         <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={btnClass(editor.isActive('orderedList'))}>1. List</button>
-        <div className="w-px h-4 bg-warm-border mx-1" />
+        <div className="w-px h-4 bg-line mx-1" />
         <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={btnClass(editor.isActive('heading', { level: 3 }))}>H3</button>
         <div className="flex-1" />
         {status === 'saving' && (
-          <span className="flex items-center gap-1 text-xs text-ink-3">
+          <span className="flex items-center gap-1 text-xs text-ink-muted">
             <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -84,8 +84,8 @@ export function InstructionsEditor({ projectId, userType, initialHtml }: Instruc
             Saving…
           </span>
         )}
-        {status === 'saved' && <span className="text-xs text-status-pass-text">✓ Saved</span>}
-        {status === 'error' && <span className="text-xs text-status-fail-text">Failed to save</span>}
+        {status === 'saved' && <span className="text-xs text-pass">✓ Saved</span>}
+        {status === 'error' && <span className="text-xs text-fail">Failed to save</span>}
       </div>
 
       <EditorContent editor={editor} />

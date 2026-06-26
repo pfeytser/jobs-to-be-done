@@ -47,10 +47,10 @@ export function VotingView({
 
   return (
     <main className="min-h-screen bg-canvas">
-      <div className="max-w-2xl mx-auto px-5 py-8 sm:py-12">
-        <p className="text-xs font-bold uppercase tracking-widest text-ink-3 mb-2">🎯 Spot the lie</p>
+      <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
+        <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-2">🎯 Spot the lie</p>
         <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
-        <p className="text-ink-2 mt-1">
+        <p className="text-ink-soft mt-1">
           by {authorName} · Tap the statement you think is <span className="font-bold text-ink">the lie</span>
         </p>
 
@@ -62,16 +62,16 @@ export function VotingView({
                 key={s.id}
                 onClick={() => setSelected(s.id)}
                 disabled={submitting}
-                className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${
+                className={`w-full text-left p-5 rounded-lg border-2 transition-all ${
                   isSelected
-                    ? 'border-ink bg-gold/25 shadow-md scale-[1.01]'
-                    : 'border-warm-border bg-surface hover:border-ink/40'
+                    ? 'border-ink bg-accent/25 shadow-md scale-[1.01]'
+                    : 'border-line bg-surface hover:border-ink/40'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <span
                     className={`shrink-0 w-7 h-7 rounded-full grid place-items-center text-sm font-black transition-colors ${
-                      isSelected ? 'bg-ink text-white' : 'bg-canvas text-ink-3 border border-warm-border'
+                      isSelected ? 'bg-ink text-white' : 'bg-canvas text-ink-muted border border-line'
                     }`}
                   >
                     {String.fromCharCode(65 + i)}
@@ -83,7 +83,7 @@ export function VotingView({
           })}
         </div>
 
-        {error && <p className="mt-4 text-sm text-status-fail-text font-medium">{error}</p>}
+        {error && <p className="mt-4 text-sm text-fail font-medium">{error}</p>}
 
         <button
           onClick={submit}
@@ -92,7 +92,7 @@ export function VotingView({
         >
           {submitting ? 'Locking it in…' : selected ? 'Lock in my guess 🔒' : 'Pick a statement'}
         </button>
-        <p className="text-center text-xs text-ink-3 mt-3">
+        <p className="text-center text-xs text-ink-muted mt-3">
           You get one vote — and it&apos;s final once you lock it in.
         </p>
       </div>

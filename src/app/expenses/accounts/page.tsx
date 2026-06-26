@@ -21,12 +21,12 @@ export default async function AccountsPage() {
 
   return (
     <main className="min-h-screen bg-canvas">
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        <Link href="/expenses" className="text-sm text-ink-3 hover:text-ink transition-colors">
+      <div className="max-w-content mx-auto px-6 py-8">
+        <Link href="/expenses" className="text-sm text-ink-muted hover:text-ink transition-colors">
           ← Back to transactions
         </Link>
         <h1 className="text-2xl font-bold text-ink mt-3 mb-1">Connected Gmail accounts</h1>
-        <p className="text-sm text-ink-3 mb-6">
+        <p className="text-sm text-ink-muted mb-6">
           Connect your work and personal Gmail so the matcher can search both for receipts.
           Read-only access; tokens are encrypted at rest.
         </p>

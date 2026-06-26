@@ -57,23 +57,23 @@ export function ResultsView({
         </div>
       )}
 
-      <div className="relative z-10 max-w-2xl mx-auto px-5 py-8 sm:py-12">
-        <p className="text-xs font-bold uppercase tracking-widest text-ink-3 mb-2">🏁 The reveal</p>
+      <div className="relative z-10 max-w-content mx-auto px-5 py-8 sm:py-12">
+        <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-2">🏁 The reveal</p>
         <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
-        <p className="text-ink-2 mt-1">by {authorName}</p>
+        <p className="text-ink-soft mt-1">by {authorName}</p>
 
         {viewerVoted && (
           <div
-            className={`mt-5 p-5 rounded-2xl border-2 text-center transition-all duration-500 ${
+            className={`mt-5 p-5 rounded-lg border-2 text-center transition-all duration-500 ${
               guessedCorrectly
-                ? 'border-status-pass-border bg-status-pass'
-                : 'border-status-fail-border bg-status-fail'
+                ? 'border-pass-line bg-pass-soft'
+                : 'border-fail-line bg-fail-soft'
             } ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
           >
             <p className="text-2xl font-black text-ink">
               {guessedCorrectly ? 'You guessed correctly 🎉' : 'You guessed incorrectly 😅'}
             </p>
-            <p className="text-sm text-ink-2 mt-1">
+            <p className="text-sm text-ink-soft mt-1">
               {guessedCorrectly
                 ? 'You spotted the lie. Nicely done.'
                 : `The lie was hiding somewhere else.`}
@@ -81,10 +81,10 @@ export function ResultsView({
           </div>
         )}
         {!viewerVoted && !isAuthor && (
-          <p className="mt-5 text-sm text-ink-3">You didn&apos;t vote in this round — here&apos;s how it shook out.</p>
+          <p className="mt-5 text-sm text-ink-muted">You didn&apos;t vote in this round — here&apos;s how it shook out.</p>
         )}
         {isAuthor && (
-          <p className="mt-5 text-sm text-ink-3">Here&apos;s how the team did against your lie 🤥</p>
+          <p className="mt-5 text-sm text-ink-muted">Here&apos;s how the team did against your lie 🤥</p>
         )}
 
         <div className="mt-6 space-y-3">
@@ -94,43 +94,43 @@ export function ResultsView({
             return (
               <div
                 key={s.id}
-                className={`relative overflow-hidden rounded-2xl border-2 p-5 transition-all duration-500 ${
+                className={`relative overflow-hidden rounded-lg border-2 p-5 transition-all duration-500 ${
                   s.is_lie
-                    ? 'border-status-fail-text bg-status-fail/50'
-                    : 'border-warm-border bg-surface'
+                    ? 'border-fail bg-fail-soft/50'
+                    : 'border-line bg-surface'
                 }`}
                 style={{ transitionDelay: `${i * 90}ms` }}
               >
                 {/* vote-share bar */}
                 <div
-                  className="absolute inset-y-0 left-0 bg-gold/25 transition-all duration-700 ease-out"
+                  className="absolute inset-y-0 left-0 bg-accent/25 transition-all duration-700 ease-out"
                   style={{ width: revealed ? `${pct}%` : '0%' }}
                   aria-hidden
                 />
                 <div className="relative">
                   <div className="flex items-start gap-3">
-                    <span className="shrink-0 w-7 h-7 rounded-full grid place-items-center text-sm font-black bg-canvas text-ink border border-warm-border">
+                    <span className="shrink-0 w-7 h-7 rounded-full grid place-items-center text-sm font-black bg-canvas text-ink border border-line">
                       {String.fromCharCode(65 + i)}
                     </span>
                     <span className="text-lg text-ink font-medium leading-snug flex-1">{s.text}</span>
                   </div>
                   <div className="flex items-center flex-wrap gap-2 mt-3 pl-10">
                     {s.is_lie && (
-                      <span className="text-xs font-black text-white bg-status-fail-text px-2.5 py-1 rounded-full">
+                      <span className="text-xs font-black text-white bg-fail px-2.5 py-1 rounded-full">
                         🤥 THE LIE
                       </span>
                     )}
                     {youGuessed && (
-                      <span className="text-xs font-bold text-ink bg-gold px-2.5 py-1 rounded-full">
+                      <span className="text-xs font-bold text-ink bg-accent px-2.5 py-1 rounded-full">
                         Your guess
                       </span>
                     )}
-                    <span className="text-sm font-bold text-ink-2">
+                    <span className="text-sm font-bold text-ink-soft">
                       {s.votes} {s.votes === 1 ? 'vote' : 'votes'} · {pct}%
                     </span>
                   </div>
                   {s.voters.length > 0 && (
-                    <p className="text-sm text-ink-3 mt-2 pl-10">{s.voters.join(', ')}</p>
+                    <p className="text-sm text-ink-muted mt-2 pl-10">{s.voters.join(', ')}</p>
                   )}
                 </div>
               </div>
@@ -138,7 +138,7 @@ export function ResultsView({
           })}
         </div>
 
-        <p className="text-center text-sm text-ink-3 mt-6">
+        <p className="text-center text-sm text-ink-muted mt-6">
           {totalVotes} {totalVotes === 1 ? 'person' : 'people'} voted
         </p>
 

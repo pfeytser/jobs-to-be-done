@@ -108,12 +108,12 @@ export function UploadPanel({ projectId, userType, onItemsReady }: UploadPanelPr
             if (f) handleFile(f)
           }}
           onClick={() => !uploading && fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-[12px] p-8 text-center transition-colors ${
+          className={`border-2 border-dashed rounded-md p-8 text-center transition-colors ${
             uploading
               ? 'border-ink bg-canvas cursor-default'
               : dragOver
-              ? 'border-ink bg-mist cursor-pointer'
-              : 'border-warm-border hover:border-ink-3 cursor-pointer'
+              ? 'border-ink bg-info cursor-pointer'
+              : 'border-line hover:border-ink-muted cursor-pointer'
           }`}
         >
           <input
@@ -130,13 +130,13 @@ export function UploadPanel({ projectId, userType, onItemsReady }: UploadPanelPr
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
               <p className="text-sm font-medium text-ink mb-1">Reading {file?.name}…</p>
-              <p className="text-xs text-ink-3">Parsing test items</p>
+              <p className="text-xs text-ink-muted">Parsing test items</p>
             </>
           ) : (
             <>
               <div className="text-2xl mb-2">📋</div>
               <p className="text-sm font-medium text-ink mb-1">Drop a CSV here or click to browse</p>
-              <p className="text-xs text-ink-3">CSV only · Max 5MB · Uploads automatically</p>
+              <p className="text-xs text-ink-muted">CSV only · Max 5MB · Uploads automatically</p>
             </>
           )}
         </div>
@@ -146,15 +146,15 @@ export function UploadPanel({ projectId, userType, onItemsReady }: UploadPanelPr
       {validation && (
         <div className="space-y-3">
           {/* File summary row */}
-          <div className="flex items-center justify-between p-3 bg-surface border border-warm-border rounded-[10px]">
+          <div className="flex items-center justify-between p-3 bg-surface border border-line rounded-sm">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-sm">📋</span>
               <span className="text-sm font-medium text-ink truncate">{file?.name}</span>
-              <span className="text-xs text-ink-3 shrink-0">· {parsedItems?.length ?? 0} items</span>
+              <span className="text-xs text-ink-muted shrink-0">· {parsedItems?.length ?? 0} items</span>
             </div>
             <button
               onClick={handleReset}
-              className="text-xs text-ink-3 hover:text-ink transition-colors shrink-0 ml-3"
+              className="text-xs text-ink-muted hover:text-ink transition-colors shrink-0 ml-3"
             >
               Upload different file
             </button>
@@ -162,11 +162,11 @@ export function UploadPanel({ projectId, userType, onItemsReady }: UploadPanelPr
 
           {/* Warnings — blocks auto-proceed, requires confirmation */}
           {hasWarnings && (
-            <div className="p-3 bg-status-blocked border border-status-blocked-border rounded-[10px] space-y-2">
-              <p className="text-xs font-semibold text-status-blocked-text">⚠️ Issues that may affect testers</p>
+            <div className="p-3 bg-blocked-soft border border-blocked-line rounded-sm space-y-2">
+              <p className="text-xs font-semibold text-blocked">⚠️ Issues that may affect testers</p>
               <ul className="space-y-1">
                 {validation.warnings.map((w, i) => (
-                  <li key={i} className="text-xs text-status-blocked-text leading-relaxed">• {w}</li>
+                  <li key={i} className="text-xs text-blocked leading-relaxed">• {w}</li>
                 ))}
               </ul>
             </div>
@@ -174,11 +174,11 @@ export function UploadPanel({ projectId, userType, onItemsReady }: UploadPanelPr
 
           {/* Info — purely informational */}
           {hasInfo && (
-            <div className="p-3 bg-surface border border-warm-border rounded-[10px] space-y-1.5">
-              <p className="text-xs font-semibold text-ink-2">ℹ️ Notes</p>
+            <div className="p-3 bg-surface border border-line rounded-sm space-y-1.5">
+              <p className="text-xs font-semibold text-ink-soft">ℹ️ Notes</p>
               <ul className="space-y-1">
                 {validation.info.map((msg, i) => (
-                  <li key={i} className="text-xs text-ink-3 leading-relaxed">• {msg}</li>
+                  <li key={i} className="text-xs text-ink-muted leading-relaxed">• {msg}</li>
                 ))}
               </ul>
             </div>
@@ -187,27 +187,27 @@ export function UploadPanel({ projectId, userType, onItemsReady }: UploadPanelPr
           {/* Column mapping — collapsible */}
           {validation.recognisedColumns.length > 0 && (
             <details className="group">
-              <summary className="text-xs text-ink-3 cursor-pointer hover:text-ink transition-colors select-none list-none flex items-center gap-1">
+              <summary className="text-xs text-ink-muted cursor-pointer hover:text-ink transition-colors select-none list-none flex items-center gap-1">
                 <span className="group-open:rotate-90 transition-transform inline-block">▸</span>
                 {validation.recognisedColumns.length} column{validation.recognisedColumns.length !== 1 ? 's' : ''} recognised
                 {validation.unmappedColumns.length > 0 && (
-                  <span className="text-ink-3">, {validation.unmappedColumns.length} ignored</span>
+                  <span className="text-ink-muted">, {validation.unmappedColumns.length} ignored</span>
                 )}
               </summary>
-              <div className="mt-2 p-3 bg-canvas border border-warm-border rounded-[8px] space-y-1">
+              <div className="mt-2 p-3 bg-canvas border border-line rounded-xs space-y-1">
                 {validation.recognisedColumns.map(({ field, column }) => (
                   <div key={field} className="flex items-center gap-1.5 text-xs">
-                    <span className="text-status-pass-text shrink-0">✓</span>
+                    <span className="text-pass shrink-0">✓</span>
                     <span className="font-mono text-ink">{column}</span>
-                    <span className="text-ink-3">→</span>
-                    <span className="text-ink-2">{field}</span>
+                    <span className="text-ink-muted">→</span>
+                    <span className="text-ink-soft">{field}</span>
                   </div>
                 ))}
                 {validation.unmappedColumns.map((col) => (
                   <div key={col} className="flex items-center gap-1.5 text-xs">
-                    <span className="text-ink-3 shrink-0">–</span>
-                    <span className="font-mono text-ink-3">{col}</span>
-                    <span className="text-[10px] text-ink-3">(ignored)</span>
+                    <span className="text-ink-muted shrink-0">–</span>
+                    <span className="font-mono text-ink-muted">{col}</span>
+                    <span className="text-[10px] text-ink-muted">(ignored)</span>
                   </div>
                 ))}
               </div>
@@ -219,13 +219,13 @@ export function UploadPanel({ projectId, userType, onItemsReady }: UploadPanelPr
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleReset}
-                className="px-3 py-2 text-sm font-medium bg-canvas border border-warm-border text-ink-3 rounded-[8px] hover:border-ink transition-colors"
+                className="px-3 py-2 text-sm font-medium bg-canvas border border-line text-ink-muted rounded-xs hover:border-ink transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirm}
-                className="px-4 py-2 text-sm font-semibold bg-ink text-white rounded-[8px] hover:opacity-90 transition-opacity"
+                className="px-4 py-2 text-sm font-semibold bg-ink text-white rounded-xs hover:opacity-90 transition-opacity"
               >
                 Import anyway ({parsedItems.length} items)
               </button>
@@ -235,7 +235,7 @@ export function UploadPanel({ projectId, userType, onItemsReady }: UploadPanelPr
       )}
 
       {error && (
-        <div className="p-3 bg-status-fail border border-status-fail-border rounded-[10px] text-status-fail-text text-sm">
+        <div className="p-3 bg-fail-soft border border-fail-line rounded-sm text-fail text-sm">
           {error}
         </div>
       )}

@@ -71,7 +71,7 @@ export function UploadAndEditPage({
                     className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
                       userType === ut
                         ? 'bg-ink text-white border-ink'
-                        : 'bg-canvas border-warm-border text-ink hover:border-ink-2'
+                        : 'bg-canvas border-line text-ink hover:border-ink-soft'
                     }`}
                   >
                     {ut}
@@ -84,16 +84,16 @@ export function UploadAndEditPage({
                 value={customUserType}
                 onChange={(e) => setCustomUserType(e.target.value)}
                 placeholder="e.g. Dedicated Office Member"
-                className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
               />
             )}
-            <p className="text-xs text-ink-3 mt-1.5">
+            <p className="text-xs text-ink-muted mt-1.5">
               All rows in the CSV will be assigned this user type.
             </p>
           </div>
 
           {/* Upload panel */}
-          <div className="bg-surface border border-warm-border rounded-[14px] p-6">
+          <div className="bg-surface border border-line rounded-md p-6">
             <UploadPanel
               projectId={projectId}
               userType={activeUserType}
@@ -101,7 +101,7 @@ export function UploadAndEditPage({
             />
           </div>
 
-          <p className="text-xs text-ink-3 text-center">
+          <p className="text-xs text-ink-muted text-center">
             Or{' '}
             <a
               href={`/qa/admin/${projectSlug}/suite`}
@@ -118,15 +118,15 @@ export function UploadAndEditPage({
             <div>
               <p className="text-sm font-semibold text-ink">
                 {pendingItems.length} test items found
-                {activeUserType && <span className="text-ink-2 font-normal"> · {activeUserType}</span>}
+                {activeUserType && <span className="text-ink-soft font-normal"> · {activeUserType}</span>}
               </p>
-              <p className="text-xs text-ink-3 mt-0.5">
+              <p className="text-xs text-ink-muted mt-0.5">
                 Review and edit below. When you&apos;re happy, click &ldquo;Save suite&rdquo; to publish.
               </p>
             </div>
             <button
               onClick={() => setStage('upload')}
-              className="text-xs text-ink-3 hover:text-ink transition-colors underline"
+              className="text-xs text-ink-muted hover:text-ink transition-colors underline"
             >
               ← Upload different file
             </button>

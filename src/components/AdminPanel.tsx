@@ -238,7 +238,7 @@ export function AdminPanel() {
   return (
     <div className="space-y-6">
       {/* Create Exercise */}
-      <section className="bg-surface rounded-[14px] border border-warm-border p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+      <section className="bg-surface rounded-md border border-line p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
         <h2 className="text-base font-semibold text-ink mb-4">Create Exercise</h2>
         <form onSubmit={handleCreate} className="space-y-3">
           {/* Exercise type selector */}
@@ -259,7 +259,7 @@ export function AdminPanel() {
                 className={`flex-1 py-2 rounded-full text-sm font-medium transition-all border ${
                   newExerciseType === t
                     ? 'bg-ink text-white border-ink'
-                    : 'bg-canvas text-ink-2 border-warm-border hover:border-ink hover:text-ink'
+                    : 'bg-canvas text-ink-soft border-line hover:border-ink hover:text-ink'
                 }`}
               >
                 {t === 'jtbd' ? 'Jobs to Be Done' : 'Sentiment Design'}
@@ -277,7 +277,7 @@ export function AdminPanel() {
                   className={`flex-1 py-2 rounded-full text-sm font-medium transition-all border ${
                     newJtbdMode === m
                       ? 'bg-ink text-white border-ink'
-                      : 'bg-canvas text-ink-2 border-warm-border hover:border-ink hover:text-ink'
+                      : 'bg-canvas text-ink-soft border-line hover:border-ink hover:text-ink'
                   }`}
                 >
                   {m === 'classic' ? 'Classic JTBD' : 'Hiring Mode'}
@@ -291,7 +291,7 @@ export function AdminPanel() {
             value={newExerciseName}
             onChange={(e) => setNewExerciseName(e.target.value)}
             placeholder={newExerciseType === 'sentiment' ? 'Exercise name (e.g. Member Sentiment — Q1 2025)' : 'Exercise name (e.g. Q1 2025 App Roadmap)'}
-            className="w-full px-4 py-2.5 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent transition-all"
+            className="w-full px-4 py-2.5 border border-line rounded-md text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent transition-all"
             maxLength={200}
             required
           />
@@ -304,7 +304,7 @@ export function AdminPanel() {
                 ? 'What feeling do you want to evoke in our members when they are using our app?'
                 : 'Main prompt question (e.g. What job are members hiring the app for?)'
             }
-            className="w-full px-4 py-2.5 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent transition-all"
+            className="w-full px-4 py-2.5 border border-line rounded-md text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent transition-all"
             maxLength={500}
           />
           <div className="flex justify-end">
@@ -334,7 +334,7 @@ export function AdminPanel() {
 
       {/* Active Exercise Controls */}
       {activeExercise && (
-        <section className="bg-surface rounded-[14px] border border-warm-border p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+        <section className="bg-surface rounded-md border border-line p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
           <div className="flex items-start justify-between mb-5">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -348,7 +348,7 @@ export function AdminPanel() {
             </div>
             <button
               onClick={() => handlePatch(activeExercise.id, { isActive: false })}
-              className="text-xs text-ink-3 hover:text-red-600 transition-colors"
+              className="text-xs text-ink-muted hover:text-red-600 transition-colors"
             >
               Deactivate
             </button>
@@ -375,7 +375,7 @@ export function AdminPanel() {
                     className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
                       activeExercise.currentPhase === p
                         ? 'bg-ink text-white'
-                        : 'bg-canvas text-ink-2 border border-warm-border hover:border-ink hover:text-ink disabled:opacity-50'
+                        : 'bg-canvas text-ink-soft border border-line hover:border-ink hover:text-ink disabled:opacity-50'
                     }`}
                   >
                     {p === 1 ? '1 · Creation' : p === 2 ? '2 · Analysis' : '3 · Brainstorm'}
@@ -392,7 +392,7 @@ export function AdminPanel() {
                     className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
                       activeExercise.currentPhase === p
                         ? 'bg-ink text-white'
-                        : 'bg-canvas text-ink-2 border border-warm-border hover:border-ink hover:text-ink disabled:opacity-50'
+                        : 'bg-canvas text-ink-soft border border-line hover:border-ink hover:text-ink disabled:opacity-50'
                     }`}
                   >
                     {p === 1 ? '1 · Creation' : p === 2 ? '2 · Voting' : p === 3 ? '3 · Discussion' : p === 4 ? '4 · Brainstorm' : '5 · Synthesis'}
@@ -401,7 +401,7 @@ export function AdminPanel() {
               </div>
             )}
             {deduplicating && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-muted">
                 <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -410,7 +410,7 @@ export function AdminPanel() {
               </div>
             )}
             {discussionAnalyzing && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-muted">
                 <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -421,13 +421,13 @@ export function AdminPanel() {
             {activeExercise.type === 'jtbd' && activeExercise.currentPhase === 3 && !discussionAnalyzing && (
               <button
                 onClick={() => triggerDiscussionAnalyze(activeExercise.id)}
-                className="mt-2 px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
+                className="mt-2 px-4 py-2 bg-canvas border border-line text-ink-soft rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
               >
                 Regenerate discussion insights
               </button>
             )}
             {brainstormGenerating && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-muted">
                 <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -438,13 +438,13 @@ export function AdminPanel() {
             {activeExercise.type === 'jtbd' && activeExercise.currentPhase === 4 && !brainstormGenerating && (
               <button
                 onClick={() => triggerBrainstormGenerate(activeExercise.id)}
-                className="mt-2 px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
+                className="mt-2 px-4 py-2 bg-canvas border border-line text-ink-soft rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
               >
                 Regenerate problem statements
               </button>
             )}
             {synthesizing && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-muted">
                 <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -453,14 +453,14 @@ export function AdminPanel() {
               </div>
             )}
             {synthesisError && (
-              <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-[10px] px-3 py-2">
+              <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-sm px-3 py-2">
                 {synthesisError}
               </div>
             )}
             {activeExercise.type === 'jtbd' && activeExercise.currentPhase === 5 && !synthesizing && (
               <button
                 onClick={() => triggerSynthesize(activeExercise.id)}
-                className="mt-2 px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
+                className="mt-2 px-4 py-2 bg-canvas border border-line text-ink-soft rounded-full text-xs font-medium hover:border-ink hover:text-ink transition-all"
               >
                 {synthesisError ? 'Retry synthesis' : 'Regenerate synthesis'}
               </button>
@@ -496,7 +496,7 @@ export function AdminPanel() {
             </div>
           )}
           {activeExercise.type === 'sentiment' && activeExercise.sentimentAnalysis && (
-            <div className="mb-5 flex items-center gap-2 text-sm text-ink-2">
+            <div className="mb-5 flex items-center gap-2 text-sm text-ink-soft">
               <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
@@ -515,9 +515,9 @@ export function AdminPanel() {
                 min="1"
                 max="60"
                 step="1"
-                className="w-24 px-3 py-2 border border-warm-border rounded-[14px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink"
+                className="w-24 px-3 py-2 border border-line rounded-md text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink"
               />
-              <span className="text-sm text-ink-3">minutes</span>
+              <span className="text-sm text-ink-muted">minutes</span>
               <button
                 onClick={() => handleSetTimer(activeExercise.id)}
                 disabled={!!actionLoading}
@@ -529,7 +529,7 @@ export function AdminPanel() {
                 <button
                   onClick={() => handleClearTimer(activeExercise.id)}
                   disabled={!!actionLoading}
-                  className="px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-sm font-medium hover:border-ink hover:text-ink disabled:opacity-40 transition-all"
+                  className="px-4 py-2 bg-canvas border border-line text-ink-soft rounded-full text-sm font-medium hover:border-ink hover:text-ink disabled:opacity-40 transition-all"
                 >
                   Clear
                 </button>
@@ -539,24 +539,24 @@ export function AdminPanel() {
 
           {/* Voting Progress (Phase 2 only) */}
           {activeExercise.currentPhase === 2 && voteData?.perUserSpend && (
-            <div className="mt-5 pt-5 border-t border-warm-border">
+            <div className="mt-5 pt-5 border-t border-line">
               <p className="text-sm font-medium text-ink mb-3">Per-User Vote Progress</p>
               {voteData.perUserSpend.length === 0 ? (
-                <p className="text-sm text-ink-3">No votes cast yet</p>
+                <p className="text-sm text-ink-muted">No votes cast yet</p>
               ) : (
                 <div className="space-y-2">
                   {voteData.perUserSpend.map((u) => (
                     <div key={u.userId} className="flex items-center gap-3">
-                      <div className="text-xs text-ink-3 truncate max-w-[140px]">
+                      <div className="text-xs text-ink-muted truncate max-w-[140px]">
                         {u.userName ?? u.userId.substring(0, 8) + '…'}
                       </div>
-                      <div className="flex-1 h-1.5 bg-canvas rounded-full overflow-hidden border border-warm-border">
+                      <div className="flex-1 h-1.5 bg-canvas rounded-full overflow-hidden border border-line">
                         <div
                           className="h-full bg-ink rounded-full transition-all"
                           style={{ width: `${(u.used / 20) * 100}%` }}
                         />
                       </div>
-                      <div className="text-xs text-ink-2 tabular-nums">
+                      <div className="text-xs text-ink-soft tabular-nums">
                         {u.used}/20
                       </div>
                     </div>
@@ -569,19 +569,19 @@ export function AdminPanel() {
       )}
 
       {/* All Exercises */}
-      <section className="bg-surface rounded-[14px] border border-warm-border p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+      <section className="bg-surface rounded-md border border-line p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
         <h2 className="text-base font-semibold text-ink mb-4">
           All Exercises ({visibleExercises.length})
         </h2>
         {visibleExercises.length === 0 ? (
-          <p className="text-ink-3 text-sm">No exercises yet. Create one above.</p>
+          <p className="text-ink-muted text-sm">No exercises yet. Create one above.</p>
         ) : (
           <div className="space-y-2">
             {visibleExercises.map((ex) => (
               <div
                 key={ex.id}
-                className={`flex items-center justify-between p-4 rounded-[14px] border transition-colors ${
-                  ex.isActive ? 'bg-sand border-warm-border' : 'bg-canvas border-warm-border'
+                className={`flex items-center justify-between p-4 rounded-md border transition-colors ${
+                  ex.isActive ? 'bg-almond-400 border-line' : 'bg-canvas border-line'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -593,11 +593,11 @@ export function AdminPanel() {
                     <div className="flex items-center gap-2 mt-0.5">
                       <PhaseBadge phase={ex.currentPhase} small exerciseType={ex.type} />
                       {ex.type === 'jtbd' && ex.jtbdMode === 'hiring' && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-mist text-ink-2 border border-warm-border font-medium">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-info text-ink-soft border border-line font-medium">
                           Hiring
                         </span>
                       )}
-                      <span className="text-xs text-ink-3">
+                      <span className="text-xs text-ink-muted">
                         {new Date(ex.createdAt).toLocaleDateString()}
                       </span>
                     </div>
@@ -608,7 +608,7 @@ export function AdminPanel() {
                     <button
                       onClick={() => handlePatch(ex.id, { isActive: true })}
                       disabled={!!actionLoading}
-                      className="px-4 py-1.5 bg-surface border border-warm-border text-ink text-xs font-medium rounded-full hover:bg-ink hover:text-white hover:border-ink disabled:opacity-50 transition-all"
+                      className="px-4 py-1.5 bg-surface border border-line text-ink text-xs font-medium rounded-full hover:bg-ink hover:text-white hover:border-ink disabled:opacity-50 transition-all"
                     >
                       Activate
                     </button>
@@ -617,7 +617,7 @@ export function AdminPanel() {
                     <button
                       onClick={() => handlePatch(ex.id, { isArchived: true })}
                       disabled={!!actionLoading}
-                      className="px-3 py-1.5 text-ink-3 hover:text-ink text-xs font-medium transition-colors disabled:opacity-50"
+                      className="px-3 py-1.5 text-ink-muted hover:text-ink text-xs font-medium transition-colors disabled:opacity-50"
                       title="Archive"
                     >
                       Archive
@@ -631,10 +631,10 @@ export function AdminPanel() {
 
         {/* Archive accordion */}
         {archivedExercises.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-warm-border">
+          <div className="mt-4 pt-4 border-t border-line">
             <button
               onClick={() => setArchiveOpen((o) => !o)}
-              className="flex items-center gap-2 text-sm font-medium text-ink-2 hover:text-ink transition-colors w-full text-left"
+              className="flex items-center gap-2 text-sm font-medium text-ink-soft hover:text-ink transition-colors w-full text-left"
             >
               <svg
                 className={`w-4 h-4 transition-transform ${archiveOpen ? 'rotate-180' : ''}`}
@@ -652,13 +652,13 @@ export function AdminPanel() {
                 {archivedExercises.map((ex) => (
                   <div
                     key={ex.id}
-                    className="flex items-center justify-between p-4 rounded-[14px] border border-warm-border bg-canvas opacity-60"
+                    className="flex items-center justify-between p-4 rounded-md border border-line bg-canvas opacity-60"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-ink truncate">{ex.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <PhaseBadge phase={ex.currentPhase} small exerciseType={ex.type} />
-                        <span className="text-xs text-ink-3">
+                        <span className="text-xs text-ink-muted">
                           {new Date(ex.createdAt).toLocaleDateString()}
                         </span>
                       </div>
@@ -666,7 +666,7 @@ export function AdminPanel() {
                     <button
                       onClick={() => handlePatch(ex.id, { isArchived: false })}
                       disabled={!!actionLoading}
-                      className="shrink-0 px-3 py-1.5 text-ink-3 hover:text-ink text-xs font-medium transition-colors disabled:opacity-50"
+                      className="shrink-0 px-3 py-1.5 text-ink-muted hover:text-ink text-xs font-medium transition-colors disabled:opacity-50"
                     >
                       Unarchive
                     </button>
@@ -704,7 +704,7 @@ function PromptEditor({
         value={value}
         onChange={(e) => { setValue(e.target.value); setSaved(false) }}
         placeholder="e.g. What job are members hiring the app for?"
-        className="flex-1 px-4 py-2 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent transition-all"
+        className="flex-1 px-4 py-2 border border-line rounded-md text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent transition-all"
         maxLength={500}
       />
       <button
@@ -732,7 +732,7 @@ function PhaseBadge({
       : { 1: 'Creation', 2: 'Voting', 3: 'Discussion', 4: 'Brainstorm', 5: 'Synthesis' }
   return (
     <span
-      className={`inline-flex items-center rounded-full font-medium bg-sand text-ink ${
+      className={`inline-flex items-center rounded-full font-medium bg-almond-400 text-ink ${
         small ? 'text-xs px-2 py-0.5' : 'text-xs px-2.5 py-1'
       }`}
     >

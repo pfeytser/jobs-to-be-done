@@ -31,10 +31,10 @@ export default async function SuitePage({
 
   return (
     <main className="max-w-full px-6 py-8">
-      <div className="max-w-5xl mx-auto mb-6">
+      <div className="max-w-wide mx-auto mb-6">
         <Link
           href={`/qa/admin/${projectId}`}
-          className="text-xs text-ink-3 hover:text-ink transition-colors"
+          className="text-xs text-ink-muted hover:text-ink transition-colors"
         >
           ← Back to dashboard
         </Link>
@@ -42,7 +42,7 @@ export default async function SuitePage({
           <h1 className="text-2xl font-bold text-ink mb-0.5">
             {userType ?? 'All test items'}
           </h1>
-          <p className="text-sm text-ink-3">{project.name}</p>
+          <p className="text-sm text-ink-muted">{project.name}</p>
         </div>
       </div>
 

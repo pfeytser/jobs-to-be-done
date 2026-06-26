@@ -44,7 +44,7 @@ export function AdminNav({ role }: { role: 'admin' | 'collaborator' }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-sand border border-warm-border text-ink text-xs font-semibold rounded-full hover:bg-ink hover:text-white hover:border-ink transition-all"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-almond-400 border border-line text-ink text-xs font-semibold rounded-full hover:bg-ink hover:text-white hover:border-ink transition-all"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
@@ -59,9 +59,9 @@ export function AdminNav({ role }: { role: 'admin' | 'collaborator' }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-52 bg-surface border border-warm-border rounded-[14px] shadow-lg overflow-hidden z-50">
+        <div className="absolute right-0 top-full mt-2 w-52 bg-surface border border-line rounded-md shadow-lg overflow-hidden z-50">
           <div className="px-3 pt-3 pb-1">
-            <p className="text-[10px] font-semibold text-ink-3 uppercase tracking-widest mb-1.5">Manage</p>
+            <p className="text-[10px] font-semibold text-ink-muted uppercase tracking-widest mb-1.5">Manage</p>
             {ADMIN_LINKS.map(({ href, label, emoji }) => (
               <Link
                 key={href}
@@ -74,14 +74,14 @@ export function AdminNav({ role }: { role: 'admin' | 'collaborator' }) {
             ))}
           </div>
 
-          <div className="border-t border-warm-border px-3 pt-2 pb-3 mt-1">
-            <p className="text-[10px] font-semibold text-ink-3 uppercase tracking-widest mb-1.5">Browse</p>
+          <div className="border-t border-line px-3 pt-2 pb-3 mt-1">
+            <p className="text-[10px] font-semibold text-ink-muted uppercase tracking-widest mb-1.5">Browse</p>
             <div className="flex flex-wrap gap-1.5">
               {BROWSE_LINKS.map(({ href, label }) => (
                 <Link
                   key={href}
                   href={href}
-                  className="px-2.5 py-1 text-xs text-ink border border-warm-border rounded-full hover:border-ink hover:bg-canvas transition-colors"
+                  className="px-2.5 py-1 text-xs text-ink border border-line rounded-full hover:border-ink hover:bg-canvas transition-colors"
                 >
                   {label}
                 </Link>

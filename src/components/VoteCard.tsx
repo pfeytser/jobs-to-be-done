@@ -49,8 +49,8 @@ export function VoteCard({
   const canRemove = !disabled && myVotes > 0 && !voting
 
   return (
-    <div className={`bg-surface rounded-[14px] border p-5 transition-all ${
-      myVotes > 0 ? 'border-ink' : 'border-warm-border'
+    <div className={`bg-surface rounded-md border p-5 transition-all ${
+      myVotes > 0 ? 'border-ink' : 'border-line'
     }`} style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
       <div className="flex items-start gap-4">
         {/* Rank / vote badge (discussion mode only) */}
@@ -58,15 +58,15 @@ export function VoteCard({
           <div className="shrink-0 text-center">
             {rank !== undefined ? (
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ${
-                rank === 1 ? 'bg-gold text-ink' :
-                rank === 2 ? 'bg-sand text-ink' :
-                rank === 3 ? 'bg-warm-border text-ink' :
-                'bg-canvas text-ink-3'
+                rank === 1 ? 'bg-accent text-ink' :
+                rank === 2 ? 'bg-almond-400 text-ink' :
+                rank === 3 ? 'bg-line text-ink' :
+                'bg-canvas text-ink-muted'
               }`}>
                 {rank}
               </div>
             ) : null}
-            <div className="text-xs text-ink-3 mt-1">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</div>
+            <div className="text-xs text-ink-muted mt-1">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</div>
           </div>
         )}
 
@@ -89,7 +89,7 @@ export function VoteCard({
               {Array.from({ length: myVotes }).map((_, i) => (
                 <div key={i} className="w-1.5 h-1.5 rounded-full bg-ink" />
               ))}
-              <span className="text-xs text-ink-2 ml-1">Your votes: {myVotes}</span>
+              <span className="text-xs text-ink-soft ml-1">Your votes: {myVotes}</span>
             </div>
           )}
         </div>
@@ -111,7 +111,7 @@ export function VoteCard({
             <button
               onClick={() => handleVote('remove')}
               disabled={!canRemove}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-canvas border border-warm-border text-ink-2 hover:border-ink hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed transition-all font-bold text-lg"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-canvas border border-line text-ink-soft hover:border-ink hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed transition-all font-bold text-lg"
               title="Remove vote"
             >
               −

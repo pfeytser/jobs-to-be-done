@@ -28,12 +28,12 @@ export function SentimentForm({ onSubmit }: SentimentFormProps) {
 
   return (
     <div
-      className="bg-surface rounded-[14px] border border-warm-border p-6"
+      className="bg-surface rounded-md border border-line p-6"
       style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}
     >
       <div className="mb-4">
         <h2 className="text-base font-semibold text-ink">Add a word or phrase</h2>
-        <p className="text-sm text-ink-3 mt-0.5">
+        <p className="text-sm text-ink-muted mt-0.5">
           An adjective, a feeling, or a short phrase — submit as many as you like.
         </p>
       </div>
@@ -44,7 +44,7 @@ export function SentimentForm({ onSubmit }: SentimentFormProps) {
           value={term}
           onChange={(e) => setTerm(e.target.value)}
           placeholder="e.g. empowered, safe, effortless…"
-          className="flex-1 px-4 py-3 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
+          className="flex-1 px-4 py-3 border border-line rounded-md text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
           maxLength={200}
           autoComplete="off"
           disabled={submitting}
@@ -65,7 +65,7 @@ export function SentimentForm({ onSubmit }: SentimentFormProps) {
       </form>
 
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-[14px] text-red-700 text-sm">
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           {error}
         </div>
       )}

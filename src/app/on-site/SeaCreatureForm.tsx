@@ -51,11 +51,11 @@ export default function SeaCreatureForm({ userId }: { userId: string }) {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-ink mb-1">Before we begin…</h1>
-        <p className="text-sm text-ink-3">Let&apos;s get your profile up to date.</p>
+        <p className="text-sm text-ink-muted">Let&apos;s get your profile up to date.</p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-5">
-        <div className="p-5 bg-surface border border-warm-border rounded-[16px] space-y-5">
+        <div className="p-5 bg-surface border border-line rounded-lg space-y-5">
           <div>
             <label className="block text-sm font-medium text-ink mb-2">
               If you could be any sea creature, what sea creature would you be?
@@ -64,7 +64,7 @@ export default function SeaCreatureForm({ userId }: { userId: string }) {
               type="text"
               value={creature}
               onChange={(e) => setCreature(e.target.value)}
-              className="w-full px-3 py-2.5 border border-warm-border rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink"
+              className="w-full px-3 py-2.5 border border-line rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink"
               placeholder="e.g. octopus, dolphin, manta ray…"
               autoFocus
             />
@@ -76,7 +76,7 @@ export default function SeaCreatureForm({ userId }: { userId: string }) {
               value={why}
               onChange={(e) => setWhy(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2.5 border border-warm-border rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink resize-none"
+              className="w-full px-3 py-2.5 border border-line rounded-lg text-sm text-ink bg-canvas focus:outline-none focus:border-ink resize-none"
               placeholder="What draws you to this creature?"
             />
           </div>
@@ -94,7 +94,7 @@ export default function SeaCreatureForm({ userId }: { userId: string }) {
             type="button"
             onClick={handleSkip}
             disabled={saving}
-            className="px-4 py-2.5 text-sm text-ink-3 hover:text-ink transition-colors disabled:opacity-40"
+            className="px-4 py-2.5 text-sm text-ink-muted hover:text-ink transition-colors disabled:opacity-40"
           >
             Skip
           </button>

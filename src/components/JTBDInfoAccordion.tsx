@@ -13,14 +13,14 @@ export function JTBDInfoAccordion() {
         <ExamplesModal onClose={() => setShowExamples(false)} />
       )}
 
-      <div className="mt-3 border border-warm-border rounded-[14px] overflow-hidden">
+      <div className="mt-3 border border-line rounded-md overflow-hidden">
         <button
           onClick={() => setOpen(!open)}
           className="w-full flex items-center justify-between px-4 py-3 bg-canvas hover:bg-surface transition-colors text-left"
         >
           <span className="text-sm font-medium text-ink">What is Jobs to be Done?</span>
           <svg
-            className={`w-4 h-4 text-ink-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-ink-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -29,16 +29,16 @@ export function JTBDInfoAccordion() {
           </svg>
         </button>
         {open && (
-          <div className="px-4 py-3 bg-surface border-t border-warm-border space-y-3">
-            <p className="text-sm text-ink-2 leading-relaxed">
+          <div className="px-4 py-3 bg-surface border-t border-line space-y-3">
+            <p className="text-sm text-ink-soft leading-relaxed">
               Jobs to be done helps teams define what progress a customer is trying to make in a specific situation.
             </p>
-            <p className="text-sm text-ink-3 italic">
+            <p className="text-sm text-ink-muted italic">
               &ldquo;When [situation], I want to [motivation], so I can [expected outcome].&rdquo;
             </p>
             <button
               onClick={() => setShowExamples(true)}
-              className="text-sm text-ink-2 hover:text-ink font-medium transition-colors underline underline-offset-2"
+              className="text-sm text-ink-soft hover:text-ink font-medium transition-colors underline underline-offset-2"
             >
               See some examples
             </button>

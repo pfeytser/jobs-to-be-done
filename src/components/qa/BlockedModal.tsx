@@ -64,14 +64,14 @@ export function BlockedModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="bg-surface rounded-[14px] border border-warm-border w-full max-w-md shadow-xl"
+        className="bg-surface rounded-md border border-line w-full max-w-prose shadow-xl"
         style={{ boxShadow: '0 8px 32px rgba(17,34,32,0.18)' }}
       >
-        <div className="px-6 pt-6 pb-4 border-b border-warm-border">
+        <div className="px-6 pt-6 pb-4 border-b border-line">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-bold text-status-blocked-text bg-status-blocked border border-status-blocked-border px-2 py-0.5 rounded-full">
+                <span className="text-sm font-bold text-blocked bg-blocked-soft border border-blocked-line px-2 py-0.5 rounded-full">
                   🚧 Blocked
                 </span>
               </div>
@@ -79,7 +79,7 @@ export function BlockedModal({
             </div>
             <button
               onClick={onClose}
-              className="shrink-0 p-1.5 text-ink-3 hover:text-ink transition-colors rounded-lg hover:bg-canvas"
+              className="shrink-0 p-1.5 text-ink-muted hover:text-ink transition-colors rounded-lg hover:bg-canvas"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -92,20 +92,20 @@ export function BlockedModal({
           <div>
             <label className="block text-sm font-medium text-ink mb-1.5">
               What&apos;s preventing you from testing this right now?{' '}
-              <span className="text-ink-3 font-normal">(optional)</span>
+              <span className="text-ink-muted font-normal">(optional)</span>
             </label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="e.g. The feature isn't loading, or I don't have access to the right account type…"
-              className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+              className="w-full px-3 py-2.5 border border-line rounded-sm text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
               rows={3}
               autoFocus
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-status-fail border border-status-fail-border rounded-[10px] text-status-fail-text text-sm">
+            <div className="p-3 bg-fail-soft border border-fail-line rounded-sm text-fail text-sm">
               {error}
             </div>
           )}
@@ -114,7 +114,7 @@ export function BlockedModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 bg-canvas border border-warm-border text-ink-2 text-sm font-medium rounded-full hover:border-ink hover:text-ink transition-all"
+              className="px-4 py-2.5 bg-canvas border border-line text-ink-soft text-sm font-medium rounded-full hover:border-ink hover:text-ink transition-all"
             >
               Cancel
             </button>

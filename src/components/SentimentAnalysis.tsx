@@ -67,34 +67,34 @@ export function SentimentAnalysis({ analysis }: SentimentAnalysisProps) {
     <div className="space-y-6">
       {/* Brand Feeling Statement */}
       <div
-        className="bg-surface rounded-[14px] border border-warm-border p-6"
+        className="bg-surface rounded-md border border-line p-6"
         style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}
       >
-        <p className="text-xs font-semibold text-ink-3 uppercase tracking-widest mb-3">
+        <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">
           Brand Feeling Statement
         </p>
         <blockquote className="text-xl font-bold text-ink leading-snug mb-3">
           &ldquo;{analysis.brandFeelingStatement}&rdquo;
         </blockquote>
-        <p className="text-sm text-ink-2 leading-relaxed">
+        <p className="text-sm text-ink-soft leading-relaxed">
           {analysis.brandFeelingExplanation}
         </p>
       </div>
 
       {/* Cluster Table */}
       <div
-        className="bg-surface rounded-[14px] border border-warm-border overflow-hidden"
+        className="bg-surface rounded-md border border-line overflow-hidden"
         style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}
       >
-        <div className="px-5 py-4 border-b border-warm-border">
+        <div className="px-5 py-4 border-b border-line">
           <p className="text-sm font-semibold text-ink">Theme Clusters</p>
         </div>
-        <div className="divide-y divide-warm-border">
+        <div className="divide-y divide-line">
           {/* Header row */}
           <div className="grid grid-cols-[1fr_2fr_180px] px-5 py-2.5">
-            <span className="text-xs font-semibold text-ink-3 uppercase tracking-wide">Theme</span>
-            <span className="text-xs font-semibold text-ink-3 uppercase tracking-wide">Contributing Words</span>
-            <span className="text-xs font-semibold text-ink-3 uppercase tracking-wide">Strength</span>
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">Theme</span>
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">Contributing Words</span>
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">Strength</span>
           </div>
           {analysis.clusters.map((cluster, i) => (
             <div
@@ -103,11 +103,11 @@ export function SentimentAnalysis({ analysis }: SentimentAnalysisProps) {
               style={{ backgroundColor: CLUSTER_COLORS[i % CLUSTER_COLORS.length] }}
             >
               <span className="text-sm font-semibold text-ink pr-4">{cluster.label}</span>
-              <span className="text-sm text-ink-2 pr-4 leading-relaxed">
+              <span className="text-sm text-ink-soft pr-4 leading-relaxed">
                 {cluster.terms.join(', ')}
               </span>
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-canvas rounded-full overflow-hidden border border-warm-border">
+                <div className="flex-1 h-2 bg-canvas rounded-full overflow-hidden border border-line">
                   <div
                     className="h-full bg-ink rounded-full transition-all"
                     style={{ width: `${(cluster.count / maxCount) * 100}%` }}
@@ -126,7 +126,7 @@ export function SentimentAnalysis({ analysis }: SentimentAnalysisProps) {
       <div className="flex justify-end">
         <button
           onClick={handleCopy}
-          className="flex items-center gap-2 px-5 py-2.5 bg-canvas border border-warm-border text-ink text-sm font-medium rounded-full hover:bg-surface transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-canvas border border-line text-ink text-sm font-medium rounded-full hover:bg-surface transition-colors"
         >
           {copied ? (
             <>

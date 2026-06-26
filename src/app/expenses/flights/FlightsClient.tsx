@@ -95,7 +95,7 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
               key={f}
               onClick={() => applyFilter(f)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
-                filter === f ? 'bg-ink text-white border-ink' : 'bg-surface border-warm-border text-ink-2 hover:border-ink'
+                filter === f ? 'bg-ink text-white border-ink' : 'bg-surface border-line text-ink-soft hover:border-ink'
               }`}
             >
               {f === 'all' ? 'All' : CATEGORY_LABELS[f]}
@@ -105,7 +105,7 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
         <button
           onClick={scan}
           disabled={scanning}
-          className="px-4 py-2 text-sm font-semibold bg-gold text-ink rounded-[10px] hover:opacity-90 transition-opacity disabled:opacity-50 inline-flex items-center gap-2"
+          className="px-4 py-2 text-sm font-semibold bg-accent text-ink rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50 inline-flex items-center gap-2"
         >
           {scanning && (
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -118,17 +118,17 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
       </div>
 
       {scanMsg && (
-        <div className="mb-4 p-3 bg-surface border border-warm-border rounded-[12px] text-sm text-ink-2">{scanMsg}</div>
+        <div className="mb-4 p-3 bg-surface border border-line rounded-md text-sm text-ink-soft">{scanMsg}</div>
       )}
 
       {businessMissing > 0 && (
-        <div className="mb-4 p-3 bg-status-blocked border border-status-blocked-border rounded-[12px] text-sm text-status-blocked-text">
+        <div className="mb-4 p-3 bg-blocked-soft border border-blocked-line rounded-md text-sm text-blocked">
           ⚠️ {businessMissing} business trip{businessMissing !== 1 ? 's have' : ' has'} no matching expense report — these may still need to be submitted.
         </div>
       )}
 
       {shown.length === 0 ? (
-        <div className="bg-surface border border-warm-border rounded-[14px] p-8 text-center text-sm text-ink-3">
+        <div className="bg-surface border border-line rounded-md p-8 text-center text-sm text-ink-muted">
           {trips.length === 0
             ? 'No flights found yet. Click "Scan for flights" to search both inboxes.'
             : 'No trips in this category.'}
@@ -139,7 +139,7 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
             const routes = distinctRoutes(t)
             const codes = distinctCodes(t)
             return (
-              <div key={t.id} className="bg-surface border border-warm-border rounded-[14px] p-4">
+              <div key={t.id} className="bg-surface border border-line rounded-md p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     {/* Headline: date · route · airline */}
@@ -151,15 +151,15 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
                       <span className="text-sm font-semibold text-ink">{t.airlines || 'Flight'}</span>
                       {routes.length > 0 ? (
                         routes.map((r) => (
-                          <span key={r} className="text-sm text-ink-2">{r}</span>
+                          <span key={r} className="text-sm text-ink-soft">{r}</span>
                         ))
                       ) : (
-                        <span className="text-sm text-ink-3">route n/a</span>
+                        <span className="text-sm text-ink-muted">route n/a</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap mt-1 text-xs text-ink-3">
+                    <div className="flex items-center gap-2 flex-wrap mt-1 text-xs text-ink-muted">
                       {codes.map((c) => (
-                        <span key={c} className="font-mono px-1.5 py-0.5 rounded bg-canvas text-ink-2">{c}</span>
+                        <span key={c} className="font-mono px-1.5 py-0.5 rounded bg-canvas text-ink-soft">{c}</span>
                       ))}
                       <span>
                         {t.booking_count} booking{t.booking_count !== 1 ? 's' : ''} · {t.emails.length} email{t.emails.length !== 1 ? 's' : ''}
@@ -169,9 +169,9 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
                     {t.category === 'business' && (
                       <p className="text-xs mt-1.5">
                         {t.has_expense ? (
-                          <span className="text-status-pass-text">✓ Expense report found: {t.matched_reports.join(', ')}</span>
+                          <span className="text-pass">✓ Expense report found: {t.matched_reports.join(', ')}</span>
                         ) : (
-                          <span className="text-status-fail-text font-medium">✗ No expense report found — may need submitting</span>
+                          <span className="text-fail font-medium">✗ No expense report found — may need submitting</span>
                         )}
                       </p>
                     )}
@@ -185,10 +185,10 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
                         <button
                           key={c}
                           onClick={() => setCategory(t.id, c)}
-                          className={`px-2.5 py-1.5 text-xs font-medium rounded-[8px] border transition-colors ${
+                          className={`px-2.5 py-1.5 text-xs font-medium rounded-xs border transition-colors ${
                             active
                               ? 'bg-ink text-white border-ink'
-                              : 'bg-surface text-ink-2 border-warm-border hover:border-ink'
+                              : 'bg-surface text-ink-soft border-line hover:border-ink'
                           }`}
                         >
                           {CATEGORY_LABELS[c]}
@@ -199,20 +199,20 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
                 </div>
 
                 {/* Supporting emails — always visible */}
-                <div className="mt-3 border-t border-warm-border pt-2 space-y-1.5">
+                <div className="mt-3 border-t border-line pt-2 space-y-1.5">
                   {t.emails.map((e) => (
                     <div key={e.id} className="text-xs flex items-baseline gap-2 flex-wrap">
-                      <span className="text-ink-3 tabular-nums shrink-0">
+                      <span className="text-ink-muted tabular-nums shrink-0">
                         {e.gmail_date ? new Date(e.gmail_date).toLocaleDateString() : '—'}
                       </span>
                       <span className="text-ink min-w-0">{e.gmail_subject || '(no subject)'}</span>
-                      {e.amount != null && <span className="text-ink-3 shrink-0">{money(e.amount)}</span>}
+                      {e.amount != null && <span className="text-ink-muted shrink-0">{money(e.amount)}</span>}
                       {e.account_email && (
                         <a
                           href={gmailLink(e.account_email, e)}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-ink-3 hover:text-ink hover:underline shrink-0"
+                          className="text-ink-muted hover:text-ink hover:underline shrink-0"
                         >
                           open in Gmail ↗
                         </a>

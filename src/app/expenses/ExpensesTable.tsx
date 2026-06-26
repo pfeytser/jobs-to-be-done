@@ -18,12 +18,12 @@ const MATCH_STATUS_LABELS: Record<string, string> = {
 }
 
 const MATCH_STATUS_CLASSES: Record<string, string> = {
-  unmatched: 'bg-status-skipped text-ink-2',
-  matched: 'bg-status-pass text-status-pass-text',
-  possible_match: 'bg-status-blocked text-status-blocked-text',
-  needs_review: 'bg-status-blocked text-status-blocked-text',
-  no_receipt_required: 'bg-mist text-ink-2',
-  ignored: 'bg-status-skipped text-ink-3',
+  unmatched: 'bg-skipped-soft text-ink-soft',
+  matched: 'bg-pass-soft text-pass',
+  possible_match: 'bg-blocked-soft text-blocked',
+  needs_review: 'bg-blocked-soft text-blocked',
+  no_receipt_required: 'bg-info text-ink-soft',
+  ignored: 'bg-skipped-soft text-ink-muted',
 }
 
 type SortKey =
@@ -156,7 +156,7 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-ink">Expense Transactions</h1>
-          <p className="text-sm text-ink-3 mt-0.5">
+          <p className="text-sm text-ink-muted mt-0.5">
             {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
             {' · '}
             {money(totalAmount)} total (USD)
@@ -166,7 +166,7 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
           <button
             onClick={runMatcher}
             disabled={running}
-            className="px-4 py-2 text-sm font-semibold bg-gold text-ink rounded-[10px] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            className="px-4 py-2 text-sm font-semibold bg-accent text-ink rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
           >
             {running && (
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -178,25 +178,25 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
           </button>
           <Link
             href="/expenses/flights"
-            className="px-4 py-2 text-sm font-medium bg-surface border border-warm-border text-ink rounded-[10px] hover:border-ink transition-colors"
+            className="px-4 py-2 text-sm font-medium bg-surface border border-line text-ink rounded-sm hover:border-ink transition-colors"
           >
             ✈ Flights
           </Link>
           <Link
             href="/expenses/coupa-upload"
-            className="px-4 py-2 text-sm font-medium bg-surface border border-warm-border text-ink rounded-[10px] hover:border-ink transition-colors"
+            className="px-4 py-2 text-sm font-medium bg-surface border border-line text-ink rounded-sm hover:border-ink transition-colors"
           >
             Coupa upload
           </Link>
           <Link
             href="/expenses/accounts"
-            className="px-4 py-2 text-sm font-medium bg-surface border border-warm-border text-ink rounded-[10px] hover:border-ink transition-colors"
+            className="px-4 py-2 text-sm font-medium bg-surface border border-line text-ink rounded-sm hover:border-ink transition-colors"
           >
             Gmail accounts
           </Link>
           <Link
             href="/expenses/import"
-            className="px-4 py-2 text-sm font-semibold bg-ink text-white rounded-[10px] hover:opacity-90 transition-opacity"
+            className="px-4 py-2 text-sm font-semibold bg-ink text-white rounded-sm hover:opacity-90 transition-opacity"
           >
             Import CSV
           </Link>
@@ -205,20 +205,20 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
 
       {/* Run result banner */}
       {runResult && (
-        <div className="mb-4 p-3 bg-surface border border-warm-border rounded-[12px] flex items-center justify-between gap-3 text-sm">
+        <div className="mb-4 p-3 bg-surface border border-line rounded-md flex items-center justify-between gap-3 text-sm">
           <span className="text-ink">
             Run complete: <strong>{runResult.autoMatched}</strong> auto-matched,{' '}
             <strong>{runResult.needsReview}</strong> to review,{' '}
             <strong>{runResult.skipped}</strong> skipped, <strong>{runResult.filesSaved}</strong> receipts saved
-            {runResult.errors > 0 && <span className="text-status-blocked-text"> · {runResult.errors} errors</span>}
+            {runResult.errors > 0 && <span className="text-blocked"> · {runResult.errors} errors</span>}
             {' · '}
-            <span className="text-ink-2">{runResult.remaining} expense{runResult.remaining !== 1 ? 's' : ''} still to process</span>
+            <span className="text-ink-soft">{runResult.remaining} expense{runResult.remaining !== 1 ? 's' : ''} still to process</span>
           </span>
           {runResult.remaining > 0 && (
             <button
               onClick={runMatcher}
               disabled={running}
-              className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-ink text-white rounded-[8px] hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-ink text-white rounded-xs hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
               Run again
             </button>
@@ -227,7 +227,7 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
       )}
 
       {/* Filters */}
-      <div className="bg-surface border border-warm-border rounded-[14px] p-4 mb-4">
+      <div className="bg-surface border border-line rounded-md p-4 mb-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <FilterSelect
             label="Match Status"
@@ -284,8 +284,8 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
           />
         </div>
         {activeFilterCount > 0 && (
-          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-warm-border">
-            <span className="text-xs text-ink-3">
+          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-line">
+            <span className="text-xs text-ink-muted">
               {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} active
             </span>
             <button
@@ -294,35 +294,35 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
             >
               Clear all
             </button>
-            {loading && <span className="text-xs text-ink-3">Loading…</span>}
+            {loading && <span className="text-xs text-ink-muted">Loading…</span>}
           </div>
         )}
       </div>
 
       {/* Table */}
-      <div className="bg-surface border border-warm-border rounded-[14px] overflow-hidden">
+      <div className="bg-surface border border-line rounded-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-warm-border bg-canvas text-left">
+              <tr className="border-b border-line bg-canvas text-left">
                 <SortHeader label="Expense Date" sortKey="expense_date" active={sortBy} dir={sortDir} onClick={toggleSort} />
                 <SortHeader label="Merchant" sortKey="merchant" active={sortBy} dir={sortDir} onClick={toggleSort} />
-                <th className="px-3 py-2.5 font-semibold text-ink-2 whitespace-nowrap">Category</th>
+                <th className="px-3 py-2.5 font-semibold text-ink-soft whitespace-nowrap">Category</th>
                 <SortHeader label="Amount (USD)" sortKey="amount_usd" active={sortBy} dir={sortDir} onClick={toggleSort} align="right" />
                 <SortHeader label="Receipt Amt (Orig.)" sortKey="receipt_amount_original" active={sortBy} dir={sortDir} onClick={toggleSort} align="right" />
-                <th className="px-3 py-2.5 font-semibold text-ink-2 whitespace-nowrap">Report Name</th>
-                <th className="px-3 py-2.5 font-semibold text-ink-2 whitespace-nowrap">Report #</th>
-                <th className="px-3 py-2.5 font-semibold text-ink-2 whitespace-nowrap">Card ID</th>
-                <th className="px-3 py-2.5 font-semibold text-ink-2 whitespace-nowrap">Reimburse</th>
-                <th className="px-3 py-2.5 font-semibold text-ink-2 whitespace-nowrap">Match Status</th>
-                <th className="px-3 py-2.5 font-semibold text-ink-2 whitespace-nowrap">Confidence</th>
-                <th className="px-3 py-2.5 font-semibold text-ink-2 whitespace-nowrap">Receipt</th>
+                <th className="px-3 py-2.5 font-semibold text-ink-soft whitespace-nowrap">Report Name</th>
+                <th className="px-3 py-2.5 font-semibold text-ink-soft whitespace-nowrap">Report #</th>
+                <th className="px-3 py-2.5 font-semibold text-ink-soft whitespace-nowrap">Card ID</th>
+                <th className="px-3 py-2.5 font-semibold text-ink-soft whitespace-nowrap">Reimburse</th>
+                <th className="px-3 py-2.5 font-semibold text-ink-soft whitespace-nowrap">Match Status</th>
+                <th className="px-3 py-2.5 font-semibold text-ink-soft whitespace-nowrap">Confidence</th>
+                <th className="px-3 py-2.5 font-semibold text-ink-soft whitespace-nowrap">Receipt</th>
               </tr>
             </thead>
             <tbody>
               {transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="px-3 py-12 text-center text-ink-3">
+                  <td colSpan={12} className="px-3 py-12 text-center text-ink-muted">
                     No transactions found.{' '}
                     <Link href="/expenses/import" className="text-ink font-medium hover:underline">
                       Import a Coupa CSV
@@ -332,33 +332,33 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
                 </tr>
               ) : (
                 transactions.map((t) => (
-                  <tr key={t.id} className="border-b border-warm-border last:border-0 hover:bg-canvas/60">
+                  <tr key={t.id} className="border-b border-line last:border-0 hover:bg-canvas/60">
                     <td className="px-3 py-2.5 whitespace-nowrap text-ink">{date(t.expense_date)}</td>
                     <td className="px-3 py-2.5 text-ink font-medium">
                       <Link href={`/expenses/${t.id}`} className="hover:underline">
                         {t.merchant || '—'}
                       </Link>
                     </td>
-                    <td className="px-3 py-2.5 text-ink-2 whitespace-nowrap">{t.category || '—'}</td>
+                    <td className="px-3 py-2.5 text-ink-soft whitespace-nowrap">{t.category || '—'}</td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap text-ink tabular-nums">{money(t.amount_usd)}</td>
                     <td className="px-3 py-2.5 text-right whitespace-nowrap text-ink tabular-nums font-medium">{money(t.receipt_amount_original)}</td>
-                    <td className="px-3 py-2.5 text-ink-2">{t.report_name || '—'}</td>
-                    <td className="px-3 py-2.5 text-ink-2 whitespace-nowrap">{t.report_number || '—'}</td>
-                    <td className="px-3 py-2.5 text-ink-2 whitespace-nowrap">{t.card_id || '—'}</td>
-                    <td className="px-3 py-2.5 text-ink-2 whitespace-nowrap">{t.reimburse_to_employee || '—'}</td>
+                    <td className="px-3 py-2.5 text-ink-soft">{t.report_name || '—'}</td>
+                    <td className="px-3 py-2.5 text-ink-soft whitespace-nowrap">{t.report_number || '—'}</td>
+                    <td className="px-3 py-2.5 text-ink-soft whitespace-nowrap">{t.card_id || '—'}</td>
+                    <td className="px-3 py-2.5 text-ink-soft whitespace-nowrap">{t.reimburse_to_employee || '—'}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${MATCH_STATUS_CLASSES[t.match_status] ?? 'bg-status-skipped text-ink-2'}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${MATCH_STATUS_CLASSES[t.match_status] ?? 'bg-skipped-soft text-ink-soft'}`}>
                         {MATCH_STATUS_LABELS[t.match_status] ?? t.match_status}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-ink-2 whitespace-nowrap tabular-nums">
+                    <td className="px-3 py-2.5 text-ink-soft whitespace-nowrap tabular-nums">
                       {t.confidence_score == null ? '—' : `${Math.round(t.confidence_score)}%`}
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
                       {t.matched_receipt_file_id ? (
-                        <span className="text-status-pass-text text-xs">✓ Attached</span>
+                        <span className="text-pass text-xs">✓ Attached</span>
                       ) : (
-                        <span className="text-ink-3 text-xs">—</span>
+                        <span className="text-ink-muted text-xs">—</span>
                       )}
                     </td>
                   </tr>
@@ -389,13 +389,13 @@ function SortHeader({
 }) {
   const isActive = active === sortKey
   return (
-    <th className={`px-3 py-2.5 font-semibold text-ink-2 whitespace-nowrap ${align === 'right' ? 'text-right' : ''}`}>
+    <th className={`px-3 py-2.5 font-semibold text-ink-soft whitespace-nowrap ${align === 'right' ? 'text-right' : ''}`}>
       <button
         onClick={() => onClick(sortKey)}
         className={`inline-flex items-center gap-1 hover:text-ink transition-colors ${isActive ? 'text-ink' : ''}`}
       >
         {label}
-        <span className="text-ink-3">{isActive ? (dir === 'asc' ? '▲' : '▼') : '↕'}</span>
+        <span className="text-ink-muted">{isActive ? (dir === 'asc' ? '▲' : '▼') : '↕'}</span>
       </button>
     </th>
   )
@@ -414,11 +414,11 @@ function FilterSelect({
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-ink-2 mb-1">{label}</span>
+      <span className="block text-xs font-medium text-ink-soft mb-1">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-2.5 py-1.5 text-sm bg-canvas border border-warm-border rounded-[8px] text-ink focus:border-ink outline-none"
+        className="w-full px-2.5 py-1.5 text-sm bg-canvas border border-line rounded-xs text-ink focus:border-ink outline-none"
       >
         <option value="">All</option>
         {options.map((o) => (
@@ -444,13 +444,13 @@ function FilterText({
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-ink-2 mb-1">{label}</span>
+      <span className="block text-xs font-medium text-ink-soft mb-1">{label}</span>
       <input
         type="text"
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-2.5 py-1.5 text-sm bg-canvas border border-warm-border rounded-[8px] text-ink focus:border-ink outline-none"
+        className="w-full px-2.5 py-1.5 text-sm bg-canvas border border-line rounded-xs text-ink focus:border-ink outline-none"
       />
     </label>
   )
@@ -471,20 +471,20 @@ function FilterDateRange({
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-ink-2 mb-1">{label}</span>
+      <span className="block text-xs font-medium text-ink-soft mb-1">{label}</span>
       <div className="flex items-center gap-1">
         <input
           type="date"
           value={from}
           onChange={(e) => onFrom(e.target.value)}
-          className="w-full px-2 py-1.5 text-xs bg-canvas border border-warm-border rounded-[8px] text-ink focus:border-ink outline-none"
+          className="w-full px-2 py-1.5 text-xs bg-canvas border border-line rounded-xs text-ink focus:border-ink outline-none"
         />
-        <span className="text-ink-3 text-xs">–</span>
+        <span className="text-ink-muted text-xs">–</span>
         <input
           type="date"
           value={to}
           onChange={(e) => onTo(e.target.value)}
-          className="w-full px-2 py-1.5 text-xs bg-canvas border border-warm-border rounded-[8px] text-ink focus:border-ink outline-none"
+          className="w-full px-2 py-1.5 text-xs bg-canvas border border-line rounded-xs text-ink focus:border-ink outline-none"
         />
       </div>
     </label>

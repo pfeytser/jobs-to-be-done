@@ -66,16 +66,16 @@ function SortableRow({
     opacity: isDragging ? 0.5 : 1,
   }
 
-  const cellClass = 'px-2 py-1.5 border border-warm-border rounded-[6px] text-xs text-ink bg-canvas focus:outline-none focus:ring-1 focus:ring-ink w-full resize-none'
+  const cellClass = 'px-2 py-1.5 border border-line rounded-xs text-xs text-ink bg-canvas focus:outline-none focus:ring-1 focus:ring-ink w-full resize-none'
 
   return (
-    <tr ref={setNodeRef} style={style} className={item.needs_review ? 'bg-status-blocked/40' : 'bg-surface'}>
+    <tr ref={setNodeRef} style={style} className={item.needs_review ? 'bg-blocked-soft/40' : 'bg-surface'}>
       {/* Drag handle */}
       <td className="px-1 py-2 text-center">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-ink-3 hover:text-ink-2 touch-none"
+          className="cursor-grab active:cursor-grabbing text-ink-muted hover:text-ink-soft touch-none"
           aria-label="Drag to reorder"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +90,7 @@ function SortableRow({
           <button
             onClick={() => onResolve(item.id)}
             title="Needs review — click to resolve"
-            className="text-status-blocked-text hover:opacity-70 transition-opacity"
+            className="text-blocked hover:opacity-70 transition-opacity"
           >
             ⚠️
           </button>
@@ -120,7 +120,7 @@ function SortableRow({
       <td className="px-1 py-2 text-center">
         <button
           onClick={() => onDelete(item.id)}
-          className="text-ink-3 hover:text-status-fail-text transition-colors"
+          className="text-ink-muted hover:text-fail transition-colors"
           aria-label="Delete row"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,20 +305,20 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <span className="text-sm text-ink-2">{items.length} test items</span>
+          <span className="text-sm text-ink-soft">{items.length} test items</span>
           {pendingReviewCount > 0 && (
-            <span className="text-xs px-2.5 py-0.5 bg-status-blocked border border-status-blocked-border text-status-blocked-text rounded-full font-medium">
+            <span className="text-xs px-2.5 py-0.5 bg-blocked-soft border border-blocked-line text-blocked rounded-full font-medium">
               ⚠️ {pendingReviewCount} need{pendingReviewCount === 1 ? 's' : ''} review
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {saved && !dirty && <span className="text-xs text-status-pass-text">✓ Saved</span>}
-          {dirty && <span className="text-xs text-ink-3">Unsaved changes</span>}
+          {saved && !dirty && <span className="text-xs text-pass">✓ Saved</span>}
+          {dirty && <span className="text-xs text-ink-muted">Unsaved changes</span>}
           <button
             onClick={() => handleSave()}
             disabled={saving || !dirty}
-            className="flex items-center gap-1.5 px-3 py-2 bg-ink text-white text-sm font-medium rounded-[8px] hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+            className="flex items-center gap-1.5 px-3 py-2 bg-ink text-white text-sm font-medium rounded-xs hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
             {saving ? (
               <>
@@ -335,7 +335,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
               {deleteConfirm && (
                 <button
                   onClick={() => setDeleteConfirm(false)}
-                  className="px-3 py-2 bg-canvas border border-warm-border text-ink-3 text-sm font-medium rounded-[8px] hover:border-ink transition-colors"
+                  className="px-3 py-2 bg-canvas border border-line text-ink-muted text-sm font-medium rounded-xs hover:border-ink transition-colors"
                 >
                   Cancel
                 </button>
@@ -343,10 +343,10 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
               <button
                 onClick={handleDeleteAll}
                 disabled={deleting}
-                className={`px-3 py-2 text-sm font-medium rounded-[8px] border transition-colors disabled:opacity-50 flex items-center gap-2 ${
+                className={`px-3 py-2 text-sm font-medium rounded-xs border transition-colors disabled:opacity-50 flex items-center gap-2 ${
                   !deleteConfirm
-                    ? 'bg-canvas border-warm-border text-status-fail-text hover:border-status-fail-border'
-                    : 'bg-status-fail border-status-fail-border text-status-fail-text hover:opacity-80'
+                    ? 'bg-canvas border-line text-fail hover:border-fail-line'
+                    : 'bg-fail-soft border-fail-line text-fail hover:opacity-80'
                 }`}
               >
                 {deleting ? (
@@ -365,7 +365,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
           )}
           <button
             onClick={handleAddRow}
-            className="px-3 py-2 bg-canvas border border-warm-border text-ink text-sm font-medium rounded-[8px] hover:border-ink transition-colors"
+            className="px-3 py-2 bg-canvas border border-line text-ink text-sm font-medium rounded-xs hover:border-ink transition-colors"
           >
             + Add row
           </button>
@@ -373,19 +373,19 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-status-fail border border-status-fail-border rounded-[10px] text-status-fail-text text-sm">
+        <div className="mb-4 p-3 bg-fail-soft border border-fail-line rounded-sm text-fail text-sm">
           {error}
         </div>
       )}
 
       {pendingReviewCount > 0 && (
-        <div className="mb-4 p-3 bg-status-blocked border border-status-blocked-border rounded-[10px] text-status-blocked-text text-sm">
+        <div className="mb-4 p-3 bg-blocked-soft border border-blocked-line rounded-sm text-blocked text-sm">
           <strong>{pendingReviewCount} item{pendingReviewCount === 1 ? '' : 's'} need{pendingReviewCount === 1 ? 's' : ''} your review.</strong>{' '}
           These were flagged by the AI as ambiguous or technical. Review and edit them, then click ⚠️ to clear the flag.
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-[12px] border border-warm-border">
+      <div className="overflow-x-auto rounded-md border border-line">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -393,9 +393,9 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
         >
           <table className="w-full text-xs border-collapse table-fixed">
             <thead>
-              <tr className="bg-canvas border-b border-warm-border">
+              <tr className="bg-canvas border-b border-line">
                 {columns.map((col, i) => (
-                  <th key={i} className={`px-2 py-2 text-left text-xs font-semibold text-ink-3 whitespace-nowrap ${col.width}`}>
+                  <th key={i} className={`px-2 py-2 text-left text-xs font-semibold text-ink-muted whitespace-nowrap ${col.width}`}>
                     {col.header}
                   </th>
                 ))}
@@ -417,7 +417,7 @@ export function TestSuiteEditor({ projectId, userType, initialItems, onSaved, sa
           </table>
         </DndContext>
         {items.length === 0 && (
-          <div className="text-center py-12 text-ink-3 text-sm">
+          <div className="text-center py-12 text-ink-muted text-sm">
             No test items yet. Upload a document or add a row manually.
           </div>
         )}

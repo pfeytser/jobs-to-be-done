@@ -14,7 +14,7 @@ export default async function TranslationHome() {
 
   return (
     <main className="min-h-screen bg-canvas">
-      <div className="max-w-3xl mx-auto px-6 py-10">
+      <div className="max-w-content mx-auto px-6 py-10">
         <ProjectsClient initialProjects={projects} isOwner={isOwner} />
       </div>
     </main>

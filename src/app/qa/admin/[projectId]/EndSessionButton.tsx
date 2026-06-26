@@ -21,7 +21,7 @@ export function EndSessionButton({ sessionId }: { sessionId: string }) {
     <button
       onClick={handleEnd}
       disabled={loading}
-      className="px-2.5 py-1 text-xs font-medium rounded-full border border-warm-border bg-canvas text-ink-2 hover:text-ink hover:border-ink transition-all disabled:opacity-50 whitespace-nowrap"
+      className="px-2.5 py-1 text-xs font-medium rounded-full border border-line bg-canvas text-ink-soft hover:text-ink hover:border-ink transition-all disabled:opacity-50 whitespace-nowrap"
     >
       {loading ? (
         <span className="flex items-center gap-1.5">

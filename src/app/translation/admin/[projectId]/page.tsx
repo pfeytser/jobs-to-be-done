@@ -20,7 +20,7 @@ export default async function ProjectSetupPage({ params }: { params: Promise<{ p
 
   return (
     <main className="min-h-screen bg-canvas">
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-wide mx-auto px-6 py-10">
         <SetupClient project={project} initialDatasets={datasetMeta} />
       </div>
     </main>

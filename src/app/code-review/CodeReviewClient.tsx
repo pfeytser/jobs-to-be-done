@@ -103,12 +103,12 @@ export function CodeReviewClient() {
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-ink mb-1">Code Review</h1>
-          <p className="text-sm text-ink-3">
+          <p className="text-sm text-ink-muted">
             Paste one or more GitHub PR URLs (one per line) for an L7-level AI review.
           </p>
         </div>
 
-        <div className="bg-surface border border-warm-border rounded-xl p-6 mb-6">
+        <div className="bg-surface border border-line rounded-xl p-6 mb-6">
           <label className="block text-sm font-semibold text-ink mb-2">
             GitHub PR URLs
           </label>
@@ -118,7 +118,7 @@ export function CodeReviewClient() {
             placeholder="https://github.com/owner/repo/pull/123&#10;https://github.com/owner/repo/pull/456"
             rows={4}
             disabled={phase === 'fetching' || phase === 'reviewing'}
-            className="w-full text-sm font-mono bg-canvas border border-warm-border rounded-lg px-3 py-2 text-ink placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-ink/20 resize-none disabled:opacity-50"
+            className="w-full text-sm font-mono bg-canvas border border-line rounded-lg px-3 py-2 text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-ink/20 resize-none disabled:opacity-50"
           />
           <div className="mt-4 flex items-center gap-3">
             <button
@@ -137,7 +137,7 @@ export function CodeReviewClient() {
                   setErrorMsg('')
                   reviewAccumRef.current = ''
                 }}
-                className="px-5 py-2 text-sm font-semibold text-ink-2 border border-warm-border rounded-full hover:bg-canvas transition-colors"
+                className="px-5 py-2 text-sm font-semibold text-ink-soft border border-line rounded-full hover:bg-canvas transition-colors"
               >
                 New review
               </button>
@@ -146,18 +146,18 @@ export function CodeReviewClient() {
         </div>
 
         {progressMessages.length > 0 && phase !== 'done' && (
-          <div className="bg-mist border border-warm-border rounded-xl p-4 mb-6">
-            <p className="text-xs font-semibold text-ink-3 uppercase tracking-wide mb-2">Progress</p>
+          <div className="bg-info border border-line rounded-xl p-4 mb-6">
+            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">Progress</p>
             <ul className="space-y-1">
               {progressMessages.map((msg, i) => (
-                <li key={i} className="text-sm text-ink-2 flex items-start gap-2">
-                  <span className="text-ink-3 mt-0.5 shrink-0">›</span>
+                <li key={i} className="text-sm text-ink-soft flex items-start gap-2">
+                  <span className="text-ink-muted mt-0.5 shrink-0">›</span>
                   {msg}
                 </li>
               ))}
               {(phase === 'fetching' || phase === 'reviewing') && (
-                <li className="text-sm text-ink-3 flex items-center gap-2">
-                  <span className="inline-block w-3 h-3 border-2 border-ink-3 border-t-transparent rounded-full animate-spin" />
+                <li className="text-sm text-ink-muted flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 border-2 border-ink-muted border-t-transparent rounded-full animate-spin" />
                   {phase === 'reviewing' ? 'Streaming review…' : 'Working…'}
                 </li>
               )}
@@ -166,21 +166,21 @@ export function CodeReviewClient() {
         )}
 
         {phase === 'error' && (
-          <div className="bg-status-fail border border-status-fail-text/20 rounded-xl p-4 mb-6">
-            <p className="text-sm font-semibold text-status-fail-text">Error</p>
-            <p className="text-sm text-status-fail-text/80 mt-1">{errorMsg}</p>
+          <div className="bg-fail-soft border border-fail/20 rounded-xl p-4 mb-6">
+            <p className="text-sm font-semibold text-fail">Error</p>
+            <p className="text-sm text-fail/80 mt-1">{errorMsg}</p>
           </div>
         )}
 
         {(reviewHtml || phase === 'reviewing') && (
-          <div className="bg-surface border border-warm-border rounded-xl p-6">
+          <div className="bg-surface border border-line rounded-xl p-6">
             {reviewHtml ? (
               <div
                 className="prose prose-sm max-w-none text-ink"
                 dangerouslySetInnerHTML={{ __html: reviewHtml }}
               />
             ) : (
-              <p className="text-sm text-ink-3">Receiving review…</p>
+              <p className="text-sm text-ink-muted">Receiving review…</p>
             )}
           </div>
         )}

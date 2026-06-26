@@ -54,17 +54,17 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
 
   if (mode === 'hiring') {
     return (
-      <div className="bg-surface rounded-[14px] border border-warm-border p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+      <div className="bg-surface rounded-md border border-line p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
         <div className="mb-5">
           <h2 className="text-base font-semibold text-ink">Add your statement</h2>
-          <p className="text-sm text-ink-3 mt-0.5">
+          <p className="text-sm text-ink-muted mt-0.5">
             Complete the sentence below — a few words or a short phrase is enough.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-3 text-sm pointer-events-none font-medium whitespace-nowrap">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted text-sm pointer-events-none font-medium whitespace-nowrap">
               I am hiring it to
             </span>
             <input
@@ -72,7 +72,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
               value={hiringText}
               onChange={(e) => setHiringText(e.target.value)}
               placeholder="help me find a workspace quickly…"
-              className="w-full pl-[11.5rem] pr-4 py-3 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
+              className="w-full pl-[11.5rem] pr-4 py-3 border border-line rounded-md text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
               maxLength={500}
               required
               autoComplete="off"
@@ -80,7 +80,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-[14px] text-red-700 text-sm">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
               {error}
             </div>
           )}
@@ -109,10 +109,10 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
 
   // Classic mode
   return (
-    <div className="bg-surface rounded-[14px] border border-warm-border p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+    <div className="bg-surface rounded-md border border-line p-6" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
       <div className="mb-5">
         <h2 className="text-base font-semibold text-ink">Add your JTBD</h2>
-        <p className="text-sm text-ink-3 mt-0.5">
+        <p className="text-sm text-ink-muted mt-0.5">
           Complete each part of the statement below
         </p>
       </div>
@@ -120,7 +120,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-3 text-sm pointer-events-none font-medium">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted text-sm pointer-events-none font-medium">
               When
             </span>
             <input
@@ -128,7 +128,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
               value={situation}
               onChange={(e) => setSituation(e.target.value)}
               placeholder="the situation or context…"
-              className="w-full pl-16 pr-4 py-3 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
+              className="w-full pl-16 pr-4 py-3 border border-line rounded-md text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
               maxLength={500}
               required
             />
@@ -137,7 +137,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
 
         <div>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-3 text-sm pointer-events-none whitespace-nowrap font-medium">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted text-sm pointer-events-none whitespace-nowrap font-medium">
               I want to
             </span>
             <input
@@ -145,7 +145,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
               value={motivation}
               onChange={(e) => setMotivation(e.target.value)}
               placeholder="what the user is trying to do…"
-              className="w-full pl-[5.25rem] pr-4 py-3 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
+              className="w-full pl-[5.25rem] pr-4 py-3 border border-line rounded-md text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
               maxLength={500}
               required
             />
@@ -154,7 +154,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
 
         <div>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-3 text-sm pointer-events-none whitespace-nowrap font-medium">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted text-sm pointer-events-none whitespace-nowrap font-medium">
               So I can
             </span>
             <input
@@ -162,7 +162,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
               value={expectedOutcome}
               onChange={(e) => setExpectedOutcome(e.target.value)}
               placeholder="that outcome or value they hope to get…"
-              className="w-full pl-[5.25rem] pr-4 py-3 border border-warm-border rounded-[14px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
+              className="w-full pl-[5.25rem] pr-4 py-3 border border-line rounded-md text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent focus:bg-surface transition-all"
               maxLength={500}
               required
             />
@@ -170,8 +170,8 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
         </div>
 
         {classicPreview && (
-          <div className="bg-mist rounded-[14px] p-4 border border-warm-border">
-            <p className="text-xs text-ink-2 font-medium mb-1 uppercase tracking-wide">Preview</p>
+          <div className="bg-info rounded-md p-4 border border-line">
+            <p className="text-xs text-ink-soft font-medium mb-1 uppercase tracking-wide">Preview</p>
             <p className="text-sm text-ink leading-relaxed italic">
               &ldquo;{classicPreview}&rdquo;
             </p>
@@ -179,7 +179,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
         )}
 
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-[14px] text-red-700 text-sm">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
             {error}
           </div>
         )}

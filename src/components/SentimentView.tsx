@@ -109,7 +109,7 @@ export function SentimentView({ exercise }: SentimentViewProps) {
           <PhaseBadge phase={liveExercise.currentPhase} />
           {exercise.timerEndsAt && <Timer endsAt={exercise.timerEndsAt} />}
         </div>
-        <div className="text-sm text-ink-3">{exercise.name}</div>
+        <div className="text-sm text-ink-muted">{exercise.name}</div>
       </div>
 
       {/* Phase 1: Creation */}
@@ -137,7 +137,7 @@ export function SentimentView({ exercise }: SentimentViewProps) {
           )}
 
           {entries.length === 0 && (
-            <div className="text-center py-10 text-ink-3">
+            <div className="text-center py-10 text-ink-muted">
               <div className="text-3xl mb-2">✍️</div>
               <p className="text-sm">Your responses will appear here</p>
             </div>
@@ -153,13 +153,13 @@ export function SentimentView({ exercise }: SentimentViewProps) {
           ) : (
             <div className="text-center py-20 space-y-4">
               <div className="flex justify-center">
-                <svg className="w-8 h-8 animate-spin text-ink-3" fill="none" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 animate-spin text-ink-muted" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               </div>
               <p className="text-sm font-medium text-ink">Generating your analysis…</p>
-              <p className="text-xs text-ink-3">Your facilitator is synthesizing the responses</p>
+              <p className="text-xs text-ink-muted">Your facilitator is synthesizing the responses</p>
             </div>
           )}
         </div>
@@ -175,7 +175,7 @@ function PhaseBadge({ phase }: { phase: 1 | 2 | 3 | 4 | 5 }) {
     3: 'Phase 3: Brainstorming',
   }
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-sand text-ink border border-warm-border">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-almond-400 text-ink border border-line">
       <span className="w-1.5 h-1.5 rounded-full bg-ink opacity-50" />
       {labels[phase] ?? `Phase ${phase}`}
     </span>

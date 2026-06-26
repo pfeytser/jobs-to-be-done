@@ -37,16 +37,16 @@ function OnSiteLanding({ profile }: { profile: { sea_creature?: string | null; s
 
       <div>
         <h1 className="text-2xl font-bold text-ink mb-1">Welcome to On-site</h1>
-        <p className="text-sm text-ink-3 mb-6">Ready to build your storyboard?</p>
+        <p className="text-sm text-ink-muted mb-6">Ready to build your storyboard?</p>
         <a
           href="/storyboard"
-          className="flex items-center justify-between w-full p-5 bg-surface border border-warm-border rounded-[16px] hover:border-ink transition-colors group"
+          className="flex items-center justify-between w-full p-5 bg-surface border border-line rounded-lg hover:border-ink transition-colors group"
         >
           <div>
             <p className="text-base font-semibold text-ink">Storyboards</p>
-            <p className="text-sm text-ink-3 mt-0.5">Create and view customer journey storyboards</p>
+            <p className="text-sm text-ink-muted mt-0.5">Create and view customer journey storyboards</p>
           </div>
-          <svg className="w-5 h-5 text-ink-3 group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-ink-muted group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </a>

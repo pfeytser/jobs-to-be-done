@@ -160,39 +160,39 @@ export function SourcesPanel({
     <div className="mb-6">
       <div className="grid md:grid-cols-2 gap-4">
         {/* UI dictionary card */}
-        <div className="bg-surface border border-warm-border rounded-[16px] p-5">
+        <div className="bg-surface border border-line rounded-lg p-5">
           <h3 className="text-sm font-semibold text-ink">UI dictionary (JSON)</h3>
-          <p className="text-xs text-ink-3 mt-1">
+          <p className="text-xs text-ink-muted mt-1">
             Translators only edit the translation. Keys, structure, and placeholders are locked; exports match{' '}
             <code className="font-mono">en.json</code> exactly.
           </p>
           <div className="mt-3 space-y-2">
-            <label className="block text-xs font-medium text-ink-2">English source</label>
+            <label className="block text-xs font-medium text-ink-soft">English source</label>
             <input
               ref={enRef}
               type="file"
               accept=".json,application/json"
               onChange={(e) => setEnFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-xs text-ink-2 file:mr-3 file:py-1.5 file:px-3 file:rounded-[8px] file:border file:border-warm-border file:bg-canvas file:text-ink-2 file:text-xs"
+              className="block w-full text-xs text-ink-soft file:mr-3 file:py-1.5 file:px-3 file:rounded-xs file:border file:border-line file:bg-canvas file:text-ink-soft file:text-xs"
             />
-            <label className="block text-xs font-medium text-ink-2 mt-2">Target language files</label>
+            <label className="block text-xs font-medium text-ink-soft mt-2">Target language files</label>
             <input
               ref={targetRef}
               type="file"
               accept=".json,application/json"
               multiple
               onChange={(e) => setTargetFiles(Array.from(e.target.files ?? []))}
-              className="block w-full text-xs text-ink-2 file:mr-3 file:py-1.5 file:px-3 file:rounded-[8px] file:border file:border-warm-border file:bg-canvas file:text-ink-2 file:text-xs"
+              className="block w-full text-xs text-ink-soft file:mr-3 file:py-1.5 file:px-3 file:rounded-xs file:border file:border-line file:bg-canvas file:text-ink-soft file:text-xs"
             />
             {targetFiles.length > 0 && (
-              <p className="text-[11px] text-ink-3">
+              <p className="text-[11px] text-ink-muted">
                 {targetFiles.map((f) => f.name.replace(/\.json$/i, '')).join(', ')}
               </p>
             )}
             <button
               onClick={loadUi}
               disabled={busy}
-              className="mt-2 px-3 py-1.5 text-sm font-medium bg-ink text-white rounded-[10px] disabled:opacity-50"
+              className="mt-2 px-3 py-1.5 text-sm font-medium bg-ink text-white rounded-sm disabled:opacity-50"
             >
               Load dictionary
             </button>
@@ -200,9 +200,9 @@ export function SourcesPanel({
         </div>
 
         {/* CSV card */}
-        <div className="bg-surface border border-warm-border rounded-[16px] p-5">
+        <div className="bg-surface border border-line rounded-lg p-5">
           <h3 className="text-sm font-semibold text-ink">Database export (CSV)</h3>
-          <p className="text-xs text-ink-3 mt-1">
+          <p className="text-xs text-ink-muted mt-1">
             One column is English; one column per language. Id/path columns are preserved untouched on export.
           </p>
           <div className="mt-3">
@@ -214,13 +214,13 @@ export function SourcesPanel({
                 const f = e.target.files?.[0]
                 if (f) detectCsv(f)
               }}
-              className="block w-full text-xs text-ink-2 file:mr-3 file:py-1.5 file:px-3 file:rounded-[8px] file:border file:border-warm-border file:bg-canvas file:text-ink-2 file:text-xs"
+              className="block w-full text-xs text-ink-soft file:mr-3 file:py-1.5 file:px-3 file:rounded-xs file:border file:border-line file:bg-canvas file:text-ink-soft file:text-xs"
             />
           </div>
         </div>
       </div>
 
-      {error && <p className="text-sm text-status-fail-text mt-3">{error}</p>}
+      {error && <p className="text-sm text-fail mt-3">{error}</p>}
 
       {/* Loaded sources */}
       {datasets.length > 0 && (
@@ -232,14 +232,14 @@ export function SourcesPanel({
                 : Object.keys((d.config as CsvDatasetConfig).langColumns)
             const mismatches = d.kind === 'ui' ? (d.config as UiDatasetConfig).mismatches : undefined
             return (
-              <div key={d.id} className="flex items-start justify-between bg-surface border border-warm-border rounded-[12px] px-4 py-3">
+              <div key={d.id} className="flex items-start justify-between bg-surface border border-line rounded-md px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-ink">
-                    {d.name} <span className="text-xs text-ink-3">({d.kind === 'ui' ? 'UI JSON' : 'CSV'})</span>
+                    {d.name} <span className="text-xs text-ink-muted">({d.kind === 'ui' ? 'UI JSON' : 'CSV'})</span>
                   </p>
-                  <p className="text-xs text-ink-3 mt-0.5">{langs.join(', ') || 'no languages detected'}</p>
+                  <p className="text-xs text-ink-muted mt-0.5">{langs.join(', ') || 'no languages detected'}</p>
                   {mismatches && Object.keys(mismatches).length > 0 && (
-                    <p className="text-[11px] text-status-blocked-text mt-1">
+                    <p className="text-[11px] text-blocked mt-1">
                       ⚠ Structural mismatch:{' '}
                       {Object.entries(mismatches)
                         .map(
@@ -252,7 +252,7 @@ export function SourcesPanel({
                 </div>
                 <button
                   onClick={() => removeDataset(d.id, d.name)}
-                  className="shrink-0 ml-3 text-xs text-status-fail-text hover:opacity-80 border border-warm-border rounded-[8px] px-2.5 py-1"
+                  className="shrink-0 ml-3 text-xs text-fail hover:opacity-80 border border-line rounded-xs px-2.5 py-1"
                 >
                   Remove
                 </button>
@@ -265,15 +265,15 @@ export function SourcesPanel({
       {/* CSV column-mapping dialog */}
       {csvDetect && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" onClick={() => setCsvDetect(null)}>
-          <div className="bg-surface rounded-[16px] p-6 max-w-lg w-full max-h-[85vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-surface rounded-lg p-6 max-w-lg w-full max-h-[85vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-semibold text-ink">Map columns — {csvDetect.fileName}</h3>
-            <p className="text-xs text-ink-3 mt-1">{csvDetect.rowCount.toLocaleString()} rows. Confirm which columns hold copy.</p>
+            <p className="text-xs text-ink-muted mt-1">{csvDetect.rowCount.toLocaleString()} rows. Confirm which columns hold copy.</p>
 
-            <label className="block text-xs font-medium text-ink-2 mt-4">English column</label>
+            <label className="block text-xs font-medium text-ink-soft mt-4">English column</label>
             <select
               value={csvDetect.englishColumn}
               onChange={(e) => setCsvDetect({ ...csvDetect, englishColumn: e.target.value })}
-              className="mt-1 w-full px-3 py-2 text-sm border border-warm-border rounded-[10px] bg-canvas"
+              className="mt-1 w-full px-3 py-2 text-sm border border-line rounded-sm bg-canvas"
             >
               {csvDetect.headers.map((h) => (
                 <option key={h} value={h}>
@@ -282,24 +282,24 @@ export function SourcesPanel({
               ))}
             </select>
 
-            <p className="text-xs font-medium text-ink-2 mt-4">Language columns</p>
+            <p className="text-xs font-medium text-ink-soft mt-4">Language columns</p>
             <div className="mt-1 grid grid-cols-2 gap-1.5">
               {csvDetect.headers
                 .filter((h) => h !== csvDetect.englishColumn)
                 .map((h) => (
-                  <label key={h} className="flex items-center gap-1.5 text-xs text-ink-2">
+                  <label key={h} className="flex items-center gap-1.5 text-xs text-ink-soft">
                     <input type="checkbox" checked={!!csvDetect.langColumns[h]} onChange={() => toggleLang(h)} />
                     <span className="truncate">{h}</span>
                   </label>
                 ))}
             </div>
 
-            <p className="text-xs font-medium text-ink-2 mt-4">Label columns (shown to identify each row)</p>
+            <p className="text-xs font-medium text-ink-soft mt-4">Label columns (shown to identify each row)</p>
             <div className="mt-1 grid grid-cols-2 gap-1.5">
               {csvDetect.headers
                 .filter((h) => h !== csvDetect.englishColumn && !csvDetect.langColumns[h])
                 .map((h) => (
-                  <label key={h} className="flex items-center gap-1.5 text-xs text-ink-2">
+                  <label key={h} className="flex items-center gap-1.5 text-xs text-ink-soft">
                     <input type="checkbox" checked={csvDetect.labelColumns.includes(h)} onChange={() => toggleLabel(h)} />
                     <span className="truncate">{h}</span>
                   </label>
@@ -307,13 +307,13 @@ export function SourcesPanel({
             </div>
 
             <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setCsvDetect(null)} className="px-3 py-1.5 text-sm text-ink-3 hover:text-ink">
+              <button onClick={() => setCsvDetect(null)} className="px-3 py-1.5 text-sm text-ink-muted hover:text-ink">
                 Cancel
               </button>
               <button
                 onClick={confirmCsv}
                 disabled={busy || Object.keys(csvDetect.langColumns).length === 0}
-                className="px-4 py-1.5 text-sm font-medium bg-ink text-white rounded-[10px] disabled:opacity-50"
+                className="px-4 py-1.5 text-sm font-medium bg-ink text-white rounded-sm disabled:opacity-50"
               >
                 Add CSV
               </button>

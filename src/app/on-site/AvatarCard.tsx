@@ -36,11 +36,11 @@ export default function AvatarCard({
   const showImage = avatarUrl && !imgFailed && !generating
 
   return (
-    <div className="flex items-center gap-4 p-5 bg-surface border border-warm-border rounded-[16px]">
+    <div className="flex items-center gap-4 p-5 bg-surface border border-line rounded-lg">
       {/* Avatar */}
-      <div className="w-16 h-16 rounded-full shrink-0 overflow-hidden bg-canvas border border-warm-border flex items-center justify-center">
+      <div className="w-16 h-16 rounded-full shrink-0 overflow-hidden bg-canvas border border-line flex items-center justify-center">
         {generating ? (
-          <svg className="w-5 h-5 text-ink-3 animate-spin" fill="none" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-ink-muted animate-spin" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
           </svg>
@@ -58,10 +58,10 @@ export default function AvatarCard({
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-ink-3 uppercase tracking-widest font-medium mb-0.5">Your sea creature</p>
+        <p className="text-xs text-ink-muted uppercase tracking-widest font-medium mb-0.5">Your sea creature</p>
         <p className="text-base font-semibold text-ink capitalize">{seaCreature}</p>
         {generating && (
-          <p className="text-xs text-ink-3 mt-0.5">Generating your avatar…</p>
+          <p className="text-xs text-ink-muted mt-0.5">Generating your avatar…</p>
         )}
       </div>
 
@@ -69,7 +69,7 @@ export default function AvatarCard({
         onClick={handleRegenerate}
         disabled={generating}
         title={avatarUrl ? 'Regenerate avatar' : 'Generate avatar'}
-        className="shrink-0 p-2 text-ink-3 hover:text-ink transition-colors disabled:opacity-40"
+        className="shrink-0 p-2 text-ink-muted hover:text-ink transition-colors disabled:opacity-40"
       >
         {generating ? (
           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

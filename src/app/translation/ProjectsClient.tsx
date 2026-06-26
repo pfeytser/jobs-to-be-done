@@ -16,16 +16,16 @@ export function ProjectsClient({
     <div>
       <div className="flex items-start justify-between mb-2">
         <div>
-          <Link href="/" className="text-sm text-ink-3 hover:text-ink transition-colors">
+          <Link href="/" className="text-sm text-ink-muted hover:text-ink transition-colors">
             ← Home
           </Link>
           <h1 className="text-2xl font-bold text-ink mt-2">Translation Review</h1>
-          <p className="text-sm text-ink-3 mt-1">Pick a project to review and refine its translations.</p>
+          <p className="text-sm text-ink-muted mt-1">Pick a project to review and refine its translations.</p>
         </div>
         {isOwner && (
           <Link
             href="/translation/admin"
-            className="shrink-0 px-4 py-2 text-sm font-medium border border-warm-border rounded-[12px] bg-surface hover:border-ink transition-colors"
+            className="shrink-0 px-4 py-2 text-sm font-medium border border-line rounded-md bg-surface hover:border-ink transition-colors"
           >
             ⚙ Setup &amp; projects
           </Link>
@@ -34,7 +34,7 @@ export function ProjectsClient({
 
       <div className="mt-6 space-y-3">
         {initialProjects.length === 0 && (
-          <p className="text-sm text-ink-3">
+          <p className="text-sm text-ink-muted">
             No projects yet.{' '}
             {isOwner && (
               <Link href="/translation/admin" className="text-ink underline">
@@ -47,13 +47,13 @@ export function ProjectsClient({
           <Link
             key={proj.id}
             href={`/translation/${proj.id}`}
-            className="flex items-center justify-between bg-surface border border-warm-border rounded-[16px] p-5 hover:border-ink transition-colors group"
+            className="flex items-center justify-between bg-surface border border-line rounded-lg p-5 hover:border-ink transition-colors group"
           >
             <div>
               <p className="text-base font-semibold text-ink">{proj.name}</p>
-              <p className="text-sm text-ink-3 mt-0.5">Open editor →</p>
+              <p className="text-sm text-ink-muted mt-0.5">Open editor →</p>
             </div>
-            <svg className="w-5 h-5 text-ink-3 group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-ink-muted group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>

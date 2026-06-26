@@ -32,7 +32,7 @@ function MultiSelect({
             className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
               selected.includes(opt)
                 ? 'bg-ink text-white border-ink'
-                : 'bg-canvas border-warm-border text-ink hover:border-ink-2'
+                : 'bg-canvas border-line text-ink hover:border-ink-soft'
             }`}
           >
             {opt}
@@ -94,7 +94,7 @@ export function CreateProjectForm() {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-ink mb-1.5">
-          Project name <span className="text-status-fail-text">*</span>
+          Project name <span className="text-fail">*</span>
         </label>
         <input
           type="text"
@@ -102,7 +102,7 @@ export function CreateProjectForm() {
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Members Portal QA — Q2 2026"
           required
-          className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+          className="w-full px-3 py-2.5 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
         />
       </div>
 
@@ -113,7 +113,7 @@ export function CreateProjectForm() {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Brief description of what this project covers…"
           rows={3}
-          className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+          className="w-full px-3 py-2.5 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
         />
       </div>
 
@@ -128,7 +128,7 @@ export function CreateProjectForm() {
               className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
                 platform === p
                   ? 'bg-ink text-white border-ink'
-                  : 'bg-canvas border-warm-border text-ink hover:border-ink-2'
+                  : 'bg-canvas border-line text-ink hover:border-ink-soft'
               }`}
             >
               {p}
@@ -149,7 +149,7 @@ export function CreateProjectForm() {
       {/* User types */}
       <div>
         <label className="block text-sm font-medium text-ink mb-1.5">User types</label>
-        <p className="text-xs text-ink-3 mb-2">
+        <p className="text-xs text-ink-muted mb-2">
           Add the membership or user types testers will choose from when starting a session.
         </p>
         <div className="flex gap-2 mb-3">
@@ -159,12 +159,12 @@ export function CreateProjectForm() {
             onChange={(e) => setNewUserType(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addUserType() } }}
             placeholder="e.g. Dedicated Office Member"
-            className="flex-1 px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+            className="flex-1 px-3 py-2.5 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
           />
           <button
             type="button"
             onClick={addUserType}
-            className="px-4 py-2.5 bg-canvas border border-warm-border text-sm font-medium text-ink rounded-[10px] hover:border-ink transition-colors"
+            className="px-4 py-2.5 bg-canvas border border-line text-sm font-medium text-ink rounded-sm hover:border-ink transition-colors"
           >
             Add
           </button>
@@ -174,13 +174,13 @@ export function CreateProjectForm() {
             {userTypes.map((ut) => (
               <span
                 key={ut}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-canvas border border-warm-border text-sm text-ink rounded-full"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-canvas border border-line text-sm text-ink rounded-full"
               >
                 {ut}
                 <button
                   type="button"
                   onClick={() => setUserTypes((prev) => prev.filter((u) => u !== ut))}
-                  className="text-ink-3 hover:text-ink transition-colors"
+                  className="text-ink-muted hover:text-ink transition-colors"
                   aria-label={`Remove ${ut}`}
                 >
                   ×
@@ -192,7 +192,7 @@ export function CreateProjectForm() {
       </div>
 
       {error && (
-        <div className="p-3 bg-status-fail border border-status-fail-border rounded-[10px] text-status-fail-text text-sm">
+        <div className="p-3 bg-fail-soft border border-fail-line rounded-sm text-fail text-sm">
           {error}
         </div>
       )}
@@ -201,7 +201,7 @@ export function CreateProjectForm() {
         <button
           type="button"
           onClick={() => window.history.back()}
-          className="px-4 py-2.5 bg-canvas border border-warm-border text-ink-2 text-sm font-medium rounded-full hover:border-ink hover:text-ink transition-all"
+          className="px-4 py-2.5 bg-canvas border border-line text-ink-soft text-sm font-medium rounded-full hover:border-ink hover:text-ink transition-all"
         >
           Cancel
         </button>

@@ -58,27 +58,27 @@ export function UserTypeSuiteView({
   return (
     <div>
       {/* Setup instructions editor */}
-      <div className="max-w-3xl mb-8">
+      <div className="max-w-content mb-8">
         <h2 className="text-sm font-semibold text-ink mb-2">Setup instructions</h2>
-        <p className="text-xs text-ink-3 mb-3">Shown to testers at the top of their session page. Use this to describe how to set up the test account or environment.</p>
+        <p className="text-xs text-ink-muted mb-3">Shown to testers at the top of their session page. Use this to describe how to set up the test account or environment.</p>
         <InstructionsEditor projectId={projectId} userType={userType} initialHtml={initialInstructions} />
       </div>
 
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-        <p className="text-sm text-ink-3">
+        <p className="text-sm text-ink-muted">
           {items.length} test item{items.length !== 1 ? 's' : ''}
         </p>
         <button
           onClick={() => setShowUpload((v) => !v)}
-          className="px-4 py-2 text-sm font-medium bg-canvas border border-warm-border text-ink rounded-[8px] hover:border-ink transition-colors"
+          className="px-4 py-2 text-sm font-medium bg-canvas border border-line text-ink rounded-xs hover:border-ink transition-colors"
         >
           {showUpload ? 'Cancel upload' : 'Upload new CSV'}
         </button>
       </div>
 
       {showUpload && (
-        <div className="mb-6 max-w-lg bg-surface border border-warm-border rounded-[14px] p-5">
-          <p className="text-xs text-ink-3 mb-4">
+        <div className="mb-6 max-w-lg bg-surface border border-line rounded-md p-5">
+          <p className="text-xs text-ink-muted mb-4">
             Uploading will replace all <strong>{userType}</strong> tests with the new CSV.
           </p>
           <UploadPanel projectId={projectId} userType={userType} onItemsReady={handleItemsReady} />

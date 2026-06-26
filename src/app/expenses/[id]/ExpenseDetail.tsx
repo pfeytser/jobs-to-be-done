@@ -23,11 +23,11 @@ const RM_STATUS_LABELS: Record<string, string> = {
 }
 
 const RM_STATUS_CLASSES: Record<string, string> = {
-  candidate: 'bg-status-skipped text-ink-2',
-  auto_matched: 'bg-status-pass text-status-pass-text',
-  approved: 'bg-status-pass text-status-pass-text',
-  rejected: 'bg-status-fail text-status-fail-text',
-  needs_review: 'bg-status-blocked text-status-blocked-text',
+  candidate: 'bg-skipped-soft text-ink-soft',
+  auto_matched: 'bg-pass-soft text-pass',
+  approved: 'bg-pass-soft text-pass',
+  rejected: 'bg-fail-soft text-fail',
+  needs_review: 'bg-blocked-soft text-blocked',
 }
 
 function money(n: number | null): string {
@@ -98,11 +98,11 @@ export function ExpenseDetail({
     <div className="mt-3">
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-bold text-ink">{expense.merchant || 'Expense'}</h1>
-        <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-mist text-ink-2">
+        <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-info text-ink-soft">
           {MATCH_STATUS_LABELS[expense.match_status] ?? expense.match_status}
         </span>
       </div>
-      <p className="text-sm text-ink-3 mb-6">
+      <p className="text-sm text-ink-muted mb-6">
         {expense.expense_date} · {money(expense.amount_usd)}
         {expense.receipt_amount_original != null && (
           <> · original {money(expense.receipt_amount_original)}</>
@@ -110,12 +110,12 @@ export function ExpenseDetail({
       </p>
 
       {/* Transaction details */}
-      <div className="bg-surface border border-warm-border rounded-[14px] p-5 mb-6">
+      <div className="bg-surface border border-line rounded-md p-5 mb-6">
         <h2 className="text-sm font-semibold text-ink mb-3">Transaction</h2>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
           {fields.map(([k, v]) => (
-            <div key={k} className="flex justify-between gap-3 text-sm border-b border-warm-border/60 py-1">
-              <dt className="text-ink-3">{k}</dt>
+            <div key={k} className="flex justify-between gap-3 text-sm border-b border-line/60 py-1">
+              <dt className="text-ink-muted">{k}</dt>
               <dd className="text-ink text-right">{v}</dd>
             </div>
           ))}
@@ -123,7 +123,7 @@ export function ExpenseDetail({
       </div>
 
       {error && (
-        <div className="p-3 mb-4 bg-status-fail border border-status-fail-border rounded-[10px] text-status-fail-text text-sm">
+        <div className="p-3 mb-4 bg-fail-soft border border-fail-line rounded-sm text-fail text-sm">
           {error}
         </div>
       )}
@@ -134,22 +134,22 @@ export function ExpenseDetail({
           Receipt candidates {matches.length > 0 && `(${matches.length})`}
         </h2>
         {matches.length === 0 ? (
-          <div className="bg-surface border border-warm-border rounded-[14px] p-6 text-center text-sm text-ink-3">
+          <div className="bg-surface border border-line rounded-md p-6 text-center text-sm text-ink-muted">
             No candidates yet. Run the Gmail matcher, or upload a receipt manually below.
           </div>
         ) : (
           <div className="space-y-3">
             {matches.map((m) => (
-              <div key={m.id} className="bg-surface border border-warm-border rounded-[14px] p-4">
+              <div key={m.id} className="bg-surface border border-line rounded-md p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${RM_STATUS_CLASSES[m.match_status] ?? 'bg-status-skipped text-ink-2'}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${RM_STATUS_CLASSES[m.match_status] ?? 'bg-skipped-soft text-ink-soft'}`}>
                         {RM_STATUS_LABELS[m.match_status] ?? m.match_status}
                       </span>
                       <span className="text-sm font-semibold text-ink tabular-nums">{Math.round(m.confidence_score)}/100</span>
                       {m.account_label && (
-                        <span className="text-xs text-ink-3">
+                        <span className="text-xs text-ink-muted">
                           {m.account_label} &lt;{m.account_email}&gt;
                         </span>
                       )}
@@ -157,7 +157,7 @@ export function ExpenseDetail({
                     {m.file_subject && (
                       <p className="text-sm text-ink mt-1.5 truncate">{m.file_subject}</p>
                     )}
-                    <p className="text-xs text-ink-3 mt-0.5">
+                    <p className="text-xs text-ink-muted mt-0.5">
                       {m.file_from && <span>{m.file_from}</span>}
                       {m.file_date && <span> · {new Date(m.file_date).toLocaleDateString()}</span>}
                       {m.matched_amount_type !== 'unknown' && m.matched_amount_value != null && (
@@ -165,7 +165,7 @@ export function ExpenseDetail({
                       )}
                     </p>
                     {m.reason_summary && (
-                      <p className="text-xs text-ink-3 mt-1 leading-relaxed">{m.reason_summary}</p>
+                      <p className="text-xs text-ink-muted mt-1 leading-relaxed">{m.reason_summary}</p>
                     )}
                     <div className="flex items-center gap-3 mt-2">
                       {m.receipt_file_id ? (
@@ -173,10 +173,10 @@ export function ExpenseDetail({
                           View receipt PDF ↗
                         </a>
                       ) : (
-                        <span className="text-xs text-ink-3">No file stored yet</span>
+                        <span className="text-xs text-ink-muted">No file stored yet</span>
                       )}
                       {m.file_source_url && (
-                        <a href={m.file_source_url} target="_blank" rel="noreferrer" className="text-xs text-ink-3 hover:text-ink hover:underline">
+                        <a href={m.file_source_url} target="_blank" rel="noreferrer" className="text-xs text-ink-muted hover:text-ink hover:underline">
                           Source link ↗
                         </a>
                       )}
@@ -186,14 +186,14 @@ export function ExpenseDetail({
                     <button
                       onClick={() => act(m.id, 'approve')}
                       disabled={!!busy || m.match_status === 'approved'}
-                      className="px-3 py-1.5 text-xs font-semibold bg-ink text-white rounded-[8px] hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      className="px-3 py-1.5 text-xs font-semibold bg-ink text-white rounded-xs hover:opacity-90 disabled:opacity-40 transition-opacity"
                     >
                       {busy === m.id + 'approve' ? '…' : 'Approve'}
                     </button>
                     <button
                       onClick={() => act(m.id, 'reject')}
                       disabled={!!busy || m.match_status === 'rejected'}
-                      className="px-3 py-1.5 text-xs font-medium bg-canvas border border-warm-border text-ink-2 rounded-[8px] hover:border-ink disabled:opacity-40 transition-colors"
+                      className="px-3 py-1.5 text-xs font-medium bg-canvas border border-line text-ink-soft rounded-xs hover:border-ink disabled:opacity-40 transition-colors"
                     >
                       {busy === m.id + 'reject' ? '…' : 'Reject'}
                     </button>
@@ -206,9 +206,9 @@ export function ExpenseDetail({
       </div>
 
       {/* Manual upload */}
-      <div className="bg-surface border border-warm-border rounded-[14px] p-5">
+      <div className="bg-surface border border-line rounded-md p-5">
         <h2 className="text-sm font-semibold text-ink mb-1">Upload a receipt manually</h2>
-        <p className="text-xs text-ink-3 mb-3">PDF or image. Attaches and marks this expense matched.</p>
+        <p className="text-xs text-ink-muted mb-3">PDF or image. Attaches and marks this expense matched.</p>
         <input
           ref={fileRef}
           type="file"
@@ -218,9 +218,9 @@ export function ExpenseDetail({
             const f = e.target.files?.[0]
             if (f) upload(f)
           }}
-          className="block w-full text-sm text-ink-2 file:mr-3 file:px-3 file:py-1.5 file:rounded-[8px] file:border-0 file:bg-ink file:text-white file:text-sm file:font-semibold hover:file:opacity-90"
+          className="block w-full text-sm text-ink-soft file:mr-3 file:px-3 file:py-1.5 file:rounded-xs file:border-0 file:bg-ink file:text-white file:text-sm file:font-semibold hover:file:opacity-90"
         />
-        {uploading && <p className="text-xs text-ink-3 mt-2">Uploading…</p>}
+        {uploading && <p className="text-xs text-ink-muted mt-2">Uploading…</p>}
       </div>
     </div>
   )

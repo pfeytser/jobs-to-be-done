@@ -20,16 +20,16 @@ export default async function UploadPage({
   if (!project) redirect('/qa/admin')
 
   return (
-    <main className="max-w-5xl mx-auto px-6 py-8">
+    <main className="max-w-wide mx-auto px-6 py-8">
       <div className="mb-6">
         <Link
           href={`/qa/admin/${projectId}`}
-          className="text-xs text-ink-3 hover:text-ink transition-colors"
+          className="text-xs text-ink-muted hover:text-ink transition-colors"
         >
           ← Back to dashboard
         </Link>
         <h1 className="text-2xl font-bold text-ink mt-2 mb-1">Upload test documents</h1>
-        <p className="text-sm text-ink-3">
+        <p className="text-sm text-ink-muted">
           Upload CSV, PDF, Word, or Excel files. The AI will read them and build a clean test suite.
           You can edit, reorder, and save before it goes live.
         </p>

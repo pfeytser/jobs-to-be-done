@@ -33,7 +33,7 @@ export default async function CoupaUploadPage() {
   return (
     <main className="min-h-screen bg-canvas">
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <Link href="/expenses" className="text-sm text-ink-3 hover:text-ink transition-colors">
+        <Link href="/expenses" className="text-sm text-ink-muted hover:text-ink transition-colors">
           ← Back to transactions
         </Link>
         <div className="flex items-start justify-between gap-3 mt-3 mb-1">
@@ -41,19 +41,19 @@ export default async function CoupaUploadPage() {
           {items.length > 0 && (
             <a
               href="/api/expenses/coupa-upload/export"
-              className="px-4 py-2 text-sm font-semibold bg-ink text-white rounded-[10px] hover:opacity-90 transition-opacity shrink-0"
+              className="px-4 py-2 text-sm font-semibold bg-ink text-white rounded-sm hover:opacity-90 transition-opacity shrink-0"
             >
               Download all receipts (ZIP)
             </a>
           )}
         </div>
-        <p className="text-sm text-ink-3 mb-6">
+        <p className="text-sm text-ink-muted mb-6">
           {items.length} confirmed receipt{items.length !== 1 ? 's' : ''} across {reports.length} report
           {reports.length !== 1 ? 's' : ''}, ready to attach in Coupa.
           {pending.length > 0 && (
             <>
               {' '}
-              <span className="text-status-blocked-text">
+              <span className="text-blocked">
                 {pending.length} more {pending.length === 1 ? 'is' : 'are'} awaiting review
               </span>{' '}
               — confirm {pending.length === 1 ? 'it' : 'them'} on the{' '}
@@ -63,24 +63,24 @@ export default async function CoupaUploadPage() {
         </p>
 
         {reports.length === 0 ? (
-          <div className="bg-surface border border-warm-border rounded-[14px] p-8 text-center text-sm text-ink-3">
+          <div className="bg-surface border border-line rounded-md p-8 text-center text-sm text-ink-muted">
             No confirmed receipts yet. Match and approve receipts first, then they’ll appear here grouped by report.
           </div>
         ) : (
           <div className="space-y-4">
             {reports.map(([reportNumber, { name, items: lines }]) => (
-              <div key={reportNumber} className="bg-surface border border-warm-border rounded-[14px] p-4">
+              <div key={reportNumber} className="bg-surface border border-line rounded-md p-4">
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <div>
                     <h2 className="text-sm font-semibold text-ink">
                       Report {reportNumber}
-                      {name && <span className="text-ink-3 font-normal"> · {name}</span>}
+                      {name && <span className="text-ink-muted font-normal"> · {name}</span>}
                     </h2>
-                    <p className="text-xs text-ink-3">{lines.length} receipt{lines.length !== 1 ? 's' : ''}</p>
+                    <p className="text-xs text-ink-muted">{lines.length} receipt{lines.length !== 1 ? 's' : ''}</p>
                   </div>
                   <a
                     href={`/api/expenses/coupa-upload/export?report=${encodeURIComponent(reportNumber)}`}
-                    className="px-3 py-1.5 text-xs font-semibold bg-surface border border-warm-border text-ink rounded-[8px] hover:border-ink transition-colors shrink-0"
+                    className="px-3 py-1.5 text-xs font-semibold bg-surface border border-line text-ink rounded-xs hover:border-ink transition-colors shrink-0"
                   >
                     Download ZIP
                   </a>
@@ -88,7 +88,7 @@ export default async function CoupaUploadPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left border-b border-warm-border text-ink-2">
+                      <tr className="text-left border-b border-line text-ink-soft">
                         <th className="py-1.5 pr-3 font-semibold">Date</th>
                         <th className="py-1.5 pr-3 font-semibold">Merchant</th>
                         <th className="py-1.5 pr-3 font-semibold text-right">Amount</th>
@@ -98,16 +98,16 @@ export default async function CoupaUploadPage() {
                     </thead>
                     <tbody>
                       {lines.map((it) => (
-                        <tr key={it.expense_id} className="border-b border-warm-border last:border-0">
+                        <tr key={it.expense_id} className="border-b border-line last:border-0">
                           <td className="py-1.5 pr-3 whitespace-nowrap text-ink">{it.expense_date ?? '—'}</td>
                           <td className="py-1.5 pr-3 text-ink">{it.merchant || '—'}</td>
                           <td className="py-1.5 pr-3 text-right tabular-nums text-ink whitespace-nowrap">
                             {money(it.amount_usd)}
                             {it.receipt_amount_original != null && (
-                              <span className="text-ink-3"> · {money(it.receipt_amount_original)}</span>
+                              <span className="text-ink-muted"> · {money(it.receipt_amount_original)}</span>
                             )}
                           </td>
-                          <td className="py-1.5 pr-3 font-mono text-[11px] text-ink-2">{it.suggested_filename}</td>
+                          <td className="py-1.5 pr-3 font-mono text-[11px] text-ink-soft">{it.suggested_filename}</td>
                           <td className="py-1.5 whitespace-nowrap">
                             <a
                               href={`/api/expenses/receipt-file/${it.receipt_file_id}`}

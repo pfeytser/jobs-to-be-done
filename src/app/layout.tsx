@@ -1,10 +1,25 @@
 import type { Metadata } from 'next'
+import { Hanken_Grotesk, Newsreader } from 'next/font/google'
 import './globals.css'
 import { SessionProvider } from 'next-auth/react'
 import { auth } from '@/lib/auth/config'
 import NextTopLoader from 'nextjs-toploader'
 import { Header } from '@/components/Header'
 import { recordUser } from '@/lib/db/users'
+
+// Brand type: Hanken Grotesk (workhorse sans) + Newsreader (editorial display).
+const hanken = Hanken_Grotesk({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  variable: '--font-hanken',
+  display: 'swap',
+})
+const newsreader = Newsreader({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  variable: '--font-newsreader',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Jobs to Bee Done 🐝',
@@ -34,9 +49,9 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${hanken.variable} ${newsreader.variable}`}>
       <body className="bg-canvas min-h-screen">
-        <NextTopLoader color="#1a1a1a" showSpinner={false} />
+        <NextTopLoader color="#013E3F" showSpinner={false} />
         <SessionProvider session={session}>
           <Header />
           {children}

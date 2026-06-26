@@ -91,11 +91,11 @@ export function AuthorSetup({
 
   return (
     <main className="min-h-screen bg-canvas">
-      <div className="max-w-2xl mx-auto px-5 py-8 sm:py-12">
-        <p className="text-xs font-bold uppercase tracking-widest text-ink-3 mb-2">✍️ Set up your game</p>
+      <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
+        <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-2">✍️ Set up your game</p>
         <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
 
-        <div className="mt-4 p-4 rounded-xl bg-mist border border-warm-border text-sm text-ink-2">
+        <div className="mt-4 p-4 rounded-xl bg-info border border-line text-sm text-ink-soft">
           Write two true statements and one lie. Mark which one is the lie — players won&apos;t see your
           choice.{' '}
           <span className="font-semibold text-ink">
@@ -111,8 +111,8 @@ export function AuthorSetup({
             return (
               <div
                 key={i}
-                className={`rounded-2xl border-2 p-4 transition-colors ${
-                  isLie ? 'border-status-fail-border bg-status-fail/40' : 'border-warm-border bg-surface'
+                className={`rounded-lg border-2 p-4 transition-colors ${
+                  isLie ? 'border-fail-line bg-fail-soft/40' : 'border-line bg-surface'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -122,8 +122,8 @@ export function AuthorSetup({
                     onClick={() => setLieIndex(i)}
                     className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
                       isLie
-                        ? 'bg-status-fail-text text-white'
-                        : 'bg-canvas text-ink-3 border border-warm-border hover:border-ink'
+                        ? 'bg-fail text-white'
+                        : 'bg-canvas text-ink-muted border border-line hover:border-ink'
                     }`}
                   >
                     {isLie ? '🤥 This is the lie' : 'Mark as lie'}
@@ -139,14 +139,14 @@ export function AuthorSetup({
                   rows={2}
                   maxLength={500}
                   placeholder={isLie ? 'Something believable but false…' : 'Something true about you…'}
-                  className="w-full resize-none bg-transparent text-ink placeholder:text-ink-3 focus:outline-none text-base"
+                  className="w-full resize-none bg-transparent text-ink placeholder:text-ink-muted focus:outline-none text-base"
                 />
               </div>
             )
           })}
         </div>
 
-        {error && <p className="mt-4 text-sm text-status-fail-text font-medium">{error}</p>}
+        {error && <p className="mt-4 text-sm text-fail font-medium">{error}</p>}
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button
@@ -165,10 +165,10 @@ export function AuthorSetup({
               {activating ? 'Going live…' : 'Save & Activate 🚀'}
             </button>
           )}
-          {saved && <span className="text-sm font-semibold text-status-pass-text">Saved ✓</span>}
+          {saved && <span className="text-sm font-semibold text-pass">Saved ✓</span>}
         </div>
         {canActivate && (
-          <p className="mt-2 text-xs text-ink-3">
+          <p className="mt-2 text-xs text-ink-muted">
             Activating locks your statements and opens voting for everyone.
           </p>
         )}

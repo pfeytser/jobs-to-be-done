@@ -117,11 +117,11 @@ export function TestChecklist({
 
   function getStatusStyle(status: ResultStatus | undefined) {
     switch (status) {
-      case 'pass': return 'bg-status-pass border-status-pass-border'
-      case 'fail': return 'bg-status-fail border-status-fail-border'
-      case 'blocked': return 'bg-status-blocked border-status-blocked-border'
-      case 'skipped': return 'bg-status-skipped border-status-skipped-border'
-      default: return 'bg-surface border-warm-border'
+      case 'pass': return 'bg-pass-soft border-pass-line'
+      case 'fail': return 'bg-fail-soft border-fail-line'
+      case 'blocked': return 'bg-blocked-soft border-blocked-line'
+      case 'skipped': return 'bg-skipped-soft border-skipped-line'
+      default: return 'bg-surface border-line'
     }
   }
 
@@ -131,29 +131,29 @@ export function TestChecklist({
   return (
     <>
       {/* Session header */}
-      <div className="sticky top-[53px] z-30 bg-surface border-b border-warm-border shadow-sm">
-        <div className="max-w-3xl mx-auto px-6 py-3">
+      <div className="sticky top-[53px] z-30 bg-surface border-b border-line shadow-sm">
+        <div className="max-w-content mx-auto px-6 py-3">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3 flex-wrap">
               <SessionMood passTrigger={passTrigger} failTrigger={failTrigger} isComplete={isComplete} />
-              <div className="flex items-center gap-2 flex-wrap text-xs text-ink-2">
+              <div className="flex items-center gap-2 flex-wrap text-xs text-ink-soft">
               <span className="font-semibold text-ink">{qaSession.user_type}</span>
-              <span className="text-ink-3">·</span>
+              <span className="text-ink-muted">·</span>
               <span>{qaSession.viewport}</span>
-              <span className="text-ink-3">·</span>
+              <span className="text-ink-muted">·</span>
               <span>{qaSession.operating_system}</span>
-              <span className="text-ink-3">·</span>
+              <span className="text-ink-muted">·</span>
               <span>{qaSession.browser}</span>
               </div>
             </div>
             <div className="flex items-center gap-3 text-xs">
-              <span className="text-ink-2">
+              <span className="text-ink-soft">
                 <span className="font-semibold text-ink">{stats.done}</span> / {stats.total} done ({pct}%)
               </span>
-              <span className="text-status-pass-text font-medium">✅ {stats.passed}</span>
-              <span className="text-status-fail-text font-medium">❌ {stats.failed}</span>
-              <span className="text-status-blocked-text font-medium">🚧 {stats.blocked}</span>
-              <span className="text-status-skipped-text font-medium">⏭ {stats.skipped}</span>
+              <span className="text-pass font-medium">✅ {stats.passed}</span>
+              <span className="text-fail font-medium">❌ {stats.failed}</span>
+              <span className="text-blocked font-medium">🚧 {stats.blocked}</span>
+              <span className="text-skipped font-medium">⏭ {stats.skipped}</span>
             </div>
           </div>
           {/* Progress bar */}
@@ -167,10 +167,10 @@ export function TestChecklist({
       </div>
 
       {/* Back link + setup instructions */}
-      <div className="max-w-3xl mx-auto px-6 pt-4 flex items-center justify-between gap-3">
+      <div className="max-w-content mx-auto px-6 pt-4 flex items-center justify-between gap-3">
         <button
           onClick={() => router.push(backHref)}
-          className="text-xs text-ink-3 hover:text-ink transition-colors"
+          className="text-xs text-ink-muted hover:text-ink transition-colors"
         >
           ← {backLabel}
         </button>
@@ -183,9 +183,9 @@ export function TestChecklist({
       </div>
 
       {setupInstructions && (
-        <div className="max-w-3xl mx-auto px-6 pt-4">
-          <div className="bg-surface border border-warm-border rounded-[12px] p-5">
-            <p className="text-xs font-semibold text-ink-3 uppercase tracking-wide mb-3">Setup instructions</p>
+        <div className="max-w-content mx-auto px-6 pt-4">
+          <div className="bg-surface border border-line rounded-md p-5">
+            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">Setup instructions</p>
             <div
               className="prose prose-sm max-w-none text-ink"
               dangerouslySetInnerHTML={{ __html: setupInstructions }}
@@ -195,18 +195,18 @@ export function TestChecklist({
       )}
 
       {/* Test items */}
-      <div className="max-w-3xl mx-auto px-6 py-6 space-y-8">
+      <div className="max-w-content mx-auto px-6 py-6 space-y-8">
         {Array.from(grouped.entries()).map(([part, sections]) => (
           <div key={part}>
             {part !== 'General' && (
-              <h2 className="text-base font-bold text-ink mb-4 pb-2 border-b border-warm-border">
+              <h2 className="text-base font-bold text-ink mb-4 pb-2 border-b border-line">
                 {part}
               </h2>
             )}
             {Array.from(sections.entries()).map(([section, sectionItems]) => (
               <div key={section} className="mb-6">
                 {section && (
-                  <h3 className="text-xs font-semibold text-ink-3 uppercase tracking-widest mb-3">
+                  <h3 className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">
                     {section}
                   </h3>
                 )}
@@ -221,22 +221,22 @@ export function TestChecklist({
                     return (
                       <div
                         key={item.id}
-                        className={`rounded-[12px] border p-4 transition-colors ${getStatusStyle(status)}`}
+                        className={`rounded-md border p-4 transition-colors ${getStatusStyle(status)}`}
                       >
                         {/* Item header */}
                         <div className="flex items-start justify-between gap-3 mb-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               {item.tc_number && (
-                                <span className="text-xs text-ink-3 font-mono">{item.tc_number}</span>
+                                <span className="text-xs text-ink-muted font-mono">{item.tc_number}</span>
                               )}
                               {item.feature_area && (
-                                <span className="text-xs text-ink-2 bg-canvas px-2 py-0.5 rounded-full border border-warm-border">
+                                <span className="text-xs text-ink-soft bg-canvas px-2 py-0.5 rounded-full border border-line">
                                   {item.feature_area}
                                 </span>
                               )}
                               {item.platform && (
-                                <span className="text-xs text-ink-3">{item.platform}</span>
+                                <span className="text-xs text-ink-muted">{item.platform}</span>
                               )}
                             </div>
                             <p className="text-sm font-semibold text-ink leading-snug">
@@ -248,37 +248,37 @@ export function TestChecklist({
                         {/* Steps */}
                         {item.steps && (
                           <div className="mb-3">
-                            <p className="text-xs font-semibold text-ink-3 uppercase tracking-wider mb-1">What to do</p>
-                            <p className="text-sm text-ink-2 leading-relaxed whitespace-pre-wrap">{item.steps}</p>
+                            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1">What to do</p>
+                            <p className="text-sm text-ink-soft leading-relaxed whitespace-pre-wrap">{item.steps}</p>
                           </div>
                         )}
 
                         {/* Expected result */}
                         {item.expected_result && (
                           <div className="mb-3">
-                            <p className="text-xs font-semibold text-ink-3 uppercase tracking-wider mb-1">What should happen</p>
-                            <p className="text-sm text-ink-2 leading-relaxed">{item.expected_result}</p>
+                            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1">What should happen</p>
+                            <p className="text-sm text-ink-soft leading-relaxed">{item.expected_result}</p>
                           </div>
                         )}
 
                         {/* Blocked note if present */}
                         {status === 'blocked' && result?.blocked_note && (
-                          <div className="mb-3 px-3 py-2 bg-status-blocked border border-status-blocked-border rounded-[8px]">
-                            <p className="text-xs text-status-blocked-text">{result.blocked_note}</p>
+                          <div className="mb-3 px-3 py-2 bg-blocked-soft border border-blocked-line rounded-xs">
+                            <p className="text-xs text-blocked">{result.blocked_note}</p>
                           </div>
                         )}
 
                         {/* Fail summary if present */}
                         {status === 'fail' && result?.actual_behavior && (
-                          <div className="mb-3 px-3 py-2 bg-status-fail border border-status-fail-border rounded-[8px]">
-                            <p className="text-xs text-status-fail-text">{result.actual_behavior}</p>
+                          <div className="mb-3 px-3 py-2 bg-fail-soft border border-fail-line rounded-xs">
+                            <p className="text-xs text-fail">{result.actual_behavior}</p>
                           </div>
                         )}
 
                         {/* Acknowledged badge */}
                         {status === 'fail' && result?.acknowledged_at && (
                           <div className="mb-3 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-canvas border border-warm-border rounded-full text-xs text-ink-2">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-canvas border border-line rounded-full text-xs text-ink-soft">
                               ✓ Seen by admin
                             </span>
                           </div>
@@ -291,8 +291,8 @@ export function TestChecklist({
                             disabled={isSaving}
                             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
                               status === 'pass'
-                                ? 'bg-status-pass-text text-white border-status-pass-text'
-                                : 'bg-canvas border-warm-border text-ink hover:bg-status-pass hover:border-status-pass-border hover:text-status-pass-text'
+                                ? 'bg-pass text-white border-pass'
+                                : 'bg-canvas border-line text-ink hover:bg-pass-soft hover:border-pass-line hover:text-pass'
                             }`}
                           >
                             {savingPass ? (
@@ -307,8 +307,8 @@ export function TestChecklist({
                             disabled={isSaving}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
                               status === 'fail'
-                                ? 'bg-status-fail-text text-white border-status-fail-text'
-                                : 'bg-canvas border-warm-border text-ink hover:bg-status-fail hover:border-status-fail-border hover:text-status-fail-text'
+                                ? 'bg-fail text-white border-fail'
+                                : 'bg-canvas border-line text-ink hover:bg-fail-soft hover:border-fail-line hover:text-fail'
                             }`}
                           >
                             ❌ Fail
@@ -318,8 +318,8 @@ export function TestChecklist({
                             disabled={isSaving}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
                               status === 'blocked'
-                                ? 'bg-status-blocked-text text-white border-status-blocked-text'
-                                : 'bg-canvas border-warm-border text-ink hover:bg-status-blocked hover:border-status-blocked-border hover:text-status-blocked-text'
+                                ? 'bg-blocked text-white border-blocked'
+                                : 'bg-canvas border-line text-ink hover:bg-blocked-soft hover:border-blocked-line hover:text-blocked'
                             }`}
                           >
                             🚧 Blocked
@@ -329,8 +329,8 @@ export function TestChecklist({
                             disabled={isSaving}
                             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
                               status === 'skipped'
-                                ? 'bg-status-skipped-text text-white border-status-skipped-text'
-                                : 'bg-canvas border-warm-border text-ink hover:bg-status-skipped hover:border-status-skipped-border hover:text-status-skipped-text'
+                                ? 'bg-skipped text-white border-skipped'
+                                : 'bg-canvas border-line text-ink hover:bg-skipped-soft hover:border-skipped-line hover:text-skipped'
                             }`}
                           >
                             {savingSkipped ? (

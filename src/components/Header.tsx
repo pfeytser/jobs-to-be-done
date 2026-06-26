@@ -35,15 +35,15 @@ export function Header() {
   )
 
   return (
-    <header className="bg-surface border-b border-warm-border sticky top-0 z-40">
-      <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+    <header className="bg-surface border-b border-line sticky top-0 z-40">
+      <div className="max-w-wide mx-auto px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center hover:opacity-75 transition-opacity">
             <span className="text-xl">🐝</span>
           </Link>
           {section && (
             <>
-              <span className="text-ink-3 text-sm select-none">/</span>
+              <span className="text-ink-muted text-sm select-none">/</span>
               <Link
                 href={section.href}
                 className="font-semibold text-ink text-sm hover:opacity-75 transition-opacity"
@@ -63,12 +63,12 @@ export function Header() {
               className="w-7 h-7 rounded-full object-cover"
             />
           )}
-          <span className="text-sm text-ink-2 hidden sm:block">
+          <span className="text-sm text-ink-soft hidden sm:block">
             {session.user.name ?? session.user.email}
           </span>
           <button
             onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-            className="text-xs text-ink-3 hover:text-ink transition-colors"
+            className="text-xs text-ink-muted hover:text-ink transition-colors"
           >
             Sign out
           </button>

@@ -15,7 +15,7 @@ export default async function TranslationAdmin() {
   const projects = await listProjects()
   return (
     <main className="min-h-screen bg-canvas">
-      <div className="max-w-3xl mx-auto px-6 py-10">
+      <div className="max-w-content mx-auto px-6 py-10">
         <AdminClient initialProjects={projects} />
       </div>
     </main>

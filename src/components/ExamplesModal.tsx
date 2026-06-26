@@ -56,18 +56,18 @@ export function ExamplesModal({ onClose }: ExamplesModalProps) {
 
   return (
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-[14px] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" style={{ boxShadow: '0 8px 32px rgba(17,34,32,0.12)' }}>
+      <div className="bg-surface rounded-md w-full max-w-content max-h-[90vh] overflow-hidden flex flex-col" style={{ boxShadow: '0 8px 32px rgba(17,34,32,0.12)' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-warm-border">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div>
             <h2 className="text-lg font-bold text-ink">JTBD Examples</h2>
-            <p className="text-sm text-ink-3 mt-0.5">
+            <p className="text-sm text-ink-muted mt-0.5">
               &ldquo;When [situation], I want to [motivation], so I can [expected outcome].&rdquo;
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-ink-3 hover:text-ink transition-colors p-1.5 rounded-lg hover:bg-canvas"
+            className="text-ink-muted hover:text-ink transition-colors p-1.5 rounded-lg hover:bg-canvas"
             aria-label="Close"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@ export function ExamplesModal({ onClose }: ExamplesModalProps) {
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               activeTab === 'general'
                 ? 'bg-ink text-white'
-                : 'bg-canvas border border-warm-border text-ink-2 hover:text-ink hover:border-ink'
+                : 'bg-canvas border border-line text-ink-soft hover:text-ink hover:border-ink'
             }`}
           >
             Instagram (General)
@@ -93,7 +93,7 @@ export function ExamplesModal({ onClose }: ExamplesModalProps) {
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               activeTab === 'stories'
                 ? 'bg-ink text-white'
-                : 'bg-canvas border border-warm-border text-ink-2 hover:text-ink hover:border-ink'
+                : 'bg-canvas border border-line text-ink-soft hover:text-ink hover:border-ink'
             }`}
           >
             Instagram Stories
@@ -102,13 +102,13 @@ export function ExamplesModal({ onClose }: ExamplesModalProps) {
 
         {/* Content */}
         <div className="overflow-y-auto flex-1 p-6 space-y-4">
-          <p className="text-xs text-ink-3 uppercase tracking-wide font-medium">
+          <p className="text-xs text-ink-muted uppercase tracking-wide font-medium">
             {label} — 3 examples
           </p>
           {examples.map((ex, i) => (
             <div
               key={i}
-              className="bg-canvas border border-warm-border rounded-[14px] p-4"
+              className="bg-canvas border border-line rounded-md p-4"
             >
               <p className="text-sm text-ink leading-relaxed">
                 <strong>When</strong>{' '}
@@ -122,7 +122,7 @@ export function ExamplesModal({ onClose }: ExamplesModalProps) {
           ))}
         </div>
 
-        <div className="p-4 border-t border-warm-border">
+        <div className="p-4 border-t border-line">
           <button
             onClick={onClose}
             className="w-full px-4 py-2.5 bg-ink text-white rounded-full font-medium hover:opacity-90 transition-opacity text-sm"

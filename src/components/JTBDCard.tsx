@@ -48,7 +48,7 @@ export function JTBDCard({
   const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className="bg-surface rounded-[14px] border border-warm-border p-5 group transition-shadow hover:shadow-sm">
+    <div className="bg-surface rounded-md border border-line p-5 group transition-shadow hover:shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           {mode === 'hiring' ? (
@@ -71,7 +71,7 @@ export function JTBDCard({
             className={`shrink-0 p-2 rounded-lg transition-all ${
               confirmDelete
                 ? 'bg-red-500 text-white hover:bg-red-600'
-                : 'text-ink-3 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100'
+                : 'text-ink-muted hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100'
             }`}
             title={confirmDelete ? 'Click again to confirm' : 'Delete'}
           >

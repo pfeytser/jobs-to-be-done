@@ -46,10 +46,10 @@ function chipText(token: TagToken): string {
 }
 
 const CHIP_CLASS =
-  'inline-flex items-center gap-0.5 align-middle mx-[1px] px-1 rounded border text-[11px] font-medium text-ink-2 bg-mist border-warm-border select-none cursor-default'
-const CHIP_X_CLASS = 'ml-0.5 text-ink-3 hover:text-status-fail-text cursor-pointer leading-none'
+  'inline-flex items-center gap-0.5 align-middle mx-[1px] px-1 rounded border text-[11px] font-medium text-ink-soft bg-info border-line select-none cursor-default'
+const CHIP_X_CLASS = 'ml-0.5 text-ink-muted hover:text-fail cursor-pointer leading-none'
 const CHIP_RO_CLASS =
-  'inline-flex items-center align-middle mx-[1px] px-1 rounded border text-[11px] font-medium text-ink-3 bg-canvas border-warm-border select-none'
+  'inline-flex items-center align-middle mx-[1px] px-1 rounded border text-[11px] font-medium text-ink-muted bg-canvas border-line select-none'
 
 export function Editor({
   project,
@@ -262,11 +262,11 @@ export function Editor({
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-6 py-6">
+    <div className="max-w-wide mx-auto px-6 py-6">
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Link href="/translation" className="text-sm text-ink-3 hover:text-ink transition-colors">
+          <Link href="/translation" className="text-sm text-ink-muted hover:text-ink transition-colors">
             ← Projects
           </Link>
           <h1 className="text-lg font-bold text-ink">{project.name}</h1>
@@ -274,17 +274,17 @@ export function Editor({
         {isOwner && (
           <Link
             href={`/translation/admin/${project.id}`}
-            className="px-3 py-1.5 text-sm text-ink-2 hover:text-ink border border-warm-border rounded-[10px] bg-surface"
+            className="px-3 py-1.5 text-sm text-ink-soft hover:text-ink border border-line rounded-sm bg-surface"
           >
             ⚙ Setup
           </Link>
         )}
       </div>
 
-      {error && <p className="text-sm text-status-fail-text mb-3">{error}</p>}
+      {error && <p className="text-sm text-fail mb-3">{error}</p>}
 
       {languages.length === 0 ? (
-        <div className="bg-surface border border-warm-border rounded-[16px] p-10 text-center text-ink-3">
+        <div className="bg-surface border border-line rounded-lg p-10 text-center text-ink-muted">
           {isOwner ? (
             <>
               No sources loaded yet.{' '}
@@ -309,7 +309,7 @@ export function Editor({
                   className={`px-3.5 py-1.5 text-sm font-medium rounded-full border transition-colors ${
                     activeLang === lang
                       ? 'bg-ink text-white border-ink'
-                      : 'bg-surface text-ink-2 border-warm-border hover:border-ink'
+                      : 'bg-surface text-ink-soft border-line hover:border-ink'
                   }`}
                 >
                   {lang}
@@ -319,20 +319,20 @@ export function Editor({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => runExport('lang')}
-                className="px-3 py-1.5 text-sm font-medium border border-warm-border rounded-[10px] bg-surface hover:border-ink"
+                className="px-3 py-1.5 text-sm font-medium border border-line rounded-sm bg-surface hover:border-ink"
               >
                 ⤓ Export {activeLang}
               </button>
               <button
                 onClick={() => runExport('all')}
-                className="px-3 py-1.5 text-sm font-medium bg-ink text-white rounded-[10px] hover:opacity-90"
+                className="px-3 py-1.5 text-sm font-medium bg-ink text-white rounded-sm hover:opacity-90"
               >
                 ⤓ Export all
               </button>
               <button
                 onClick={() => runExport('lang', 'patch')}
                 title="A nested JSON of only the keys you changed — deep-merges into the repo locale file. Ideal to hand to a coding agent."
-                className="px-3 py-1.5 text-sm font-medium border border-warm-border rounded-[10px] bg-surface hover:border-ink"
+                className="px-3 py-1.5 text-sm font-medium border border-line rounded-sm bg-surface hover:border-ink"
               >
                 ⤓ Changes for Devin
               </button>
@@ -347,13 +347,13 @@ export function Editor({
               placeholder={`Paste a phrase you saw on the site to find it — searching ${
                 scope === 'english' ? 'English' : 'the translation'
               }.`}
-              className="flex-1 min-w-[280px] px-3.5 py-2 text-sm border border-warm-border rounded-[10px] bg-surface focus:outline-none focus:border-ink"
+              className="flex-1 min-w-[280px] px-3.5 py-2 text-sm border border-line rounded-sm bg-surface focus:outline-none focus:border-ink"
             />
             <select
               value={scope}
               onChange={(e) => setScope(e.target.value as ScopeSide)}
               title="Choose which side to search"
-              className="px-3 py-2 text-sm border border-warm-border rounded-[10px] bg-surface focus:outline-none focus:border-ink"
+              className="px-3 py-2 text-sm border border-line rounded-sm bg-surface focus:outline-none focus:border-ink"
             >
               <option value="target">Search {activeLang} (translation)</option>
               <option value="english">Search English</option>
@@ -362,16 +362,16 @@ export function Editor({
 
           {/* Result count */}
           {hasQuery && !loading && (
-            <p className="text-xs text-ink-3 mb-3">
+            <p className="text-xs text-ink-muted mb-3">
               {filtered.length.toLocaleString()} match{filtered.length === 1 ? '' : 'es'}
             </p>
           )}
 
           {/* Table */}
           {loading ? (
-            <div className="bg-surface border border-warm-border rounded-[16px] p-10 text-center text-ink-3">Loading…</div>
+            <div className="bg-surface border border-line rounded-lg p-10 text-center text-ink-muted">Loading…</div>
           ) : !hasQuery ? (
-            <div className="bg-surface border border-warm-border rounded-[16px] p-12 text-center text-ink-3">
+            <div className="bg-surface border border-line rounded-lg p-12 text-center text-ink-muted">
               <p className="text-sm">
                 Search to begin — paste a phrase you saw on the site to find the row and fix it.
               </p>
@@ -380,14 +380,14 @@ export function Editor({
               </p>
             </div>
           ) : (
-            <div className="border border-warm-border rounded-[16px] overflow-hidden bg-surface">
-              <div className="grid grid-cols-[minmax(220px,1fr)_minmax(220px,1.3fr)_minmax(220px,1.3fr)] bg-canvas border-b border-warm-border text-[11px] uppercase tracking-wide text-ink-3 font-medium">
+            <div className="border border-line rounded-lg overflow-hidden bg-surface">
+              <div className="grid grid-cols-[minmax(220px,1fr)_minmax(220px,1.3fr)_minmax(220px,1.3fr)] bg-canvas border-b border-line text-[11px] uppercase tracking-wide text-ink-muted font-medium">
                 <div className="px-4 py-2.5">Key / Source</div>
-                <div className="px-4 py-2.5 border-l border-warm-border">English</div>
-                <div className="px-4 py-2.5 border-l border-warm-border">Translation — {activeLang}</div>
+                <div className="px-4 py-2.5 border-l border-line">English</div>
+                <div className="px-4 py-2.5 border-l border-line">Translation — {activeLang}</div>
               </div>
               {pageItems.length === 0 ? (
-                <div className="p-10 text-center text-ink-3 text-sm">No matching strings.</div>
+                <div className="p-10 text-center text-ink-muted text-sm">No matching strings.</div>
               ) : (
                 pageItems.map((e) => (
                   <Row
@@ -408,17 +408,17 @@ export function Editor({
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="px-3 py-1.5 border border-warm-border rounded-[10px] bg-surface disabled:opacity-40 hover:border-ink"
+                className="px-3 py-1.5 border border-line rounded-sm bg-surface disabled:opacity-40 hover:border-ink"
               >
                 ‹ Prev
               </button>
-              <span className="text-ink-3">
+              <span className="text-ink-muted">
                 Page {page + 1} of {pageCount}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
                 disabled={page >= pageCount - 1}
-                className="px-3 py-1.5 border border-warm-border rounded-[10px] bg-surface disabled:opacity-40 hover:border-ink"
+                className="px-3 py-1.5 border border-line rounded-sm bg-surface disabled:opacity-40 hover:border-ink"
               >
                 Next ›
               </button>
@@ -428,7 +428,7 @@ export function Editor({
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-ink text-white text-sm px-4 py-2.5 rounded-[12px] shadow-lg max-w-[90vw]">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-ink text-white text-sm px-4 py-2.5 rounded-md shadow-lg max-w-[90vw]">
           {toast}
         </div>
       )}
@@ -450,9 +450,9 @@ function Row({
   const formats = useMemo(() => availableFormats(entry.english), [entry.english])
 
   return (
-    <div className="grid grid-cols-[minmax(220px,1fr)_minmax(220px,1.3fr)_minmax(220px,1.3fr)] border-b border-warm-border last:border-b-0">
+    <div className="grid grid-cols-[minmax(220px,1fr)_minmax(220px,1.3fr)_minmax(220px,1.3fr)] border-b border-line last:border-b-0">
       <div className="px-4 py-3 min-w-0">
-        <p className="text-xs text-ink-2 break-words font-mono leading-snug">{entry.label}</p>
+        <p className="text-xs text-ink-soft break-words font-mono leading-snug">{entry.label}</p>
         <div className="flex flex-wrap gap-1 mt-1.5">
           <Badge tone="neutral">{entry.source}</Badge>
           {entry.empty && <Badge tone="warn">empty</Badge>}
@@ -461,16 +461,16 @@ function Row({
           {entry.tagError && <Badge tone="warn">⚠ tags</Badge>}
           {entry.placeholderWarning && <Badge tone="warn">⚠ placeholder</Badge>}
           {entry.edited && (
-            <button onClick={onRevert} className="text-[10px] text-ink-3 underline hover:text-ink">
+            <button onClick={onRevert} className="text-[10px] text-ink-muted underline hover:text-ink">
               revert
             </button>
           )}
         </div>
       </div>
-      <div className="px-4 py-3 border-l border-warm-border text-sm text-ink select-text leading-relaxed">
+      <div className="px-4 py-3 border-l border-line text-sm text-ink select-text leading-relaxed">
         <ReadOnlyMarkup text={entry.english} />
       </div>
-      <div className="px-4 py-3 border-l border-warm-border">
+      <div className="px-4 py-3 border-l border-line">
         <ChipEditor
           value={entry.value}
           invalid={!!entry.tagError}
@@ -479,13 +479,13 @@ function Row({
           onChange={onEdit}
         />
         {entry.tagError ? (
-          <p className="text-[10px] text-status-fail-text mt-1">{entry.tagError}</p>
+          <p className="text-[10px] text-fail mt-1">{entry.tagError}</p>
         ) : entry.placeholderWarning ? (
-          <p className="text-[10px] text-status-blocked-text mt-1">Missing: {entry.missingTokens.join(' ')}</p>
+          <p className="text-[10px] text-blocked mt-1">Missing: {entry.missingTokens.join(' ')}</p>
         ) : null}
-        <p className="text-[10px] text-ink-3 mt-1 h-3">
+        <p className="text-[10px] text-ink-muted mt-1 h-3">
           {entry.tagError ? (
-            <span className="text-status-fail-text">Fix the formatting tags to save.</span>
+            <span className="text-fail">Fix the formatting tags to save.</span>
           ) : saving ? (
             'saving…'
           ) : entry.edited ? (
@@ -670,7 +670,7 @@ function ChipEditor({
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => applyFormat(f)}
               title={`Wrap the selected words in ${f.label.toLowerCase()}`}
-              className="px-1.5 py-0.5 text-[11px] font-medium border border-warm-border rounded bg-surface hover:border-ink text-ink-2"
+              className="px-1.5 py-0.5 text-[11px] font-medium border border-line rounded bg-surface hover:border-ink text-ink-soft"
             >
               {f.label}
             </button>
@@ -687,8 +687,8 @@ function ChipEditor({
         onKeyDown={onKeyDown}
         onPaste={onPaste}
         onClick={onClick}
-        className={`min-h-[38px] w-full text-sm rounded-[8px] px-2.5 py-2 border focus:outline-none focus:border-ink whitespace-pre-wrap break-words leading-relaxed ${
-          invalid ? 'border-status-fail-text bg-[#FEF2F2]' : empty ? 'border-warm-border bg-[#FCF6EC]' : 'border-warm-border bg-canvas'
+        className={`min-h-[38px] w-full text-sm rounded-xs px-2.5 py-2 border focus:outline-none focus:border-ink whitespace-pre-wrap break-words leading-relaxed ${
+          invalid ? 'border-fail bg-fail-soft' : empty ? 'border-line bg-sunken' : 'border-line bg-canvas'
         }`}
       />
     </div>
@@ -751,9 +751,9 @@ function removeChipPair(el: HTMLElement, chip: HTMLElement) {
 function Badge({ children, tone }: { children: React.ReactNode; tone: 'neutral' | 'accent' | 'warn' }) {
   const cls =
     tone === 'accent'
-      ? 'bg-mist text-ink border-warm-border'
+      ? 'bg-info text-ink border-line'
       : tone === 'warn'
-        ? 'bg-status-blocked text-status-blocked-text border-status-blocked-border'
-        : 'bg-canvas text-ink-3 border-warm-border'
+        ? 'bg-blocked-soft text-blocked border-blocked-line'
+        : 'bg-canvas text-ink-muted border-line'
   return <span className={`text-[10px] px-1.5 py-0.5 rounded border ${cls}`}>{children}</span>
 }

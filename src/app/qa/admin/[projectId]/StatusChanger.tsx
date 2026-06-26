@@ -11,10 +11,10 @@ const STATUS_OPTIONS = [
 ]
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-canvas text-ink-3 border-warm-border',
-  active: 'bg-status-pass text-status-pass-text border-status-pass-border',
-  complete: 'bg-mist text-ink-2 border-warm-border',
-  archived: 'bg-canvas text-ink-3 border-warm-border opacity-60',
+  draft: 'bg-canvas text-ink-muted border-line',
+  active: 'bg-pass-soft text-pass border-pass-line',
+  complete: 'bg-info text-ink-soft border-line',
+  archived: 'bg-canvas text-ink-muted border-line opacity-60',
 }
 
 export function StatusChanger({
@@ -56,14 +56,14 @@ export function StatusChanger({
           className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all disabled:opacity-50 ${
             status === opt.value
               ? `${STATUS_STYLES[opt.value]} ring-2 ring-offset-1 ring-ink`
-              : 'bg-canvas border-warm-border text-ink-2 hover:border-ink-2'
+              : 'bg-canvas border-line text-ink-soft hover:border-ink-soft'
           }`}
         >
           {opt.label}
         </button>
       ))}
       {saving && (
-        <svg className="w-4 h-4 animate-spin text-ink-3" fill="none" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 animate-spin text-ink-muted" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>

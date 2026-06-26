@@ -29,19 +29,19 @@ export function SetupClient({
   return (
     <div>
       <div className="mb-5">
-        <Link href="/translation/admin" className="text-sm text-ink-3 hover:text-ink transition-colors">
+        <Link href="/translation/admin" className="text-sm text-ink-muted hover:text-ink transition-colors">
           ← Setup &amp; projects
         </Link>
         <div className="flex items-center justify-between mt-2">
           <h1 className="text-2xl font-bold text-ink">{project.name} — sources</h1>
           <Link
             href={`/translation/${project.id}`}
-            className="px-4 py-2 text-sm font-medium border border-warm-border rounded-[12px] bg-surface hover:border-ink transition-colors"
+            className="px-4 py-2 text-sm font-medium border border-line rounded-md bg-surface hover:border-ink transition-colors"
           >
             Open editor →
           </Link>
         </div>
-        <p className="text-sm text-ink-3 mt-1">
+        <p className="text-sm text-ink-muted mt-1">
           Load the English UI JSON with its target files, or a database CSV. Exports rebuild from these.
         </p>
       </div>

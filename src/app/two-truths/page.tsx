@@ -47,16 +47,16 @@ export default async function TwoTruthsDashboard() {
 
   return (
     <main className="min-h-screen bg-canvas">
-      <div className="max-w-3xl mx-auto px-5 py-8 sm:py-12">
+      <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
         <header className="mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/20 border border-gold/40 mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/20 border border-accent/40 mb-3">
             <span className="text-base">🤥</span>
             <span className="text-xs font-bold tracking-wide text-ink uppercase">Team Game</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-black text-ink tracking-tight">
-            Two Truths <span className="text-ink-3 font-light">&amp;</span> A Lie
+            Two Truths <span className="text-ink-muted font-light">&amp;</span> A Lie
           </h1>
-          <p className="text-ink-2 mt-2 text-base">
+          <p className="text-ink-soft mt-2 text-base">
             Can you spot the fib? Vote on which statement you think is the lie.
           </p>
           {isAdmin && (
@@ -80,13 +80,13 @@ export default async function TwoTruthsDashboard() {
               <Link
                 key={s.id}
                 href={`/two-truths/${s.id}`}
-                className="block p-5 rounded-2xl bg-gold/15 border-2 border-dashed border-gold hover:bg-gold/25 transition-colors mb-3"
+                className="block p-5 rounded-lg bg-accent/15 border-2 border-dashed border-accent hover:bg-accent/25 transition-colors mb-3"
               >
-                <p className="text-xs font-bold uppercase tracking-wide text-ink-2 mb-1">
+                <p className="text-xs font-bold uppercase tracking-wide text-ink-soft mb-1">
                   ✍️ Your turn to set up
                 </p>
                 <p className="text-lg font-bold text-ink">{s.title}</p>
-                <p className="text-sm text-ink-2 mt-0.5">
+                <p className="text-sm text-ink-soft mt-0.5">
                   Write your three statements, then save &amp; activate →
                 </p>
               </Link>
@@ -96,7 +96,7 @@ export default async function TwoTruthsDashboard() {
 
         {myCreated.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-ink-3 mb-3">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-ink-muted mb-3">
               🎛️ Your games
             </h2>
             <div className="space-y-2.5">
@@ -118,11 +118,11 @@ export default async function TwoTruthsDashboard() {
         )}
 
         <section className="mb-10">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-ink-3 mb-3">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-ink-muted mb-3">
             🎯 Live now
           </h2>
           {active.length === 0 ? (
-            <p className="text-ink-3 text-sm py-6 text-center bg-surface rounded-2xl border border-warm-border">
+            <p className="text-ink-muted text-sm py-6 text-center bg-surface rounded-lg border border-line">
               No live games right now. Check back soon!
             </p>
           ) : (
@@ -134,19 +134,19 @@ export default async function TwoTruthsDashboard() {
                   <Link
                     key={s.id}
                     href={`/two-truths/${s.id}`}
-                    className="flex items-center justify-between gap-4 p-5 bg-surface border border-warm-border rounded-2xl hover:border-ink hover:shadow-sm transition-all group"
+                    className="flex items-center justify-between gap-4 p-5 bg-surface border border-line rounded-lg hover:border-ink hover:shadow-sm transition-all group"
                   >
                     <div className="min-w-0">
                       <p className="text-lg font-bold text-ink truncate">{s.title}</p>
-                      <p className="text-sm text-ink-2 mt-0.5">by {s.author_name}</p>
+                      <p className="text-sm text-ink-soft mt-0.5">by {s.author_name}</p>
                     </div>
                     <span
                       className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
                         isAuthor
-                          ? 'bg-mist text-ink'
+                          ? 'bg-info text-ink'
                           : voted
-                            ? 'bg-status-pass text-status-pass-text'
-                            : 'bg-gold text-ink group-hover:bg-ink group-hover:text-white'
+                            ? 'bg-pass-soft text-pass'
+                            : 'bg-accent text-ink group-hover:bg-ink group-hover:text-white'
                       }`}
                     >
                       {isAuthor ? 'Your game' : voted ? 'Voted ✓' : 'Play →'}
@@ -160,7 +160,7 @@ export default async function TwoTruthsDashboard() {
 
         {completed.length > 0 && (
           <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-ink-3 mb-3">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-ink-muted mb-3">
               🏁 Revealed
             </h2>
             <div className="space-y-2">
@@ -168,13 +168,13 @@ export default async function TwoTruthsDashboard() {
                 <Link
                   key={s.id}
                   href={`/two-truths/${s.id}`}
-                  className="flex items-center justify-between gap-4 px-5 py-4 bg-surface/60 border border-warm-border rounded-xl hover:border-ink transition-colors"
+                  className="flex items-center justify-between gap-4 px-5 py-4 bg-surface/60 border border-line rounded-xl hover:border-ink transition-colors"
                 >
                   <div className="min-w-0">
                     <p className="font-semibold text-ink truncate">{s.title}</p>
-                    <p className="text-xs text-ink-3 mt-0.5">by {s.author_name}</p>
+                    <p className="text-xs text-ink-muted mt-0.5">by {s.author_name}</p>
                   </div>
-                  <span className="shrink-0 text-sm font-semibold text-ink-2">See results →</span>
+                  <span className="shrink-0 text-sm font-semibold text-ink-soft">See results →</span>
                 </Link>
               ))}
             </div>

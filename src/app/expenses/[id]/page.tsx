@@ -26,7 +26,7 @@ export default async function ExpenseDetailPage({
   return (
     <main className="min-h-screen bg-canvas">
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <Link href="/expenses" className="text-sm text-ink-3 hover:text-ink transition-colors">
+        <Link href="/expenses" className="text-sm text-ink-muted hover:text-ink transition-colors">
           ← Back to transactions
         </Link>
         <ExpenseDetail expense={expense} matches={matches} />

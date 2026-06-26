@@ -64,10 +64,10 @@ const JOB_TYPE_LABELS: Record<FinalJTBDJob['jobType'], string> = {
 }
 
 const JOB_TYPE_COLORS: Record<FinalJTBDJob['jobType'], string> = {
-  functional: 'bg-mist text-ink border-warm-border',
-  emotional: 'bg-sand text-ink border-warm-border',
-  social: 'bg-canvas text-ink border-warm-border',
-  supporting: 'bg-canvas text-ink-3 border-warm-border',
+  functional: 'bg-info text-ink border-line',
+  emotional: 'bg-almond-400 text-ink border-line',
+  social: 'bg-canvas text-ink border-line',
+  supporting: 'bg-canvas text-ink-muted border-line',
 }
 
 const TIER_LABELS: Record<FinalJTBDJob['priorityTier'], string> = {
@@ -84,8 +84,8 @@ const CONFIDENCE_LABELS: Record<FinalJTBDJob['confidence'], string> = {
 
 const STRENGTH_COLORS: Record<JTBDSynthesisTheme['strength'], string> = {
   high: 'text-ink font-semibold',
-  medium: 'text-ink-2 font-medium',
-  low: 'text-ink-3 font-medium',
+  medium: 'text-ink-soft font-medium',
+  low: 'text-ink-muted font-medium',
 }
 
 function buildMarkdown(exercise: Exercise, synthesis: JTBDSynthesis): string {
@@ -210,7 +210,7 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
 
   if (isLoading) {
     return (
-      <div className="text-center py-16 text-ink-3">
+      <div className="text-center py-16 text-ink-muted">
         <svg className="w-5 h-5 animate-spin mx-auto mb-3" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -222,7 +222,7 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
 
   if (error) {
     return (
-      <div className="text-center py-16 text-ink-3">
+      <div className="text-center py-16 text-ink-muted">
         <p className="text-sm">Failed to load synthesis.</p>
         <p className="text-xs mt-1 font-mono text-red-500">{String(error)}</p>
       </div>
@@ -231,7 +231,7 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
 
   if (!synthesis) {
     return (
-      <div className="text-center py-16 text-ink-3">
+      <div className="text-center py-16 text-ink-muted">
         <p className="text-sm">Synthesis not yet generated.</p>
         {isAdmin && <p className="text-xs mt-1">Use the admin panel to generate it.</p>}
       </div>
@@ -266,7 +266,7 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
           </div>
           <button
             onClick={handleCopyMarkdown}
-            className="flex items-center gap-1.5 px-4 py-2 bg-canvas border border-warm-border text-ink-2 rounded-full text-sm font-medium hover:border-ink hover:text-ink transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-canvas border border-line text-ink-soft rounded-full text-sm font-medium hover:border-ink hover:text-ink transition-all"
           >
             {copied ? (
               <>
@@ -288,8 +288,8 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
       )}
 
       {/* Executive Summary */}
-      <div className="bg-sand rounded-[14px] border border-warm-border p-5" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
-        <p className="text-xs font-semibold text-ink-3 uppercase tracking-wide mb-2">Executive Summary</p>
+      <div className="bg-almond-400 rounded-md border border-line p-5" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+        <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">Executive Summary</p>
         <p className="text-sm text-ink leading-relaxed">{synthesis.executiveSummary}</p>
       </div>
 
@@ -342,14 +342,14 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
           <h3 className="text-sm font-semibold text-ink mb-3">Key Themes</h3>
           <div className="space-y-3">
             {synthesis.themes.map((theme, i) => (
-              <div key={i} className="bg-surface rounded-[14px] border border-warm-border p-4" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+              <div key={i} className="bg-surface rounded-md border border-line p-4" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
                 <div className="flex items-start justify-between gap-3 mb-1.5">
                   <span className={`text-sm ${STRENGTH_COLORS[theme.strength]}`}>{theme.name}</span>
-                  <span className="text-xs text-ink-3 shrink-0">{theme.strength} signal</span>
+                  <span className="text-xs text-ink-muted shrink-0">{theme.strength} signal</span>
                 </div>
-                <p className="text-sm text-ink-2 leading-relaxed mb-1.5">{theme.description}</p>
+                <p className="text-sm text-ink-soft leading-relaxed mb-1.5">{theme.description}</p>
                 {theme.implication && (
-                  <p className="text-xs text-ink-3 border-t border-warm-border pt-1.5 mt-1.5">
+                  <p className="text-xs text-ink-muted border-t border-line pt-1.5 mt-1.5">
                     → {theme.implication}
                   </p>
                 )}
@@ -365,13 +365,13 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
           <h3 className="text-sm font-semibold text-ink mb-3">Strategic Tensions</h3>
           <div className="space-y-3">
             {synthesis.tensions.map((tension, i) => (
-              <div key={i} className="bg-surface rounded-[14px] border border-warm-border p-4" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+              <div key={i} className="bg-surface rounded-md border border-line p-4" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-sm font-semibold text-ink">{tension.concept1}</span>
-                  <span className="text-xs text-ink-3">vs.</span>
+                  <span className="text-xs text-ink-muted">vs.</span>
                   <span className="text-sm font-semibold text-ink">{tension.concept2}</span>
                 </div>
-                <p className="text-sm text-ink-2 leading-relaxed">{tension.implication}</p>
+                <p className="text-sm text-ink-soft leading-relaxed">{tension.implication}</p>
               </div>
             ))}
           </div>
@@ -382,11 +382,11 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
       {synthesis.nextSteps.length > 0 && (
         <section>
           <h3 className="text-sm font-semibold text-ink mb-3">Recommended Next Steps</h3>
-          <div className="bg-surface rounded-[14px] border border-warm-border p-4" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+          <div className="bg-surface rounded-md border border-line p-4" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
             <ol className="space-y-2">
               {synthesis.nextSteps.map((step, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm text-ink-2">
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-sand border border-warm-border text-xs font-semibold text-ink flex items-center justify-center mt-0.5">
+                <li key={i} className="flex items-start gap-3 text-sm text-ink-soft">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-almond-400 border border-line text-xs font-semibold text-ink flex items-center justify-center mt-0.5">
                     {i + 1}
                   </span>
                   {step}
@@ -468,13 +468,13 @@ function JobCard({
   const idx = allJobs.findIndex((j) => j.id === job.id)
 
   return (
-    <div className="bg-surface rounded-[14px] border border-warm-border p-5" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
+    <div className="bg-surface rounded-md border border-line p-5" style={{ boxShadow: '0 1px 2px rgba(17,34,32,0.06)' }}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${JOB_TYPE_COLORS[job.jobType]}`}>
             {JOB_TYPE_LABELS[job.jobType]}
           </span>
-          <span className="text-xs text-ink-3">{CONFIDENCE_LABELS[job.confidence]}</span>
+          <span className="text-xs text-ink-muted">{CONFIDENCE_LABELS[job.confidence]}</span>
           {job.qualityFlags.length > 0 && (
             <span className="text-xs text-amber-600 border border-amber-200 bg-amber-50 px-2 py-0.5 rounded-full">
               {job.qualityFlags[0]}{job.qualityFlags.length > 1 ? ` +${job.qualityFlags.length - 1}` : ''}
@@ -486,7 +486,7 @@ function JobCard({
             <button
               onClick={() => onMove(job.id, 'up')}
               disabled={idx === 0}
-              className="p-1 text-ink-3 hover:text-ink disabled:opacity-20 transition-colors"
+              className="p-1 text-ink-muted hover:text-ink disabled:opacity-20 transition-colors"
               title="Move up"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -496,7 +496,7 @@ function JobCard({
             <button
               onClick={() => onMove(job.id, 'down')}
               disabled={idx === allJobs.length - 1}
-              className="p-1 text-ink-3 hover:text-ink disabled:opacity-20 transition-colors"
+              className="p-1 text-ink-muted hover:text-ink disabled:opacity-20 transition-colors"
               title="Move down"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -505,7 +505,7 @@ function JobCard({
             </button>
             <button
               onClick={onEdit}
-              className="ml-1 p-1.5 text-ink-3 hover:text-ink transition-colors"
+              className="ml-1 p-1.5 text-ink-muted hover:text-ink transition-colors"
               title="Edit job"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -517,24 +517,24 @@ function JobCard({
       </div>
 
       <h4 className="text-base font-semibold text-ink mb-1">{job.title}</h4>
-      <p className="text-sm text-ink-2 leading-relaxed mb-3">{job.statement}</p>
+      <p className="text-sm text-ink-soft leading-relaxed mb-3">{job.statement}</p>
 
-      <div className="flex items-center gap-3 text-xs text-ink-3 mb-3">
+      <div className="flex items-center gap-3 text-xs text-ink-muted mb-3">
         <span>{job.voteCount} vote{job.voteCount !== 1 ? 's' : ''}</span>
         <span>·</span>
         <span>{job.contributorCount} contributor{job.contributorCount !== 1 ? 's' : ''}</span>
         {job.keyTension && (
           <>
             <span>·</span>
-            <span className="text-ink-3">⚡ {job.keyTension}</span>
+            <span className="text-ink-muted">⚡ {job.keyTension}</span>
           </>
         )}
       </div>
 
       {job.opportunityStatement && (
-        <div className="bg-canvas rounded-[10px] border border-warm-border px-3 py-2.5 mb-3">
-          <p className="text-xs font-medium text-ink-3 mb-0.5">Opportunity</p>
-          <p className="text-xs text-ink-2 leading-relaxed">{job.opportunityStatement}</p>
+        <div className="bg-canvas rounded-sm border border-line px-3 py-2.5 mb-3">
+          <p className="text-xs font-medium text-ink-muted mb-0.5">Opportunity</p>
+          <p className="text-xs text-ink-soft leading-relaxed">{job.opportunityStatement}</p>
         </div>
       )}
 
@@ -542,7 +542,7 @@ function JobCard({
         <div>
           <button
             onClick={() => setShowIdeas((v) => !v)}
-            className="flex items-center gap-1.5 text-xs text-ink-3 hover:text-ink transition-colors"
+            className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink transition-colors"
           >
             <svg
               className={`w-3 h-3 transition-transform ${showIdeas ? 'rotate-180' : ''}`}
@@ -555,8 +555,8 @@ function JobCard({
           {showIdeas && (
             <ul className="mt-2 space-y-1">
               {job.ideas.map((idea, i) => (
-                <li key={i} className="text-xs text-ink-2 flex items-start gap-2">
-                  <span className="text-ink-3 shrink-0 mt-0.5">—</span>
+                <li key={i} className="text-xs text-ink-soft flex items-start gap-2">
+                  <span className="text-ink-muted shrink-0 mt-0.5">—</span>
                   {idea}
                 </li>
               ))}
@@ -603,14 +603,14 @@ function JobEditCard({
   }
 
   return (
-    <div className="bg-surface rounded-[14px] border-2 border-ink p-5 space-y-3">
+    <div className="bg-surface rounded-md border-2 border-ink p-5 space-y-3">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-semibold text-ink">Editing job</span>
         <div className="flex items-center gap-1">
           <button
             onClick={() => onMove(job.id, 'up')}
             disabled={idx === 0}
-            className="p-1 text-ink-3 hover:text-ink disabled:opacity-20 transition-colors"
+            className="p-1 text-ink-muted hover:text-ink disabled:opacity-20 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -619,7 +619,7 @@ function JobEditCard({
           <button
             onClick={() => onMove(job.id, 'down')}
             disabled={idx === allJobs.length - 1}
-            className="p-1 text-ink-3 hover:text-ink disabled:opacity-20 transition-colors"
+            className="p-1 text-ink-muted hover:text-ink disabled:opacity-20 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -629,33 +629,33 @@ function JobEditCard({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-ink-2 mb-1">Title</label>
+        <label className="block text-xs font-medium text-ink-soft mb-1">Title</label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-3 py-2 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+          className="w-full px-3 py-2 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
           placeholder="Short plain-English title"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-ink-2 mb-1">JTBD Statement</label>
+        <label className="block text-xs font-medium text-ink-soft mb-1">JTBD Statement</label>
         <textarea
           value={statement}
           onChange={(e) => setStatement(e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+          className="w-full px-3 py-2 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
           placeholder="When..., I want to..., so I can..."
         />
       </div>
 
       <div className="flex gap-3">
         <div className="flex-1">
-          <label className="block text-xs font-medium text-ink-2 mb-1">Job type</label>
+          <label className="block text-xs font-medium text-ink-soft mb-1">Job type</label>
           <select
             value={jobType}
             onChange={(e) => setJobType(e.target.value as FinalJTBDJob['jobType'])}
-            className="w-full px-3 py-2 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink"
+            className="w-full px-3 py-2 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink"
           >
             <option value="functional">Functional</option>
             <option value="emotional">Emotional</option>
@@ -664,11 +664,11 @@ function JobEditCard({
           </select>
         </div>
         <div className="flex-1">
-          <label className="block text-xs font-medium text-ink-2 mb-1">Priority tier</label>
+          <label className="block text-xs font-medium text-ink-soft mb-1">Priority tier</label>
           <select
             value={priorityTier}
             onChange={(e) => setPriorityTier(e.target.value as FinalJTBDJob['priorityTier'])}
-            className="w-full px-3 py-2 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink"
+            className="w-full px-3 py-2 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink"
           >
             <option value="primary">Primary</option>
             <option value="secondary">Secondary</option>
@@ -678,18 +678,18 @@ function JobEditCard({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-ink-2 mb-1">Opportunity statement</label>
+        <label className="block text-xs font-medium text-ink-soft mb-1">Opportunity statement</label>
         <textarea
           value={opportunityStatement}
           onChange={(e) => setOpportunityStatement(e.target.value)}
           rows={2}
-          className="w-full px-3 py-2 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+          className="w-full px-3 py-2 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
           placeholder="Make it easier to..."
         />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-ink-2 mb-2">Quality flags</label>
+        <label className="block text-xs font-medium text-ink-soft mb-2">Quality flags</label>
         <div className="flex flex-wrap gap-2">
           {FLAG_OPTIONS.map((flag) => (
             <button
@@ -699,7 +699,7 @@ function JobEditCard({
               className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                 qualityFlags.includes(flag)
                   ? 'bg-ink text-white border-ink'
-                  : 'bg-canvas text-ink-2 border-warm-border hover:border-ink'
+                  : 'bg-canvas text-ink-soft border-line hover:border-ink'
               }`}
             >
               {flag}

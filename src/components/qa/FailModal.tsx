@@ -113,15 +113,15 @@ export function FailModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="bg-surface rounded-[14px] border border-warm-border w-full max-w-lg shadow-xl mb-8"
+        className="bg-surface rounded-md border border-line w-full max-w-lg shadow-xl mb-8"
         style={{ boxShadow: '0 8px 32px rgba(17,34,32,0.18)' }}
       >
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-warm-border">
+        <div className="px-6 pt-6 pb-4 border-b border-line">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-bold text-status-fail-text bg-status-fail border border-status-fail-border px-2 py-0.5 rounded-full">
+                <span className="text-sm font-bold text-fail bg-fail-soft border border-fail-line px-2 py-0.5 rounded-full">
                   ❌ Fail
                 </span>
               </div>
@@ -129,14 +129,14 @@ export function FailModal({
             </div>
             <button
               onClick={onClose}
-              className="shrink-0 p-1.5 text-ink-3 hover:text-ink transition-colors rounded-lg hover:bg-canvas"
+              className="shrink-0 p-1.5 text-ink-muted hover:text-ink transition-colors rounded-lg hover:bg-canvas"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <p className="text-xs text-ink-3 mt-2">All fields are optional. Fill in as much as you can.</p>
+          <p className="text-xs text-ink-muted mt-2">All fields are optional. Fill in as much as you can.</p>
         </div>
 
         {/* Body */}
@@ -149,7 +149,7 @@ export function FailModal({
               value={stepsTaken}
               onChange={(e) => setStepsTaken(e.target.value)}
               placeholder="Describe the steps you took before the issue appeared…"
-              className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+              className="w-full px-3 py-2.5 border border-line rounded-sm text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
               rows={3}
             />
           </div>
@@ -162,7 +162,7 @@ export function FailModal({
               value={expectedBehavior}
               onChange={(e) => setExpectedBehavior(e.target.value)}
               placeholder="Describe what should have happened…"
-              className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+              className="w-full px-3 py-2.5 border border-line rounded-sm text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
               rows={2}
             />
           </div>
@@ -175,7 +175,7 @@ export function FailModal({
               value={actualBehavior}
               onChange={(e) => setActualBehavior(e.target.value)}
               placeholder="Describe what went wrong, including any error messages you saw…"
-              className="w-full px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink placeholder:text-ink-3 bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+              className="w-full px-3 py-2.5 border border-line rounded-sm text-sm text-ink placeholder:text-ink-muted bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
               rows={3}
             />
           </div>
@@ -190,7 +190,7 @@ export function FailModal({
                 <select
                   value={testUsername}
                   onChange={(e) => setTestUsername(e.target.value)}
-                  className="flex-1 px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                  className="flex-1 px-3 py-2.5 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                 >
                   <option value="">Select or type a username…</option>
                   {allUsernames.map((u) => (
@@ -200,7 +200,7 @@ export function FailModal({
                 <button
                   type="button"
                   onClick={() => setShowCustomInput(true)}
-                  className="px-3 py-2.5 bg-canvas border border-warm-border text-xs text-ink-2 rounded-[10px] hover:border-ink hover:text-ink transition-all whitespace-nowrap"
+                  className="px-3 py-2.5 bg-canvas border border-line text-xs text-ink-soft rounded-sm hover:border-ink hover:text-ink transition-all whitespace-nowrap"
                 >
                   + New
                 </button>
@@ -213,12 +213,12 @@ export function FailModal({
                   value={customUsername}
                   onChange={(e) => setCustomUsername(e.target.value)}
                   placeholder="Type a username or email…"
-                  className="flex-1 px-3 py-2.5 border border-warm-border rounded-[10px] text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                  className="flex-1 px-3 py-2.5 border border-line rounded-sm text-sm text-ink bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                 />
                 <button
                   type="button"
                   onClick={() => { setShowCustomInput(false); setCustomUsername('') }}
-                  className="px-3 py-2.5 bg-canvas border border-warm-border text-xs text-ink-2 rounded-[10px] hover:border-ink hover:text-ink transition-all"
+                  className="px-3 py-2.5 bg-canvas border border-line text-xs text-ink-soft rounded-sm hover:border-ink hover:text-ink transition-all"
                 >
                   Cancel
                 </button>
@@ -229,10 +229,10 @@ export function FailModal({
           {/* Screenshot */}
           <div>
             <label className="block text-sm font-medium text-ink mb-1.5">
-              Screenshot <span className="text-ink-3 font-normal">(optional)</span>
+              Screenshot <span className="text-ink-muted font-normal">(optional)</span>
             </label>
             {existingScreenshot && !screenshotFile && (
-              <p className="text-xs text-ink-2 mb-2">
+              <p className="text-xs text-ink-soft mb-2">
                 Current: <span className="font-mono">{existingScreenshot}</span>
               </p>
             )}
@@ -240,15 +240,15 @@ export function FailModal({
               type="file"
               accept="image/*"
               onChange={(e) => setScreenshotFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-sm text-ink-2 file:mr-3 file:py-2 file:px-3 file:rounded-[8px] file:border file:border-warm-border file:text-sm file:font-medium file:text-ink file:bg-canvas hover:file:bg-mist transition-all"
+              className="block w-full text-sm text-ink-soft file:mr-3 file:py-2 file:px-3 file:rounded-xs file:border file:border-line file:text-sm file:font-medium file:text-ink file:bg-canvas hover:file:bg-info transition-all"
             />
             {screenshotFile && (
-              <p className="text-xs text-ink-3 mt-1">{screenshotFile.name}</p>
+              <p className="text-xs text-ink-muted mt-1">{screenshotFile.name}</p>
             )}
           </div>
 
           {error && (
-            <div className="p-3 bg-status-fail border border-status-fail-border rounded-[10px] text-status-fail-text text-sm">
+            <div className="p-3 bg-fail-soft border border-fail-line rounded-sm text-fail text-sm">
               {error}
             </div>
           )}
@@ -257,7 +257,7 @@ export function FailModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 bg-canvas border border-warm-border text-ink-2 text-sm font-medium rounded-full hover:border-ink hover:text-ink transition-all"
+              className="px-4 py-2.5 bg-canvas border border-line text-ink-soft text-sm font-medium rounded-full hover:border-ink hover:text-ink transition-all"
             >
               Cancel
             </button>

@@ -44,7 +44,7 @@ export function CreateGameForm({ users }: { users: UserOption[] }) {
   }
 
   return (
-    <form onSubmit={submit} className="p-5 bg-surface border border-warm-border rounded-2xl">
+    <form onSubmit={submit} className="p-5 bg-surface border border-line rounded-lg">
       <p className="text-sm font-bold text-ink mb-3">Start a new game</p>
       <div className="flex flex-col sm:flex-row gap-3">
         <input
@@ -52,12 +52,12 @@ export function CreateGameForm({ users }: { users: UserOption[] }) {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Game title (e.g. Friday Standup Round)"
           maxLength={200}
-          className="sm:flex-1 min-w-0 px-4 py-2.5 bg-canvas border border-warm-border rounded-xl text-ink placeholder:text-ink-3 focus:outline-none focus:border-ink"
+          className="sm:flex-1 min-w-0 px-4 py-2.5 bg-canvas border border-line rounded-xl text-ink placeholder:text-ink-muted focus:outline-none focus:border-ink"
         />
         <select
           value={authorId}
           onChange={(e) => setAuthorId(e.target.value)}
-          className="sm:flex-1 min-w-0 px-4 py-2.5 bg-canvas border border-warm-border rounded-xl text-ink focus:outline-none focus:border-ink truncate"
+          className="sm:flex-1 min-w-0 px-4 py-2.5 bg-canvas border border-line rounded-xl text-ink focus:outline-none focus:border-ink truncate"
         >
           <option value="">Assign author…</option>
           {users.map((u) => (
@@ -74,9 +74,9 @@ export function CreateGameForm({ users }: { users: UserOption[] }) {
           {creating ? 'Creating…' : 'Create'}
         </button>
       </div>
-      {error && <p className="text-sm text-status-fail-text font-medium mt-2">{error}</p>}
+      {error && <p className="text-sm text-fail font-medium mt-2">{error}</p>}
       {users.length === 0 && (
-        <p className="text-xs text-ink-3 mt-2">
+        <p className="text-xs text-ink-muted mt-2">
           No registered users yet — people appear here after they sign in once.
         </p>
       )}

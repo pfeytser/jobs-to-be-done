@@ -1,42 +1,152 @@
 @import "tailwindcss";
+/* Fonts are loaded via next/font/google in layout.tsx (self-hosted, no FOUT,
+   no @import-ordering pitfalls); the theme below points at their CSS variables. */
 
+/* ══════════════════════════════════════════════════════════════
+   Jobs to Bee Done — Industrious-polished design tokens.
+   Single source of truth (see design system: tokens/theme.css).
+   ══════════════════════════════════════════════════════════════ */
 @theme {
-  --color-canvas: #F4F3F0;
-  --color-surface: #FFFFFF;
-  --color-warm-border: #E6E1D8;
-  --color-ink: #112220;
-  --color-ink-2: #64625B;
-  --color-ink-3: #A5A59F;
-  --color-sand: #DECEAC;
-  --color-mist: #EBF0F5;
-  --color-gold: #FBD349;
-  --color-status-pass: #D1FAE5;
-  --color-status-pass-border: #6EE7B7;
-  --color-status-pass-text: #065F46;
-  --color-status-fail: #FEE2E2;
-  --color-status-fail-border: #FCA5A5;
-  --color-status-fail-text: #991B1B;
-  --color-status-blocked: #FEF3C7;
-  --color-status-blocked-border: #FCD34D;
-  --color-status-blocked-text: #92400E;
-  --color-status-skipped: #F1F0EE;
-  --color-status-skipped-border: #D4D0C8;
-  --color-status-skipped-text: #64625B;
+  /* ── Fonts (variables set by next/font/google in layout.tsx) ── */
+  --font-display: var(--font-newsreader), Georgia, 'Times New Roman', serif;
+  --font-sans:    var(--font-hanken), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:    'SF Mono', ui-monospace, 'Menlo', monospace;
+
+  /* ── Raw scales (escape hatch — prefer the semantic names below) ── */
+  --color-almond-50:  #FDFCFA;
+  --color-almond-100: #F9F7F3;
+  --color-almond-200: #F1ECE3;
+  --color-almond-300: #E6DBCB;
+  --color-almond-400: #E1D5C4;
+  --color-almond-500: #D8C9B2;
+
+  --color-teal-900: #002525;
+  --color-teal-800: #013E3F;
+  --color-teal-700: #0E5152;
+  --color-teal-600: #1D5859;
+  --color-teal-500: #44605F;
+  --color-teal-300: #8FA3A2;
+  --color-teal-100: #D6E0DF;
+
+  --color-honey-700: #C99A05;
+  --color-honey-500: #FCC70F;
+  --color-honey-400: #FDD96B;
+  --color-honey-200: #FBEFC9;
+
+  --color-mist-100: #EAF0F0;
+  --color-mist-200: #D8E6E6;
+
+  --color-grey-500: #8C8A82;
+  --color-grey-400: #A8A59C;
+
+  /* ── Semantic surfaces (author UI against these) ── */
+  --color-canvas:   #F9F7F3;   /* page bg — never pure white */
+  --color-sunken:   #F1ECE3;   /* hover wells, sunken panels */
+  --color-surface:  #FFFFFF;   /* cards on canvas */
+  --color-inverse:  #013E3F;   /* teal inverse surface */
+  --color-info:     #EAF0F0;   /* neutral info wash */
+
+  /* ── Semantic ink ── */
+  --color-ink:        #013E3F;  /* headings + body */
+  --color-ink-soft:   #44605F;  /* supporting copy */
+  --color-ink-muted:  #8C8A82;  /* meta, placeholders, captions */
+  --color-on-inverse: #F9F7F3;  /* text on teal */
+  --color-on-honey:   #013E3F;  /* text on honey */
+
+  /* ── Accent ── */
+  --color-accent:      #FCC70F;
+  --color-accent-wash: #FBEFC9;
+
+  /* ── Lines ── */
+  --color-line:        #E6DBCB;  /* default hairline on cream */
+  --color-line-strong: #013E3F;
+  --color-line-hover:  #1D5859;
+
+  /* ── Status: pass (sanctioned status-only green) ── */
+  --color-pass:      #0E5C3A;
+  --color-pass-soft: #DCEFE3;
+  --color-pass-line: #9BD3B4;
+  /* ── Status: fail ── */
+  --color-fail:      #9B3415;
+  --color-fail-soft: #FBE3DC;
+  --color-fail-line: #F0A993;
+  /* ── Status: blocked / warning (honey-tinted) ── */
+  --color-blocked:      #8A5A12;
+  --color-blocked-soft: #FBEFC9;
+  --color-blocked-line: #F0CE7A;
+  /* ── Status: skipped / neutral (sand) ── */
+  --color-skipped:      #7A776E;
+  --color-skipped-soft: #F1ECE3;
+  --color-skipped-line: #D8CDBA;
+
+  /* ── Type scale (size + paired line-height) ── */
+  --text-xs:   0.75rem;    --text-xs--line-height:   1.5;
+  --text-sm:   0.875rem;   --text-sm--line-height:   1.5;
+  --text-base: 1rem;       --text-base--line-height: 1.5;
+  --text-lg:   1.125rem;   --text-lg--line-height:   1.4;
+  --text-xl:   1.25rem;    --text-xl--line-height:   1.3;
+  --text-2xl:  1.5rem;     --text-2xl--line-height:  1.25;
+  --text-3xl:  1.875rem;   --text-3xl--line-height:  1.25;
+  --text-4xl:  2.375rem;   --text-4xl--line-height:  1.15;
+  --text-5xl:  3rem;       --text-5xl--line-height:  1.1;
+  --text-6xl:  3.75rem;    --text-6xl--line-height:  1.1;
+
+  /* ── Weights ── */
+  --font-weight-light:    300;
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  /* ── Tracking (letter-spacing) ── */
+  --tracking-tight:  -0.02em;
+  --tracking-snug:   -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.08em;
+
+  /* ── Leading (line-height) ── */
+  --leading-tight:   1.1;
+  --leading-snug:    1.25;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
+
+  /* ── Radius (consolidated — kills the old 8/10/12/14/16 sprawl) ── */
+  --radius-xs:   8px;
+  --radius-sm:   10px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-pill: 9999px;
+
+  /* ── Elevation (quiet, teal-tinted — never grey) ── */
+  --shadow-xs:  0 1px 2px rgba(1, 62, 63, 0.06);
+  --shadow-sm:  0 1px 3px rgba(1, 62, 63, 0.08);
+  --shadow-md:  0 4px 14px rgba(1, 62, 63, 0.08);
+  --shadow-lg:  0 8px 32px rgba(1, 62, 63, 0.14);
+  --shadow-bar: 0 7px 16px -8px rgba(0, 37, 37, 0.13);
+
+  /* ── Container widths ── */
+  --container-prose:   42rem;
+  --container-content: 56rem;
+  --container-wide:    72rem;
+
+  /* ── Motion ── */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: ease-in-out;
+
+  --animate-spin-slow:  jtbd-spin 1.4s linear infinite;
+  --animate-pulse-soft: jtbd-pulse 1.6s var(--ease-in-out) infinite;
 }
 
+/* Keyframes can't live inside @theme — declare them once here. */
+@keyframes jtbd-spin  { to { transform: rotate(360deg); } }
+@keyframes jtbd-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+/* ── Base ── */
 body {
-  background: #F4F3F0;
-  color: #112220;
-  font-family: Inter, 'Helvetica Neue', system-ui, sans-serif;
-}
-
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
 /* Rich text prose styles */
@@ -50,7 +160,7 @@ body {
 .prose h3 { font-size: 0.95em; font-weight: 600; margin-bottom: 0.4em; margin-top: 0.75em; }
 .prose h3:first-child { margin-top: 0; }
 
-/* Two Truths & A Lie — reveal confetti */
+/* Two Truths & A Lie — reveal confetti (kept: deliberate personality) */
 @keyframes tt-confetti-fall {
   0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
