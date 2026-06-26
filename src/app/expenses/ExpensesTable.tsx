@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import { useToast } from '@/components/ui'
 import type {
   ExpenseTransaction,
   ExpenseFilterOptions,
@@ -55,6 +56,7 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>('expense_date')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const firstRender = useRef(true)
+  const toast = useToast()
   const [running, setRunning] = useState(false)
   const [runResult, setRunResult] = useState<{
     autoMatched: number
@@ -115,10 +117,10 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
         await fetchData()
       } else {
         setRunResult(null)
-        alert(data.error ?? 'Run failed')
+        toast(data.error ?? 'Run failed', 'fail')
       }
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Run failed')
+      toast(e instanceof Error ? e.message : 'Run failed', 'fail')
     } finally {
       setRunning(false)
     }
