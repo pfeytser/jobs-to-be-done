@@ -5,6 +5,7 @@ import { SessionProvider } from 'next-auth/react'
 import { auth } from '@/lib/auth/config'
 import NextTopLoader from 'nextjs-toploader'
 import { Header } from '@/components/Header'
+import { ToastProvider } from '@/components/ui'
 import { recordUser } from '@/lib/db/users'
 
 // Brand type: Hanken Grotesk (workhorse sans) + Newsreader (editorial display).
@@ -53,8 +54,10 @@ export default async function RootLayout({
       <body className="bg-canvas min-h-screen">
         <NextTopLoader color="#013E3F" showSpinner={false} />
         <SessionProvider session={session}>
-          <Header />
-          {children}
+          <ToastProvider>
+            <Header />
+            {children}
+          </ToastProvider>
         </SessionProvider>
       </body>
     </html>
