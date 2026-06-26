@@ -150,10 +150,10 @@ export function TestChecklist({
               <span className="text-ink-soft">
                 <span className="font-semibold text-ink">{stats.done}</span> / {stats.total} done ({pct}%)
               </span>
-              <span className="text-pass font-medium">✅ {stats.passed}</span>
-              <span className="text-fail font-medium">❌ {stats.failed}</span>
-              <span className="text-blocked font-medium">🚧 {stats.blocked}</span>
-              <span className="text-skipped font-medium">⏭ {stats.skipped}</span>
+              <span className="inline-flex items-center gap-1 text-pass font-medium"><span className="h-1.5 w-1.5 rounded-full bg-pass" />{stats.passed}</span>
+              <span className="inline-flex items-center gap-1 text-fail font-medium"><span className="h-1.5 w-1.5 rounded-full bg-fail" />{stats.failed}</span>
+              <span className="inline-flex items-center gap-1 text-blocked font-medium"><span className="h-1.5 w-1.5 rounded-full bg-blocked" />{stats.blocked}</span>
+              <span className="inline-flex items-center gap-1 text-skipped font-medium"><span className="h-1.5 w-1.5 rounded-full bg-skipped" />{stats.skipped}</span>
             </div>
           </div>
           {/* Progress bar */}
@@ -300,7 +300,7 @@ export function TestChecklist({
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                               </svg>
-                            ) : '✅'} Pass
+                            ) : null} Pass
                           </button>
                           <button
                             onClick={() => setFailModalItemId(item.id)}
@@ -311,7 +311,7 @@ export function TestChecklist({
                                 : 'bg-canvas border-line text-ink hover:bg-fail-soft hover:border-fail-line hover:text-fail'
                             }`}
                           >
-                            ❌ Fail
+                            Fail
                           </button>
                           <button
                             onClick={() => setBlockedModalItemId(item.id)}
@@ -322,7 +322,7 @@ export function TestChecklist({
                                 : 'bg-canvas border-line text-ink hover:bg-blocked-soft hover:border-blocked-line hover:text-blocked'
                             }`}
                           >
-                            🚧 Blocked
+                            Blocked
                           </button>
                           <button
                             onClick={() => handleQuickStatus(item, 'skipped')}
@@ -338,7 +338,7 @@ export function TestChecklist({
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                               </svg>
-                            ) : '⏭'} Skip / N/A
+                            ) : null} Skip / N/A
                           </button>
                         </div>
                       </div>

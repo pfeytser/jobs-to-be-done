@@ -72,7 +72,7 @@ export function BlockedModal({
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm font-bold text-blocked bg-blocked-soft border border-blocked-line px-2 py-0.5 rounded-full">
-                  🚧 Blocked
+                  Blocked
                 </span>
               </div>
               <p className="text-sm font-medium text-ink leading-snug">{testDescription}</p>

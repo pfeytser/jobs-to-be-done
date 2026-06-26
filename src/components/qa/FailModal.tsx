@@ -122,7 +122,7 @@ export function FailModal({
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-bold text-fail bg-fail-soft border border-fail-line px-2 py-0.5 rounded-full">
-                  ❌ Fail
+                  Fail
                 </span>
               </div>
               <p className="text-sm font-medium text-ink leading-snug mt-2">{testDescription}</p>

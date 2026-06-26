@@ -62,9 +62,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
                       </div>
                       <div className="flex items-center gap-3 text-xs text-ink-soft mt-2">
                         <span><strong className="text-ink">{s.done}</strong> / {s.total} done ({pct}%)</span>
-                        <span className="text-pass">✅ {s.passed}</span>
-                        <span className="text-fail">❌ {s.failed}</span>
-                        <span className="text-blocked">🚧 {s.blocked}</span>
+                        <span className="inline-flex items-center gap-1 text-pass"><span className="h-1.5 w-1.5 rounded-full bg-pass" />{s.passed}</span>
+                        <span className="inline-flex items-center gap-1 text-fail"><span className="h-1.5 w-1.5 rounded-full bg-fail" />{s.failed}</span>
+                        <span className="inline-flex items-center gap-1 text-blocked"><span className="h-1.5 w-1.5 rounded-full bg-blocked" />{s.blocked}</span>
                       </div>
                       <div className="mt-2 h-1 bg-canvas rounded-full overflow-hidden">
                         <div className="h-full bg-ink rounded-full" style={{ width: `${pct}%` }} />
@@ -115,9 +115,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
                       </div>
                       <div className="flex items-center gap-3 text-xs text-ink-soft mt-2">
                         <span><strong className="text-ink">{s.done}</strong> / {s.total} done ({pct}%)</span>
-                        <span className="text-pass">✅ {s.passed}</span>
-                        <span className="text-fail">❌ {s.failed}</span>
-                        <span className="text-blocked">🚧 {s.blocked}</span>
+                        <span className="inline-flex items-center gap-1 text-pass"><span className="h-1.5 w-1.5 rounded-full bg-pass" />{s.passed}</span>
+                        <span className="inline-flex items-center gap-1 text-fail"><span className="h-1.5 w-1.5 rounded-full bg-fail" />{s.failed}</span>
+                        <span className="inline-flex items-center gap-1 text-blocked"><span className="h-1.5 w-1.5 rounded-full bg-blocked" />{s.blocked}</span>
                       </div>
                       <div className="mt-2 h-1 bg-canvas rounded-full overflow-hidden">
                         <div className="h-full bg-ink rounded-full" style={{ width: `${pct}%` }} />
