@@ -23,7 +23,7 @@ export function AdminTwoTruthsClient({
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-1">⚙️ Host controls</p>
-            <h1 className="text-3xl font-black text-ink tracking-tight">Two Truths &amp; A Lie</h1>
+            <h1 className="font-display text-3xl font-black text-ink tracking-tight">Two Truths &amp; A Lie</h1>
             <p className="text-sm text-ink-muted mt-1">Every game across the team — full controls.</p>
           </div>
           <Link href="/two-truths" className="text-sm font-semibold text-ink-soft hover:text-ink">

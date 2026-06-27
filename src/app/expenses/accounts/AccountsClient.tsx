@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { SafeEmailAccount } from '@/lib/db/email-accounts'
+import { ConfirmDialog } from '@/components/ui'
 
 const CONNECT_MESSAGES: Record<string, { ok: boolean; text: string }> = {
   success: { ok: true, text: 'Account connected.' },
@@ -26,6 +27,7 @@ export function AccountsClient({
   const sp = useSearchParams()
   const [accounts, setAccounts] = useState(initialAccounts)
   const [busy, setBusy] = useState<string | null>(null)
+  const [pendingDisconnect, setPendingDisconnect] = useState<string | null>(null)
   const connectStatus = sp.get('connect')
 
   useEffect(() => {
@@ -51,11 +53,11 @@ export function AccountsClient({
   }
 
   async function disconnect(id: string) {
-    if (!confirm('Disconnect this account? Its stored token will be revoked.')) return
     setBusy(id)
     try {
       await fetch(`/api/expenses/accounts/${id}`, { method: 'DELETE' })
       router.refresh()
+      setPendingDisconnect(null)
     } finally {
       setBusy(null)
     }
@@ -122,7 +124,7 @@ export function AccountsClient({
                   {a.is_active ? 'Pause' : 'Activate'}
                 </button>
                 <button
-                  onClick={() => disconnect(a.id)}
+                  onClick={() => setPendingDisconnect(a.id)}
                   disabled={busy === a.id}
                   className="px-3 py-1.5 text-xs font-medium text-fail hover:underline disabled:opacity-40"
                 >
@@ -154,6 +156,18 @@ export function AccountsClient({
           Connect personal Gmail
         </a>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDisconnect}
+        onCancel={() => setPendingDisconnect(null)}
+        onConfirm={() => pendingDisconnect && disconnect(pendingDisconnect)}
+        title="Disconnect this account?"
+        danger
+        confirmLabel="Disconnect"
+        loading={!!pendingDisconnect && busy === pendingDisconnect}
+      >
+        Its stored token will be revoked. You can reconnect it later.
+      </ConfirmDialog>
     </div>
   )
 }

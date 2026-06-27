@@ -50,7 +50,7 @@ export default function SeaCreatureForm({ userId }: { userId: string }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink mb-1">Before we begin…</h1>
+        <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">Before we begin…</h1>
         <p className="text-sm text-ink-muted">Let&apos;s get your profile up to date.</p>
       </div>
 

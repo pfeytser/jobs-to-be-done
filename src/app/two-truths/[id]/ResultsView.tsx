@@ -59,7 +59,7 @@ export function ResultsView({
 
       <div className="relative z-10 max-w-content mx-auto px-5 py-8 sm:py-12">
         <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-2">🏁 The reveal</p>
-        <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
         <p className="text-ink-soft mt-1">by {authorName}</p>
 
         {viewerVoted && (

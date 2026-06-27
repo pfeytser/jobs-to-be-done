@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import type { DatasetMeta, UiDatasetConfig, CsvDatasetConfig } from '@/lib/translation/types'
+import { ConfirmDialog } from '@/components/ui'
 
 interface CsvDetect {
   fileName: string
@@ -30,6 +31,7 @@ export function SourcesPanel({
   const [enFile, setEnFile] = useState<File | null>(null)
   const [targetFiles, setTargetFiles] = useState<File[]>([])
   const [csvDetect, setCsvDetect] = useState<CsvDetect | null>(null)
+  const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
   async function loadUi() {
     if (!enFile || targetFiles.length === 0) {
@@ -120,13 +122,13 @@ export function SourcesPanel({
     }
   }
 
-  async function removeDataset(id: string, name: string) {
-    if (!confirm(`Remove source "${name}"? Edits for its strings will be deleted.`)) return
+  async function removeDataset(id: string) {
     setBusy(true)
     try {
       const res = await fetch(`/api/translation/projects/${projectId}/datasets/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')
       onChanged()
+      setPendingRemove(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -251,7 +253,7 @@ export function SourcesPanel({
                   )}
                 </div>
                 <button
-                  onClick={() => removeDataset(d.id, d.name)}
+                  onClick={() => setPendingRemove({ id: d.id, name: d.name })}
                   className="shrink-0 ml-3 text-xs text-fail hover:opacity-80 border border-line rounded-xs px-2.5 py-1"
                 >
                   Remove
@@ -321,6 +323,18 @@ export function SourcesPanel({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingRemove}
+        onCancel={() => setPendingRemove(null)}
+        onConfirm={() => pendingRemove && removeDataset(pendingRemove.id)}
+        title={pendingRemove ? `Remove “${pendingRemove.name}”?` : ''}
+        danger
+        confirmLabel="Remove"
+        loading={busy}
+      >
+        Edits for this source’s strings will be deleted. This can’t be undone.
+      </ConfirmDialog>
     </div>
   )
 }

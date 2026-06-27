@@ -30,7 +30,7 @@ export default async function StoryboardPage() {
     <div className="min-h-screen bg-canvas">
       <main className="max-w-content mx-auto px-6 py-12">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-ink mb-1">Storyboards</h1>
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">Storyboards</h1>
           <p className="text-sm text-ink-muted">Select a use case to create or view your storyboard.</p>
         </div>
 

@@ -102,7 +102,7 @@ export function CodeReviewClient() {
     <div className="min-h-screen bg-canvas">
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-ink mb-1">Code Review</h1>
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">Code Review</h1>
           <p className="text-sm text-ink-muted">
             Paste one or more GitHub PR URLs (one per line) for an L7-level AI review.
           </p>

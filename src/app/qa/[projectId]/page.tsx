@@ -34,7 +34,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
         <Link href="/qa" className="text-xs text-ink-muted hover:text-ink transition-colors">
           ← All projects
         </Link>
-        <h1 className="text-2xl font-bold text-ink mt-2 mb-1">{project.name}</h1>
+        <h1 className="font-display tracking-tight text-2xl font-bold text-ink mt-2 mb-1">{project.name}</h1>
         {project.description && (
           <p className="text-sm text-ink-soft">{project.description}</p>
         )}

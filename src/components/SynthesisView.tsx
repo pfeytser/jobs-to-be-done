@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import useSWR from 'swr'
+import { useToast } from '@/components/ui'
 
 interface FinalJTBDJob {
   id: string
@@ -150,6 +151,7 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
   const [editingJobId, setEditingJobId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
+  const toast = useToast()
 
   // Sync server data to local state when not dirty
   const synthesis = isDirty ? localSynthesis : (data?.synthesis ?? null)
@@ -193,11 +195,11 @@ export function SynthesisView({ exercise, isAdmin = false }: SynthesisViewProps)
       await mutate()
       setIsDirty(false)
     } catch {
-      alert('Failed to save changes. Please try again.')
+      toast('Failed to save changes. Please try again.', 'fail')
     } finally {
       setSaving(false)
     }
-  }, [localSynthesis, exercise.id, mutate])
+  }, [localSynthesis, exercise.id, mutate, toast])
 
   const handleCopyMarkdown = useCallback(() => {
     if (!synthesis) return

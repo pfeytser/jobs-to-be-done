@@ -33,7 +33,7 @@ export default async function QAHomePage() {
     <main className="max-w-content mx-auto px-6 py-8">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-ink mb-1">QA Projects</h1>
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">QA Projects</h1>
           <p className="text-sm text-ink-muted">
             {session.user.role === 'admin'
               ? 'All projects — click one to manage it.'

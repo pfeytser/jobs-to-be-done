@@ -49,7 +49,7 @@ export function VotingView({
     <main className="min-h-screen bg-canvas">
       <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
         <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-2">🎯 Spot the lie</p>
-        <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
         <p className="text-ink-soft mt-1">
           by {authorName} · Tap the statement you think is <span className="font-bold text-ink">the lie</span>
         </p>

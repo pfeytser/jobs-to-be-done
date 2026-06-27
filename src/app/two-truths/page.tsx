@@ -53,7 +53,7 @@ export default async function TwoTruthsDashboard() {
             <span className="text-base">🤥</span>
             <span className="text-xs font-bold tracking-wide text-ink uppercase">Team Game</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-black text-ink tracking-tight">
+          <h1 className="font-display text-4xl sm:text-5xl font-black text-ink tracking-tight">
             Two Truths <span className="text-ink-muted font-light">&amp;</span> A Lie
           </h1>
           <p className="text-ink-soft mt-2 text-base">

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import type { TranslationProject } from '@/lib/translation/types'
+import { ConfirmDialog } from '@/components/ui'
 
 // Owner-only project management: create / rename / delete, and a link into each
 // project's source setup. Translators never see this surface.
@@ -14,6 +15,7 @@ export function AdminClient({ initialProjects }: { initialProjects: TranslationP
   const [error, setError] = useState<string | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null)
 
   async function createProject() {
     const name = newName.trim()
@@ -58,13 +60,13 @@ export function AdminClient({ initialProjects }: { initialProjects: TranslationP
     }
   }
 
-  async function remove(id: string, name: string) {
-    if (!confirm(`Delete project "${name}" and all its loaded sources and edits? This cannot be undone.`)) return
+  async function remove(id: string) {
     setBusy(true)
     try {
       const res = await fetch(`/api/translation/projects/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')
       setProjects((p) => p.filter((proj) => proj.id !== id))
+      setPendingDelete(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -79,7 +81,7 @@ export function AdminClient({ initialProjects }: { initialProjects: TranslationP
           <Link href="/translation" className="text-sm text-ink-muted hover:text-ink transition-colors">
             ← Back to projects
           </Link>
-          <h1 className="text-2xl font-bold text-ink mt-2">Setup &amp; projects</h1>
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mt-2">Setup &amp; projects</h1>
           <p className="text-sm text-ink-muted mt-1">Create projects and load source files. Translators only see the editor.</p>
         </div>
         {!creating && (
@@ -159,7 +161,7 @@ export function AdminClient({ initialProjects }: { initialProjects: TranslationP
                     Rename
                   </button>
                   <button
-                    onClick={() => remove(proj.id, proj.name)}
+                    onClick={() => setPendingDelete({ id: proj.id, name: proj.name })}
                     className="px-3 py-1.5 text-xs text-fail hover:opacity-80 border border-line rounded-xs"
                   >
                     Delete
@@ -170,6 +172,18 @@ export function AdminClient({ initialProjects }: { initialProjects: TranslationP
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => pendingDelete && remove(pendingDelete.id)}
+        title={pendingDelete ? `Delete “${pendingDelete.name}”?` : ''}
+        danger
+        confirmLabel="Delete"
+        loading={busy}
+      >
+        This deletes the project and all its loaded sources and edits. This can’t be undone.
+      </ConfirmDialog>
     </div>
   )
 }

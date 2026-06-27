@@ -19,7 +19,7 @@ export default async function JTBDAdminPage() {
     <div className="min-h-screen bg-canvas">
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-ink mb-1">JTBD Exercise</h1>
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">JTBD Exercise</h1>
           <p className="text-ink-muted text-sm">
             Manage exercises, set phases, and track voting progress.
           </p>

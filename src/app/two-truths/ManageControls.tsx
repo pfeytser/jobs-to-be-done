@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ConfirmDialog } from '@/components/ui'
 
 export type TtStatus = 'draft' | 'active' | 'completed' | 'archived'
 
@@ -16,6 +17,7 @@ export function ManageControls({ sessionId, status }: { sessionId: string; statu
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   async function run(fn: () => Promise<Response>) {
     setBusy(true)
@@ -43,9 +45,9 @@ export function ManageControls({ sessionId, status }: { sessionId: string; statu
       })
     )
 
-  const remove = () => {
-    if (!confirm('Delete this draft game? This cannot be undone.')) return
-    run(() => fetch(`/api/two-truths/sessions/${sessionId}`, { method: 'DELETE' }))
+  const remove = async () => {
+    await run(() => fetch(`/api/two-truths/sessions/${sessionId}`, { method: 'DELETE' }))
+    setConfirmOpen(false)
   }
 
   return (
@@ -61,7 +63,7 @@ export function ManageControls({ sessionId, status }: { sessionId: string; statu
               Activate
             </button>
             <button
-              onClick={remove}
+              onClick={() => setConfirmOpen(true)}
               disabled={busy}
               className="px-3 py-1.5 text-fail text-xs font-bold rounded-full hover:bg-fail-soft disabled:opacity-50"
             >
@@ -107,6 +109,17 @@ export function ManageControls({ sessionId, status }: { sessionId: string; statu
         )}
       </div>
       {error && <span className="text-xs text-fail text-right">{error}</span>}
+      <ConfirmDialog
+        open={confirmOpen}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={remove}
+        title="Delete this draft game?"
+        danger
+        confirmLabel="Delete"
+        loading={busy}
+      >
+        This can’t be undone.
+      </ConfirmDialog>
     </div>
   )
 }

@@ -37,7 +37,7 @@ export default async function CoupaUploadPage() {
           ← Back to transactions
         </Link>
         <div className="flex items-start justify-between gap-3 mt-3 mb-1">
-          <h1 className="text-2xl font-bold text-ink">Coupa upload worklist</h1>
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink">Coupa upload worklist</h1>
           {items.length > 0 && (
             <a
               href="/api/expenses/coupa-upload/export"

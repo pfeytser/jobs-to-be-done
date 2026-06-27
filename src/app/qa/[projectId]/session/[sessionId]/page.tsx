@@ -38,7 +38,7 @@ export default async function SessionPage({
     return (
       <main className="max-w-content mx-auto px-6 py-8 text-center">
         <p className="text-4xl mb-3">🔍</p>
-        <h1 className="text-xl font-bold text-ink mb-2">No test items yet</h1>
+        <h1 className="font-display tracking-tight text-xl font-bold text-ink mb-2">No test items yet</h1>
         <p className="text-sm text-ink-soft mb-4">
           This project doesn&apos;t have a test suite set up yet. Ask an admin to add test items.
         </p>

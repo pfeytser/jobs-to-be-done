@@ -93,7 +93,7 @@ export function AuthorSetup({
     <main className="min-h-screen bg-canvas">
       <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
         <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-2">✍️ Set up your game</p>
-        <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
 
         <div className="mt-4 p-4 rounded-xl bg-info border border-line text-sm text-ink-soft">
           Write two true statements and one lie. Mark which one is the lie — players won&apos;t see your

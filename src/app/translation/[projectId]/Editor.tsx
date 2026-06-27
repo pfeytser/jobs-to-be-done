@@ -269,7 +269,7 @@ export function Editor({
           <Link href="/translation" className="text-sm text-ink-muted hover:text-ink transition-colors">
             ← Projects
           </Link>
-          <h1 className="text-lg font-bold text-ink">{project.name}</h1>
+          <h1 className="font-display tracking-tight text-lg font-bold text-ink">{project.name}</h1>
         </div>
         {isOwner && (
           <Link

@@ -29,7 +29,7 @@ export default async function QAAdminPage() {
       </div>
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-ink mb-1">QA Projects</h1>
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">QA Projects</h1>
           <p className="text-sm text-ink-muted">Manage projects, test suites, and view results.</p>
         </div>
         <Link

@@ -19,7 +19,7 @@ export function ProjectsClient({
           <Link href="/" className="text-sm text-ink-muted hover:text-ink transition-colors">
             ← Home
           </Link>
-          <h1 className="text-2xl font-bold text-ink mt-2">Translation Review</h1>
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mt-2">Translation Review</h1>
           <p className="text-sm text-ink-muted mt-1">Pick a project to review and refine its translations.</p>
         </div>
         {isOwner && (

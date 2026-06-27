@@ -36,7 +36,7 @@ function OnSiteLanding({ profile }: { profile: { sea_creature?: string | null; s
       )}
 
       <div>
-        <h1 className="text-2xl font-bold text-ink mb-1">Welcome to On-site</h1>
+        <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">Welcome to On-site</h1>
         <p className="text-sm text-ink-muted mb-6">Ready to build your storyboard?</p>
         <a
           href="/storyboard"

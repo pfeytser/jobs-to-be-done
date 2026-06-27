@@ -25,7 +25,7 @@ export default async function AccountsPage() {
         <Link href="/expenses" className="text-sm text-ink-muted hover:text-ink transition-colors">
           ← Back to transactions
         </Link>
-        <h1 className="text-2xl font-bold text-ink mt-3 mb-1">Connected Gmail accounts</h1>
+        <h1 className="font-display tracking-tight text-2xl font-bold text-ink mt-3 mb-1">Connected Gmail accounts</h1>
         <p className="text-sm text-ink-muted mb-6">
           Connect your work and personal Gmail so the matcher can search both for receipts.
           Read-only access; tokens are encrypted at rest.

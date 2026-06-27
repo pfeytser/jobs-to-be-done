@@ -18,7 +18,7 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen bg-canvas">
       <main className="max-w-content mx-auto px-6 py-12">
-        <h1 className="text-2xl font-bold text-ink mb-1">Admin</h1>
+        <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">Admin</h1>
         <p className="text-sm text-ink-muted mb-8">Choose an activity to manage.</p>
 
         <div className="space-y-3">

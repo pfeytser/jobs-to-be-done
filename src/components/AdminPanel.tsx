@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { Timer } from './Timer'
+import { useToast } from '@/components/ui'
 
 interface Exercise {
   id: string
@@ -51,6 +52,7 @@ export function AdminPanel() {
   const [synthesizing, setSynthesizing] = useState(false)
   const [synthesisError, setSynthesisError] = useState<string | null>(null)
   const [archiveOpen, setArchiveOpen] = useState(false)
+  const toast = useToast()
 
   const { data, mutate } = useSWR<{ exercises: Exercise[] }>(
     '/api/exercises',
@@ -118,7 +120,7 @@ export function AdminPanel() {
       }
       await mutate()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Action failed')
+      toast(err instanceof Error ? err.message : 'Action failed', 'fail')
     } finally {
       setActionLoading(null)
     }
@@ -127,7 +129,7 @@ export function AdminPanel() {
   async function handleSetTimer(exerciseId: string) {
     const minutes = parseFloat(timerMinutes)
     if (isNaN(minutes) || minutes <= 0) {
-      alert('Enter a valid number of minutes')
+      toast('Enter a valid number of minutes', 'fail')
       return
     }
     const endsAt = new Date(Date.now() + minutes * 60 * 1000).toISOString()
@@ -160,11 +162,11 @@ export function AdminPanel() {
       const res = await fetch(`/api/exercises/${exerciseId}/deduplicate`, { method: 'POST' })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        alert(err.error ?? 'Deduplication failed. Please try again.')
+        toast(err.error ?? 'Deduplication failed. Please try again.', 'fail')
       }
       await mutate()
     } catch {
-      alert('Deduplication failed. Please try again.')
+      toast('Deduplication failed. Please try again.', 'fail')
     } finally {
       setDeduplicating(false)
     }
@@ -176,11 +178,11 @@ export function AdminPanel() {
       const res = await fetch(`/api/exercises/${exerciseId}/discussion-analyze`, { method: 'POST' })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        alert(err.error ?? 'Discussion analysis failed. Please try again.')
+        toast(err.error ?? 'Discussion analysis failed. Please try again.', 'fail')
       }
       await mutate()
     } catch {
-      alert('Discussion analysis failed. Please try again.')
+      toast('Discussion analysis failed. Please try again.', 'fail')
     } finally {
       setDiscussionAnalyzing(false)
     }
@@ -192,11 +194,11 @@ export function AdminPanel() {
       const res = await fetch(`/api/exercises/${exerciseId}/brainstorm/generate`, { method: 'POST' })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        alert(err.error ?? 'Generation failed. Please try again.')
+        toast(err.error ?? 'Generation failed. Please try again.', 'fail')
       }
       await mutate()
     } catch {
-      alert('Generation failed. Please try again.')
+      toast('Generation failed. Please try again.', 'fail')
     } finally {
       setBrainstormGenerating(false)
     }
@@ -229,7 +231,7 @@ export function AdminPanel() {
       }
       await mutate()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Analysis failed')
+      toast(err instanceof Error ? err.message : 'Analysis failed', 'fail')
     } finally {
       setAnalyzing(false)
     }

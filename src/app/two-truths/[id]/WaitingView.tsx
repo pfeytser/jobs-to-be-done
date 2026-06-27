@@ -25,7 +25,7 @@ export function WaitingView({
     <main className="min-h-screen bg-canvas">
       <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
         <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-2">⏳ Hang tight</p>
-        <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
 
         <div className="mt-6 p-6 rounded-lg bg-surface border border-line text-center">
           <div className="text-5xl mb-3 animate-pulse">🍿</div>

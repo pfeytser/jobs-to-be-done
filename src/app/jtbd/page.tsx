@@ -38,7 +38,7 @@ export default async function JTBDPage() {
     <div className="min-h-screen bg-canvas">
       <main className="max-w-content mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-ink mb-2">
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-2">
             {activeExercise.name}
           </h1>
           {activeExercise.mainPrompt && (

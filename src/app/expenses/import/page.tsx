@@ -18,7 +18,7 @@ export default async function ImportPage() {
           <Link href="/expenses" className="text-sm text-ink-muted hover:text-ink transition-colors">
             ← Back to transactions
           </Link>
-          <h1 className="text-2xl font-bold text-ink mt-2">Import Coupa Export</h1>
+          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mt-2">Import Coupa Export</h1>
           <p className="text-sm text-ink-muted mt-0.5">
             Upload one or more Coupa CSV exports. Rows are de-duplicated automatically, so
             re-importing the same file is safe.

@@ -105,7 +105,7 @@ export default function AdminStoryboardPage() {
       <main className="max-w-content mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-ink">Storyboard Use Cases</h1>
+            <h1 className="font-display tracking-tight text-2xl font-bold text-ink">Storyboard Use Cases</h1>
             <p className="text-sm text-ink-muted mt-1">Create and manage use cases for collaborator storyboards.</p>
           </div>
           <button
