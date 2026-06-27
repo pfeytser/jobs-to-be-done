@@ -57,7 +57,7 @@ export function VoteCard({
         {discussionMode && (
           <div className="shrink-0 text-center">
             {rank !== undefined ? (
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ${
+              <div className={`w-10 h-10 rounded-md flex items-center justify-center font-bold text-base ${
                 rank === 1 ? 'bg-accent text-ink' :
                 rank === 2 ? 'bg-almond-400 text-ink' :
                 rank === 3 ? 'bg-line text-ink' :
@@ -100,7 +100,7 @@ export function VoteCard({
             <button
               onClick={() => handleVote('add')}
               disabled={!canAdd}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-ink text-white hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity font-bold text-lg"
+              className="w-9 h-9 flex items-center justify-center rounded-md bg-ink text-white hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity font-bold text-lg"
               title="Add vote"
             >
               +

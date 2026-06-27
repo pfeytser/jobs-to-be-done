@@ -33,7 +33,7 @@ export default async function QAHomePage() {
     <main className="max-w-content mx-auto px-6 py-8">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">QA Projects</h1>
+          <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mb-1">QA Projects</h1>
           <p className="text-sm text-ink-muted">
             {session.user.role === 'admin'
               ? 'All projects — click one to manage it.'
@@ -43,7 +43,7 @@ export default async function QAHomePage() {
         {session.user.role === 'admin' && (
           <Link
             href="/qa/admin"
-            className="px-4 py-2 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity whitespace-nowrap"
+            className="px-4 py-2 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 transition-opacity whitespace-nowrap"
           >
             Admin panel
           </Link>
@@ -61,7 +61,7 @@ export default async function QAHomePage() {
           {session.user.role === 'admin' && (
             <Link
               href="/qa/admin/new"
-              className="mt-4 inline-block px-5 py-2.5 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity"
+              className="mt-4 inline-block px-5 py-2.5 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
             >
               Create first project
             </Link>

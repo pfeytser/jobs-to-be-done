@@ -97,7 +97,7 @@ export function ExpenseDetail({
   return (
     <div className="mt-3">
       <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display tracking-tight text-2xl font-bold text-ink">{expense.merchant || 'Expense'}</h1>
+        <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink">{expense.merchant || 'Expense'}</h1>
         <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-info text-ink-soft">
           {MATCH_STATUS_LABELS[expense.match_status] ?? expense.match_status}
         </span>

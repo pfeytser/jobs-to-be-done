@@ -18,7 +18,7 @@ export default async function HomePage() {
     <main className="min-h-screen bg-canvas flex items-center justify-center p-6">
       <div className="w-full max-w-prose">
         <div className="text-center mb-10">
-          <h1 className="font-display text-3xl font-bold tracking-tight text-ink mb-2">Welcome back</h1>
+          <h1 className="font-display leading-tight text-3xl font-light tracking-tight text-ink mb-2">Welcome back</h1>
           <p className="text-sm text-ink-muted">Where would you like to go?</p>
         </div>
 

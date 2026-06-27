@@ -15,7 +15,7 @@ function SignInContent() {
       <div className="bg-surface rounded-xl border border-line shadow-md p-8 w-full max-w-prose">
         <div className="text-center mb-8">
           <Bee size={44} className="mx-auto mb-4 text-ink" />
-          <h1 className="font-display text-3xl font-bold tracking-tight text-ink">Jobs to Bee Done</h1>
+          <h1 className="font-display leading-tight text-3xl font-light tracking-tight text-ink">Jobs to Bee Done</h1>
           <p className="text-ink-muted mt-2 text-sm">
             Sign in to join the workshop
           </p>

@@ -102,7 +102,7 @@ export function CodeReviewClient() {
     <div className="min-h-screen bg-canvas">
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">Code Review</h1>
+          <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mb-1">Code Review</h1>
           <p className="text-sm text-ink-muted">
             Paste one or more GitHub PR URLs (one per line) for an L7-level AI review.
           </p>
@@ -124,7 +124,7 @@ export function CodeReviewClient() {
             <button
               onClick={handleSubmit}
               disabled={!urls.trim() || phase === 'fetching' || phase === 'reviewing'}
-              className="px-5 py-2 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-5 py-2 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {phase === 'fetching' ? 'Fetching PRs…' : phase === 'reviewing' ? 'Reviewing…' : 'Review'}
             </button>

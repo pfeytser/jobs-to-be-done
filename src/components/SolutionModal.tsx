@@ -133,7 +133,7 @@ export function SolutionModal({
             <button
               type="submit"
               disabled={submitting || !text.trim()}
-              className="px-5 py-2.5 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
+              className="px-5 py-2.5 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
             >
               {submitting ? (
                 <>

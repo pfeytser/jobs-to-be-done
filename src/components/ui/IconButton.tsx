@@ -33,7 +33,7 @@ export function IconButton({
         'inline-flex items-center justify-center transition-[background,border-color,color] duration-150 ease-out',
         'disabled:opacity-40 disabled:cursor-not-allowed',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600/40',
-        shape === 'pill' ? 'rounded-full' : 'rounded-sm',
+        shape === 'pill' ? 'rounded-md' : 'rounded-sm',
         VARIANT[variant],
         className,
       )}

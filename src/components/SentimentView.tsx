@@ -175,7 +175,7 @@ function PhaseBadge({ phase }: { phase: 1 | 2 | 3 | 4 | 5 }) {
     3: 'Phase 3: Brainstorming',
   }
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-almond-400 text-ink border border-line">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-almond-400 text-ink border border-line">
       <span className="w-1.5 h-1.5 rounded-full bg-ink opacity-50" />
       {labels[phase] ?? `Phase ${phase}`}
     </span>

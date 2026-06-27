@@ -94,7 +94,7 @@ export function FlightsClient({ initialTrips }: { initialTrips: TripWithEmails[]
             <button
               key={f}
               onClick={() => applyFilter(f)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
                 filter === f ? 'bg-ink text-white border-ink' : 'bg-surface border-line text-ink-soft hover:border-ink'
               }`}
             >

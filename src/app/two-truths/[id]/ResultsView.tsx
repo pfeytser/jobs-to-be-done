@@ -59,7 +59,7 @@ export function ResultsView({
 
       <div className="relative z-10 max-w-content mx-auto px-5 py-8 sm:py-12">
         <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-2">🏁 The reveal</p>
-        <h1 className="font-display text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
+        <h1 className="font-display leading-tight text-3xl sm:text-4xl font-light text-ink tracking-tight">{title}</h1>
         <p className="text-ink-soft mt-1">by {authorName}</p>
 
         {viewerVoted && (
@@ -121,7 +121,7 @@ export function ResultsView({
                       </span>
                     )}
                     {youGuessed && (
-                      <span className="text-xs font-bold text-ink bg-accent px-2.5 py-1 rounded-full">
+                      <span className="text-xs font-bold text-ink bg-accent px-2.5 py-1 rounded-md">
                         Your guess
                       </span>
                     )}
@@ -145,7 +145,7 @@ export function ResultsView({
         <div className="mt-6 text-center">
           <Link
             href="/two-truths"
-            className="inline-block px-6 py-3 bg-ink text-white font-bold rounded-full hover:opacity-90 transition-opacity"
+            className="inline-block px-6 py-3 bg-ink text-white font-bold rounded-md hover:opacity-90 transition-opacity"
           >
             ← Back to games
           </Link>

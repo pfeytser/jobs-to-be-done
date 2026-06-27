@@ -157,7 +157,7 @@ export function ExpensesTable({ initialTransactions, initialOptions }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display tracking-tight text-2xl font-bold text-ink">Expense Transactions</h1>
+          <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink">Expense Transactions</h1>
           <p className="text-sm text-ink-muted mt-0.5">
             {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
             {' · '}

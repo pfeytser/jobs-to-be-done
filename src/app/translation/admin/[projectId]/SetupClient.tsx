@@ -33,7 +33,7 @@ export function SetupClient({
           ← Setup &amp; projects
         </Link>
         <div className="flex items-center justify-between mt-2">
-          <h1 className="font-display tracking-tight text-2xl font-bold text-ink">{project.name} — sources</h1>
+          <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink">{project.name} — sources</h1>
           <Link
             href={`/translation/${project.id}`}
             className="px-4 py-2 text-sm font-medium border border-line rounded-md bg-surface hover:border-ink transition-colors"

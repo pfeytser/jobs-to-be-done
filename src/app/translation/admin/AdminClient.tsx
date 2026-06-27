@@ -81,7 +81,7 @@ export function AdminClient({ initialProjects }: { initialProjects: TranslationP
           <Link href="/translation" className="text-sm text-ink-muted hover:text-ink transition-colors">
             ← Back to projects
           </Link>
-          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mt-2">Setup &amp; projects</h1>
+          <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mt-2">Setup &amp; projects</h1>
           <p className="text-sm text-ink-muted mt-1">Create projects and load source files. Translators only see the editor.</p>
         </div>
         {!creating && (

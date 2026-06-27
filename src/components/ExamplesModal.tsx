@@ -80,7 +80,7 @@ export function ExamplesModal({ onClose }: ExamplesModalProps) {
         <div className="flex gap-2 px-6 pt-4">
           <button
             onClick={() => setActiveTab('general')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'general'
                 ? 'bg-ink text-white'
                 : 'bg-canvas border border-line text-ink-soft hover:text-ink hover:border-ink'
@@ -90,7 +90,7 @@ export function ExamplesModal({ onClose }: ExamplesModalProps) {
           </button>
           <button
             onClick={() => setActiveTab('stories')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'stories'
                 ? 'bg-ink text-white'
                 : 'bg-canvas border border-line text-ink-soft hover:text-ink hover:border-ink'
@@ -125,7 +125,7 @@ export function ExamplesModal({ onClose }: ExamplesModalProps) {
         <div className="p-4 border-t border-line">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2.5 bg-ink text-white rounded-full font-medium hover:opacity-90 transition-opacity text-sm"
+            className="w-full px-4 py-2.5 bg-ink text-white rounded-md font-medium hover:opacity-90 transition-opacity text-sm"
           >
             Got it, close
           </button>

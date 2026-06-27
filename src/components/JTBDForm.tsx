@@ -88,7 +88,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
           <button
             type="submit"
             disabled={submitting || !hiringText.trim()}
-            className="w-full py-3 bg-ink text-white rounded-full font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3 bg-ink text-white rounded-md font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>
@@ -192,7 +192,7 @@ export function JTBDForm({ exerciseId: _exerciseId, mode = 'classic', onSubmit }
             !motivation.trim() ||
             !expectedOutcome.trim()
           }
-          className="w-full py-3 bg-ink text-white rounded-full font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-3 bg-ink text-white rounded-md font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {submitting ? (
             <>

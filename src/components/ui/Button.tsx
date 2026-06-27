@@ -51,7 +51,7 @@ export function Button({
         'transition-[background,border-color,transform,opacity] duration-150 ease-out',
         'active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600/40',
-        shape === 'pill' ? 'rounded-full' : 'rounded-md',
+        shape === 'pill' ? 'rounded-md' : 'rounded-md',
         fullWidth && 'w-full',
         SIZE[size],
         VARIANT[variant],

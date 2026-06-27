@@ -34,7 +34,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
         <Link href="/qa" className="text-xs text-ink-muted hover:text-ink transition-colors">
           ← All projects
         </Link>
-        <h1 className="font-display tracking-tight text-2xl font-bold text-ink mt-2 mb-1">{project.name}</h1>
+        <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mt-2 mb-1">{project.name}</h1>
         {project.description && (
           <p className="text-sm text-ink-soft">{project.description}</p>
         )}
@@ -76,7 +76,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
                     <div className="flex flex-col gap-2 items-end shrink-0">
                       <Link
                         href={`/qa/${slug}/session/${s.id}`}
-                        className="px-4 py-2 bg-ink text-white text-xs font-semibold rounded-full hover:opacity-90 transition-opacity whitespace-nowrap"
+                        className="px-4 py-2 bg-ink text-white text-xs font-semibold rounded-md hover:opacity-90 transition-opacity whitespace-nowrap"
                       >
                         Resume
                       </Link>
@@ -123,7 +123,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
                         <div className="h-full bg-ink rounded-full" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
-                    <span className="text-xs font-medium text-ink-muted bg-canvas border border-line px-2.5 py-1 rounded-full shrink-0">
+                    <span className="text-xs font-medium text-ink-muted bg-canvas border border-line px-2.5 py-1 rounded-md shrink-0">
                       Complete
                     </span>
                   </div>

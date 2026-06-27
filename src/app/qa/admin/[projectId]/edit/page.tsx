@@ -28,7 +28,7 @@ export default async function EditProjectPage({
         >
           ← Back to dashboard
         </Link>
-        <h1 className="font-display tracking-tight text-2xl font-bold text-ink mt-2 mb-1">Edit project</h1>
+        <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mt-2 mb-1">Edit project</h1>
       </div>
       <div className="bg-surface border border-line rounded-md p-6">
         <EditProjectForm project={project} />

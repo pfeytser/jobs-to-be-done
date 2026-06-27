@@ -58,7 +58,7 @@ export function ManageControls({ sessionId, status }: { sessionId: string; statu
             <button
               onClick={() => act('activate')}
               disabled={busy}
-              className="px-3 py-1.5 bg-ink text-white text-xs font-bold rounded-full hover:opacity-90 disabled:opacity-50"
+              className="px-3 py-1.5 bg-ink text-white text-xs font-bold rounded-md hover:opacity-90 disabled:opacity-50"
             >
               Activate
             </button>
@@ -75,7 +75,7 @@ export function ManageControls({ sessionId, status }: { sessionId: string; statu
           <button
             onClick={() => act('reveal')}
             disabled={busy}
-            className="px-3 py-1.5 bg-accent text-ink text-xs font-bold rounded-full hover:opacity-90 disabled:opacity-50"
+            className="px-3 py-1.5 bg-accent text-ink text-xs font-bold rounded-md hover:opacity-90 disabled:opacity-50"
           >
             Reveal answer
           </button>
@@ -85,7 +85,7 @@ export function ManageControls({ sessionId, status }: { sessionId: string; statu
             <button
               onClick={() => act('reopen')}
               disabled={busy}
-              className="px-3 py-1.5 bg-accent text-ink text-xs font-bold rounded-full hover:opacity-90 disabled:opacity-50"
+              className="px-3 py-1.5 bg-accent text-ink text-xs font-bold rounded-md hover:opacity-90 disabled:opacity-50"
             >
               Reopen voting
             </button>

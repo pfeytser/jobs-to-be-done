@@ -49,11 +49,11 @@ export default async function TwoTruthsDashboard() {
     <main className="min-h-screen bg-canvas">
       <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
         <header className="mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/20 border border-accent/40 mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-accent/20 border border-accent/40 mb-3">
             <span className="text-base">🤥</span>
             <span className="text-xs font-bold tracking-wide text-ink uppercase">Team Game</span>
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl font-black text-ink tracking-tight">
+          <h1 className="font-display leading-tight text-4xl sm:text-5xl font-light text-ink tracking-tight">
             Two Truths <span className="text-ink-muted font-light">&amp;</span> A Lie
           </h1>
           <p className="text-ink-soft mt-2 text-base">
@@ -62,7 +62,7 @@ export default async function TwoTruthsDashboard() {
           {isAdmin && (
             <Link
               href="/two-truths/admin"
-              className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
             >
               <span>⚙️</span> Admin: all games
             </Link>
@@ -141,7 +141,7 @@ export default async function TwoTruthsDashboard() {
                       <p className="text-sm text-ink-soft mt-0.5">by {s.author_name}</p>
                     </div>
                     <span
-                      className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
+                      className={`shrink-0 px-4 py-2 rounded-md text-sm font-bold transition-colors ${
                         isAuthor
                           ? 'bg-info text-ink'
                           : voted

@@ -39,7 +39,7 @@ export default async function SuitePage({
           ← Back to dashboard
         </Link>
         <div className="mt-2">
-          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-0.5">
+          <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mb-0.5">
             {userType ?? 'All test items'}
           </h1>
           <p className="text-sm text-ink-muted">{project.name}</p>

@@ -22,7 +22,7 @@ function ErrorContent() {
     <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
       <div className="bg-surface rounded-xl border border-line shadow-md p-8 w-full max-w-prose text-center">
         <Bee size={44} className="mx-auto mb-4 text-ink" />
-        <h1 className="font-display text-3xl font-bold tracking-tight text-ink mb-2">Oops!</h1>
+        <h1 className="font-display leading-tight text-3xl font-light tracking-tight text-ink mb-2">Oops!</h1>
         <p className="text-ink-soft mb-6">{message}</p>
         <Link
           href="/auth/signin"

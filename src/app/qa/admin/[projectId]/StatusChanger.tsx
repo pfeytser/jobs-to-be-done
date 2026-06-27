@@ -53,7 +53,7 @@ export function StatusChanger({
           key={opt.value}
           onClick={() => handleChange(opt.value)}
           disabled={saving}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all disabled:opacity-50 ${
+          className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-all disabled:opacity-50 ${
             status === opt.value
               ? `${STATUS_STYLES[opt.value]} ring-2 ring-offset-1 ring-ink`
               : 'bg-canvas border-line text-ink-soft hover:border-ink-soft'

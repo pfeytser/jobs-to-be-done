@@ -93,7 +93,7 @@ export function AuthorSetup({
     <main className="min-h-screen bg-canvas">
       <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
         <p className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-2">✍️ Set up your game</p>
-        <h1 className="font-display text-3xl sm:text-4xl font-black text-ink tracking-tight">{title}</h1>
+        <h1 className="font-display leading-tight text-3xl sm:text-4xl font-light text-ink tracking-tight">{title}</h1>
 
         <div className="mt-4 p-4 rounded-xl bg-info border border-line text-sm text-ink-soft">
           Write two true statements and one lie. Mark which one is the lie — players won&apos;t see your
@@ -120,7 +120,7 @@ export function AuthorSetup({
                   <button
                     type="button"
                     onClick={() => setLieIndex(i)}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+                    className={`px-3 py-1 rounded-md text-xs font-bold transition-colors ${
                       isLie
                         ? 'bg-fail text-white'
                         : 'bg-canvas text-ink-muted border border-line hover:border-ink'
@@ -152,7 +152,7 @@ export function AuthorSetup({
           <button
             onClick={save}
             disabled={saving || activating}
-            className="px-6 py-3 bg-surface border border-ink text-ink font-bold rounded-full hover:bg-canvas disabled:opacity-50 transition-colors"
+            className="px-6 py-3 bg-surface border border-ink text-ink font-bold rounded-md hover:bg-canvas disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -160,7 +160,7 @@ export function AuthorSetup({
             <button
               onClick={saveAndActivate}
               disabled={saving || activating}
-              className="px-6 py-3 bg-ink text-white font-bold rounded-full hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="px-6 py-3 bg-ink text-white font-bold rounded-md hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
               {activating ? 'Going live…' : 'Save & Activate 🚀'}
             </button>

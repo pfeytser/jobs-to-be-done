@@ -255,7 +255,7 @@ export function PhaseView({ exercise, userId, isAdmin = false }: PhaseViewProps)
                 {isAdmin && (
                   <button
                     onClick={() => setShowAll((v) => !v)}
-                    className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+                    className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border transition-all ${
                       showAll
                         ? 'bg-ink text-white border-ink'
                         : 'bg-canvas text-ink-soft border-line hover:border-ink hover:text-ink'
@@ -584,7 +584,7 @@ function SupportingEntryCard({
           <button
             onClick={handleBreakOut}
             disabled={loading}
-            className="text-xs text-ink-muted hover:text-ink border border-line rounded-full px-2.5 py-1 hover:border-ink transition-all disabled:opacity-40"
+            className="text-xs text-ink-muted hover:text-ink border border-line rounded-md px-2.5 py-1 hover:border-ink transition-all disabled:opacity-40"
           >
             Break out
           </button>
@@ -595,7 +595,7 @@ function SupportingEntryCard({
               handleMoveSelect(e.target.value)
             }}
             disabled={loading || canonicalEntries.length === 0}
-            className="text-xs text-ink-muted border border-line rounded-full px-2.5 py-1 bg-canvas hover:border-ink focus:outline-none focus:border-ink cursor-pointer disabled:opacity-40 max-w-[220px]"
+            className="text-xs text-ink-muted border border-line rounded-md px-2.5 py-1 bg-canvas hover:border-ink focus:outline-none focus:border-ink cursor-pointer disabled:opacity-40 max-w-[220px]"
           >
             <option value="" disabled>Move statement…</option>
             {canonicalEntries.map((c) => (
@@ -619,7 +619,7 @@ function PhaseBadge({ phase }: { phase: 1 | 2 | 3 | 4 | 5 }) {
     5: 'Phase 5: Synthesis',
   }
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-almond-400 text-ink border border-line">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-almond-400 text-ink border border-line">
       <span className="w-1.5 h-1.5 rounded-full bg-ink opacity-50" />
       {labels[phase]}
     </span>

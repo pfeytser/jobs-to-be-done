@@ -68,7 +68,7 @@ export function UploadAndEditPage({
                     key={ut}
                     type="button"
                     onClick={() => setUserType(ut)}
-                    className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                    className={`px-3 py-1.5 text-sm rounded-md border transition-all ${
                       userType === ut
                         ? 'bg-ink text-white border-ink'
                         : 'bg-canvas border-line text-ink hover:border-ink-soft'

@@ -28,7 +28,7 @@ export default async function UploadPage({
         >
           ← Back to dashboard
         </Link>
-        <h1 className="font-display tracking-tight text-2xl font-bold text-ink mt-2 mb-1">Upload test documents</h1>
+        <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mt-2 mb-1">Upload test documents</h1>
         <p className="text-sm text-ink-muted">
           Upload CSV, PDF, Word, or Excel files. The AI will read them and build a clean test suite.
           You can edit, reorder, and save before it goes live.

@@ -29,7 +29,7 @@ function MultiSelect({
             key={opt}
             type="button"
             onClick={() => toggle(opt)}
-            className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+            className={`px-3 py-1.5 text-sm rounded-md border transition-all ${
               selected.includes(opt)
                 ? 'bg-ink text-white border-ink'
                 : 'bg-canvas border-line text-ink hover:border-ink-soft'
@@ -125,7 +125,7 @@ export function CreateProjectForm() {
               key={p}
               type="button"
               onClick={() => { setPlatform(p); if (p === 'Mobile App') setViewports([]) }}
-              className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+              className={`px-4 py-2 text-sm font-medium rounded-md border transition-all ${
                 platform === p
                   ? 'bg-ink text-white border-ink'
                   : 'bg-canvas border-line text-ink hover:border-ink-soft'
@@ -174,7 +174,7 @@ export function CreateProjectForm() {
             {userTypes.map((ut) => (
               <span
                 key={ut}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-canvas border border-line text-sm text-ink rounded-full"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-canvas border border-line text-sm text-ink rounded-md"
               >
                 {ut}
                 <button
@@ -208,7 +208,7 @@ export function CreateProjectForm() {
         <button
           type="submit"
           disabled={!name.trim() || submitting}
-          className="px-6 py-2.5 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
+          className="px-6 py-2.5 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
         >
           {submitting ? (
             <>

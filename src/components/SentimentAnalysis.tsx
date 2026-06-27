@@ -126,7 +126,7 @@ export function SentimentAnalysis({ analysis }: SentimentAnalysisProps) {
       <div className="flex justify-end">
         <button
           onClick={handleCopy}
-          className="flex items-center gap-2 px-5 py-2.5 bg-canvas border border-line text-ink text-sm font-medium rounded-full hover:bg-surface transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-canvas border border-line text-ink text-sm font-medium rounded-md hover:bg-surface transition-colors"
         >
           {copied ? (
             <>

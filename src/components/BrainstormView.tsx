@@ -69,7 +69,7 @@ export function BrainstormView({ exercise }: BrainstormViewProps) {
       {/* Phase header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-almond-400 text-ink border border-line">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-almond-400 text-ink border border-line">
             <span className="w-1.5 h-1.5 rounded-full bg-ink opacity-50" />
             Phase 4: Brainstorming
           </span>
@@ -155,7 +155,7 @@ export function BrainstormView({ exercise }: BrainstormViewProps) {
                       key={s.id}
                       className="flex items-start gap-2.5 px-3 py-2.5 bg-canvas rounded-sm border border-line"
                     >
-                      <div className="w-5 h-5 rounded-full bg-almond-400 border border-line flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-5 h-5 rounded-md bg-almond-400 border border-line flex items-center justify-center shrink-0 mt-0.5">
                         <span className="text-xs font-bold text-ink-soft">
                           {(s.userName ?? '?').charAt(0).toUpperCase()}
                         </span>
@@ -177,7 +177,7 @@ export function BrainstormView({ exercise }: BrainstormViewProps) {
                   onClick={() => setModalEntry(card)}
                   className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink font-medium transition-colors group"
                 >
-                  <span className="w-6 h-6 rounded-full border border-line bg-canvas flex items-center justify-center group-hover:bg-ink group-hover:border-ink group-hover:text-white transition-all text-base leading-none">
+                  <span className="w-6 h-6 rounded-md border border-line bg-canvas flex items-center justify-center group-hover:bg-ink group-hover:border-ink group-hover:text-white transition-all text-base leading-none">
                     +
                   </span>
                   What feature could solve this?

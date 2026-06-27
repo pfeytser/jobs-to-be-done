@@ -132,7 +132,7 @@ export default function StoryboardEditor({
 
       {/* Use case context */}
       <section>
-        <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-2">{useCase.name}</h1>
+        <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mb-2">{useCase.name}</h1>
         {useCase.description && (
           <p className="text-sm text-ink-muted leading-relaxed">{useCase.description}</p>
         )}

@@ -289,7 +289,7 @@ export function TestChecklist({
                           <button
                             onClick={() => handleQuickStatus(item, 'pass')}
                             disabled={isSaving}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border transition-all ${
                               status === 'pass'
                                 ? 'bg-pass text-white border-pass'
                                 : 'bg-canvas border-line text-ink hover:bg-pass-soft hover:border-pass-line hover:text-pass'
@@ -305,7 +305,7 @@ export function TestChecklist({
                           <button
                             onClick={() => setFailModalItemId(item.id)}
                             disabled={isSaving}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-all ${
                               status === 'fail'
                                 ? 'bg-fail text-white border-fail'
                                 : 'bg-canvas border-line text-ink hover:bg-fail-soft hover:border-fail-line hover:text-fail'
@@ -316,7 +316,7 @@ export function TestChecklist({
                           <button
                             onClick={() => setBlockedModalItemId(item.id)}
                             disabled={isSaving}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-all ${
                               status === 'blocked'
                                 ? 'bg-blocked text-white border-blocked'
                                 : 'bg-canvas border-line text-ink hover:bg-blocked-soft hover:border-blocked-line hover:text-blocked'
@@ -327,7 +327,7 @@ export function TestChecklist({
                           <button
                             onClick={() => handleQuickStatus(item, 'skipped')}
                             disabled={isSaving}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border transition-all ${
                               status === 'skipped'
                                 ? 'bg-skipped text-white border-skipped'
                                 : 'bg-canvas border-line text-ink hover:bg-skipped-soft hover:border-skipped-line hover:text-skipped'

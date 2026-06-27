@@ -29,12 +29,12 @@ export default async function QAAdminPage() {
       </div>
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">QA Projects</h1>
+          <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mb-1">QA Projects</h1>
           <p className="text-sm text-ink-muted">Manage projects, test suites, and view results.</p>
         </div>
         <Link
           href="/qa/admin/new"
-          className="px-4 py-2 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity whitespace-nowrap"
+          className="px-4 py-2 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 transition-opacity whitespace-nowrap"
         >
           + New project
         </Link>
@@ -46,7 +46,7 @@ export default async function QAAdminPage() {
           <p className="text-sm mb-4">No projects yet.</p>
           <Link
             href="/qa/admin/new"
-            className="inline-block px-5 py-2.5 bg-ink text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity"
+            className="inline-block px-5 py-2.5 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
           >
             Create first project
           </Link>

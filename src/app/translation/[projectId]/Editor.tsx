@@ -269,7 +269,7 @@ export function Editor({
           <Link href="/translation" className="text-sm text-ink-muted hover:text-ink transition-colors">
             ← Projects
           </Link>
-          <h1 className="font-display tracking-tight text-lg font-bold text-ink">{project.name}</h1>
+          <h1 className="font-display leading-tight tracking-tight text-lg font-light text-ink">{project.name}</h1>
         </div>
         {isOwner && (
           <Link
@@ -306,7 +306,7 @@ export function Editor({
                 <button
                   key={lang}
                   onClick={() => setActiveLang(lang)}
-                  className={`px-3.5 py-1.5 text-sm font-medium rounded-full border transition-colors ${
+                  className={`px-3.5 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                     activeLang === lang
                       ? 'bg-ink text-white border-ink'
                       : 'bg-surface text-ink-soft border-line hover:border-ink'

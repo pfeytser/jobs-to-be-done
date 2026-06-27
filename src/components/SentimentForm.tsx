@@ -52,7 +52,7 @@ export function SentimentForm({ onSubmit }: SentimentFormProps) {
         <button
           type="submit"
           disabled={submitting || !term.trim()}
-          className="px-5 py-3 bg-ink text-white rounded-full text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-2 shrink-0"
+          className="px-5 py-3 bg-ink text-white rounded-md text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-2 shrink-0"
         >
           {submitting ? (
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

@@ -258,7 +258,7 @@ export function AdminPanel() {
                     setNewExercisePrompt('')
                   }
                 }}
-                className={`flex-1 py-2 rounded-full text-sm font-medium transition-all border ${
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all border ${
                   newExerciseType === t
                     ? 'bg-ink text-white border-ink'
                     : 'bg-canvas text-ink-soft border-line hover:border-ink hover:text-ink'
@@ -276,7 +276,7 @@ export function AdminPanel() {
                   key={m}
                   type="button"
                   onClick={() => setNewJtbdMode(m)}
-                  className={`flex-1 py-2 rounded-full text-sm font-medium transition-all border ${
+                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-all border ${
                     newJtbdMode === m
                       ? 'bg-ink text-white border-ink'
                       : 'bg-canvas text-ink-soft border-line hover:border-ink hover:text-ink'
@@ -313,7 +313,7 @@ export function AdminPanel() {
             <button
               type="submit"
               disabled={creating || !newExerciseName.trim()}
-              className="px-5 py-2.5 bg-ink text-white rounded-full text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
+              className="px-5 py-2.5 bg-ink text-white rounded-md text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
             >
               {creating ? (
                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -374,7 +374,7 @@ export function AdminPanel() {
                     key={p}
                     onClick={() => handlePatch(activeExercise.id, { currentPhase: p })}
                     disabled={activeExercise.currentPhase === p || !!actionLoading}
-                    className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
+                    className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-all ${
                       activeExercise.currentPhase === p
                         ? 'bg-ink text-white'
                         : 'bg-canvas text-ink-soft border border-line hover:border-ink hover:text-ink disabled:opacity-50'
@@ -391,7 +391,7 @@ export function AdminPanel() {
                     key={p}
                     onClick={() => handleSwitchPhase(activeExercise.id, p)}
                     disabled={activeExercise.currentPhase === p || !!actionLoading || (p === 2 && deduplicating) || (p === 4 && brainstormGenerating) || (p === 5 && synthesizing)}
-                    className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
+                    className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-all ${
                       activeExercise.currentPhase === p
                         ? 'bg-ink text-white'
                         : 'bg-canvas text-ink-soft border border-line hover:border-ink hover:text-ink disabled:opacity-50'
@@ -476,7 +476,7 @@ export function AdminPanel() {
               <button
                 onClick={() => handleGenerateAnalysis(activeExercise.id)}
                 disabled={analyzing}
-                className="flex items-center gap-2 px-5 py-2.5 bg-ink text-white rounded-full text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+                className="flex items-center gap-2 px-5 py-2.5 bg-ink text-white rounded-md text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 {analyzing ? (
                   <>
@@ -523,7 +523,7 @@ export function AdminPanel() {
               <button
                 onClick={() => handleSetTimer(activeExercise.id)}
                 disabled={!!actionLoading}
-                className="px-4 py-2 bg-ink text-white rounded-full text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-opacity"
+                className="px-4 py-2 bg-ink text-white rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-opacity"
               >
                 Start Timer
               </button>
@@ -610,7 +610,7 @@ export function AdminPanel() {
                     <button
                       onClick={() => handlePatch(ex.id, { isActive: true })}
                       disabled={!!actionLoading}
-                      className="px-4 py-1.5 bg-surface border border-line text-ink text-xs font-medium rounded-full hover:bg-ink hover:text-white hover:border-ink disabled:opacity-50 transition-all"
+                      className="px-4 py-1.5 bg-surface border border-line text-ink text-xs font-medium rounded-md hover:bg-ink hover:text-white hover:border-ink disabled:opacity-50 transition-all"
                     >
                       Activate
                     </button>
@@ -711,7 +711,7 @@ function PromptEditor({
       />
       <button
         onClick={handleSave}
-        className="px-4 py-2 bg-ink text-white rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
+        className="px-4 py-2 bg-ink text-white rounded-md text-sm font-medium hover:opacity-90 transition-opacity"
       >
         {saved ? 'Saved!' : 'Save'}
       </button>
@@ -734,7 +734,7 @@ function PhaseBadge({
       : { 1: 'Creation', 2: 'Voting', 3: 'Discussion', 4: 'Brainstorm', 5: 'Synthesis' }
   return (
     <span
-      className={`inline-flex items-center rounded-full font-medium bg-almond-400 text-ink ${
+      className={`inline-flex items-center rounded-md font-medium bg-almond-400 text-ink ${
         small ? 'text-xs px-2 py-0.5' : 'text-xs px-2.5 py-1'
       }`}
     >

@@ -62,7 +62,7 @@ export default async function ProjectDashboard({
       {/* Header */}
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-1">{project.name}</h1>
+          <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mb-1">{project.name}</h1>
           {project.description && <p className="text-sm text-ink-soft">{project.description}</p>}
         </div>
         <div className="flex items-center gap-2 flex-wrap">

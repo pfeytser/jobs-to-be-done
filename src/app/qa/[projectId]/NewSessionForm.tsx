@@ -128,7 +128,7 @@ export function NewSessionForm({ project, testerCounts }: { project: QAProject; 
                 key={v}
                 type="button"
                 onClick={() => { setViewport(v); setOs('') }}
-                className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+                className={`px-4 py-2 text-sm font-medium rounded-md border transition-all ${
                   viewport === v
                     ? 'bg-ink text-white border-ink'
                     : 'bg-canvas border-line text-ink hover:border-ink-soft'
@@ -151,7 +151,7 @@ export function NewSessionForm({ project, testerCounts }: { project: QAProject; 
               key={o}
               type="button"
               onClick={() => setOs(o)}
-              className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+              className={`px-4 py-2 text-sm font-medium rounded-md border transition-all ${
                 os === o
                   ? 'bg-ink text-white border-ink'
                   : 'bg-canvas border-line text-ink hover:border-ink-soft'
@@ -173,7 +173,7 @@ export function NewSessionForm({ project, testerCounts }: { project: QAProject; 
                 key={b}
                 type="button"
                 onClick={() => setBrowser(b)}
-                className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+                className={`px-4 py-2 text-sm font-medium rounded-md border transition-all ${
                   browser === b
                     ? 'bg-ink text-white border-ink'
                     : 'bg-canvas border-line text-ink hover:border-ink-soft'

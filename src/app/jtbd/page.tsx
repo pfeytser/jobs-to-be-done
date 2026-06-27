@@ -20,7 +20,7 @@ export default async function JTBDPage() {
       <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
         <div className="text-center max-w-prose">
           <div className="text-7xl mb-6 animate-bounce">🐝</div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-ink mb-3">
+          <h1 className="font-display leading-tight text-3xl font-light tracking-tight text-ink mb-3">
             Jobs to Bee Done
           </h1>
           <p className="text-lg text-ink-soft font-medium mb-4">
@@ -38,7 +38,7 @@ export default async function JTBDPage() {
     <div className="min-h-screen bg-canvas">
       <main className="max-w-content mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="font-display tracking-tight text-2xl font-bold text-ink mb-2">
+          <h1 className="font-display leading-tight tracking-tight text-2xl font-light text-ink mb-2">
             {activeExercise.name}
           </h1>
           {activeExercise.mainPrompt && (
