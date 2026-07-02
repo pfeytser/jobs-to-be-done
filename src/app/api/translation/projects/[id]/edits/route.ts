@@ -29,10 +29,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   // Never persist broken markup: the translation's tags must match the English's.
-  const english = englishForEntry(dataset, entryKey)
-  const markup = validateMarkup(english ?? '', value)
-  if (!markup.ok) {
-    return NextResponse.json({ error: markup.error ?? 'Formatting tags do not match the English.' }, { status: 422 })
+  // Mongo snapshot strings are plain text (no chip editor, no tag toolbar), so they're
+  // exempt from markup validation entirely.
+  if (dataset.kind !== 'mongo') {
+    const english = englishForEntry(dataset, entryKey)
+    const markup = validateMarkup(english ?? '', value)
+    if (!markup.ok) {
+      return NextResponse.json({ error: markup.error ?? 'Formatting tags do not match the English.' }, { status: 422 })
+    }
   }
 
   await upsertEdit(datasetId, lang, entryKey, value, session.user.email ?? null)

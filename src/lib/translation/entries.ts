@@ -1,6 +1,6 @@
 // Merge all datasets in a project into one entry list per language (brief FR-7).
 
-import type { Entry, TranslationDataset, UiDatasetConfig, CsvDatasetConfig } from './types'
+import type { Entry, TranslationDataset, UiDatasetConfig, CsvDatasetConfig, MongoSnapshot } from './types'
 import { flattenStrings, targetValueMap } from './json'
 import { parseCsv, isTrivialValue } from './csv'
 import { missingTokens } from './placeholders'
@@ -12,8 +12,17 @@ export function projectLanguages(datasets: TranslationDataset[]): string[] {
   for (const ds of datasets) {
     if (ds.kind === 'ui') {
       for (const lang of Object.keys((ds.config as UiDatasetConfig).targets)) seen.add(lang)
-    } else {
+    } else if (ds.kind === 'csv') {
       for (const lang of Object.keys((ds.config as CsvDatasetConfig).langColumns)) seen.add(lang)
+    } else {
+      const snapshot = JSON.parse(ds.english_source) as MongoSnapshot
+      for (const doc of snapshot.entries) {
+        for (const locales of Object.values(doc.fields)) {
+          for (const locale of Object.keys(locales)) {
+            if (locale !== 'en') seen.add(locale)
+          }
+        }
+      }
     }
   }
   return [...seen].sort()
@@ -44,11 +53,54 @@ export function englishForEntry(ds: TranslationDataset, entryKey: string): strin
     }
     return null
   }
+  if (ds.kind === 'mongo') {
+    const snapshot = JSON.parse(ds.english_source) as MongoSnapshot
+    for (const doc of snapshot.entries) {
+      for (const [fieldPath, locales] of Object.entries(doc.fields)) {
+        if (`${snapshot.collection}.${doc._id}.${fieldPath}` === entryKey) return locales['en'] ?? ''
+      }
+    }
+    return null
+  }
   const config = ds.config as CsvDatasetConfig
   const parsed = parseCsv(ds.english_source)
   const englishIdx = parsed.headers.indexOf(config.englishColumn)
   const row = parsed.rows[Number(entryKey)]
   return row?.[englishIdx] ?? null
+}
+
+// Build entries for a Mongo snapshot dataset (brief-provided spec). Snapshot strings
+// are plain text with no HTML-ish tags to protect, so unlike UI/CSV entries these skip
+// markup validation and placeholder-token checks entirely.
+function buildMongoEntries(ds: TranslationDataset, lang: string, edits: Map<string, string>): Entry[] {
+  const snapshot = JSON.parse(ds.english_source) as MongoSnapshot
+  const entries: Entry[] = []
+  for (const doc of snapshot.entries) {
+    for (const [fieldPath, locales] of Object.entries(doc.fields)) {
+      const english = locales['en'] ?? ''
+      const original = locales[lang] ?? ''
+      const entryKey = `${snapshot.collection}.${doc._id}.${fieldPath}`
+      const value = edits.has(entryKey) ? edits.get(entryKey)! : original
+      entries.push({
+        id: `${ds.id}:${entryKey}`,
+        datasetId: ds.id,
+        datasetName: ds.name,
+        source: 'MONGO',
+        entryKey,
+        label: `${doc.displayName} — ${fieldPath}`,
+        english,
+        original,
+        value,
+        edited: value !== original,
+        empty: value.trim() === '' && english.trim() !== '',
+        identical: value.trim() !== '' && value === english,
+        placeholderWarning: false,
+        missingTokens: [],
+        tagError: null,
+      })
+    }
+  }
+  return entries
 }
 
 // Build the merged entry list for one language. `editsByDataset` maps a dataset id to
@@ -85,6 +137,8 @@ export function buildEntries(
           }),
         )
       }
+    } else if (ds.kind === 'mongo') {
+      entries.push(...buildMongoEntries(ds, lang, edits))
     } else {
       const config = ds.config as CsvDatasetConfig
       const langHeader = config.langColumns[lang]

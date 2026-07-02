@@ -7,6 +7,7 @@ import type {
   DatasetKind,
   UiDatasetConfig,
   CsvDatasetConfig,
+  MongoDatasetConfig,
 } from '@/lib/translation/types'
 
 // --- Projects --------------------------------------------------------------
@@ -64,7 +65,7 @@ export async function deleteProject(id: string): Promise<void> {
 
 function parseDataset(row: Record<string, unknown>): TranslationDataset {
   const kind = row.kind as DatasetKind
-  const config = JSON.parse(row.config_json as string) as UiDatasetConfig | CsvDatasetConfig
+  const config = JSON.parse(row.config_json as string) as UiDatasetConfig | CsvDatasetConfig | MongoDatasetConfig
   return {
     id: row.id as string,
     project_id: row.project_id as string,
@@ -99,7 +100,7 @@ export async function createDataset(
   kind: DatasetKind,
   name: string,
   englishSource: string,
-  config: UiDatasetConfig | CsvDatasetConfig,
+  config: UiDatasetConfig | CsvDatasetConfig | MongoDatasetConfig,
 ): Promise<TranslationDataset> {
   await runMigrations()
   const now = new Date().toISOString()

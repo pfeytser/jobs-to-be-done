@@ -471,13 +471,17 @@ function Row({
         <ReadOnlyMarkup text={entry.english} />
       </div>
       <div className="px-4 py-3 border-l border-line">
-        <ChipEditor
-          value={entry.value}
-          invalid={!!entry.tagError}
-          empty={entry.empty}
-          formats={formats}
-          onChange={onEdit}
-        />
+        {entry.source === 'MONGO' ? (
+          <PlainTextEditor value={entry.value} empty={entry.empty} onChange={onEdit} />
+        ) : (
+          <ChipEditor
+            value={entry.value}
+            invalid={!!entry.tagError}
+            empty={entry.empty}
+            formats={formats}
+            onChange={onEdit}
+          />
+        )}
         {entry.tagError ? (
           <p className="text-[10px] text-fail mt-1">{entry.tagError}</p>
         ) : entry.placeholderWarning ? (
@@ -515,6 +519,29 @@ function ReadOnlyMarkup({ text }: { text: string }) {
         ),
       )}
     </span>
+  )
+}
+
+// Mongo snapshot strings are plain text (no tags to protect), so they get an ordinary
+// textarea instead of the chip editor — no toolbar, no tag validation.
+function PlainTextEditor({
+  value,
+  empty,
+  onChange,
+}: {
+  value: string
+  empty: boolean
+  onChange: (value: string) => void
+}) {
+  return (
+    <textarea
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      rows={3}
+      className={`min-h-[38px] w-full text-sm rounded-xs px-2.5 py-2 border focus:outline-none focus:border-ink whitespace-pre-wrap break-words leading-relaxed resize-y ${
+        empty ? 'border-line bg-sunken' : 'border-line bg-canvas'
+      }`}
+    />
   )
 }
 

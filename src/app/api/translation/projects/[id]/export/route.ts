@@ -6,7 +6,7 @@ import { projectLanguages } from '@/lib/translation/entries'
 import { rebuildTargetJson, targetValueMap, flattenStrings, buildChangesPatch } from '@/lib/translation/json'
 import { parseCsv, rebuildCsvMultiLang, isTrivialValue } from '@/lib/translation/csv'
 import { missingTokens } from '@/lib/translation/placeholders'
-import type { UiDatasetConfig, CsvDatasetConfig, TranslationDataset } from '@/lib/translation/types'
+import type { UiDatasetConfig, CsvDatasetConfig, TranslationDataset, MongoSnapshot } from '@/lib/translation/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -121,6 +121,80 @@ async function buildCsvFile(ds: TranslationDataset, langs: string[]): Promise<Ou
   return { path: `${sanitize(ds.name)}/${fileName}`, content, ...counts }
 }
 
+// `zh-Hans` -> `zh_Hans` for the on-disk / Mongo-facing locale format.
+function denormalizeLocale(lang: string): string {
+  return lang.replace(/-/g, '_')
+}
+
+// Full per-language patch: every field that currently has a value in that locale
+// (edited or as originally loaded from the snapshot) — a document to hand to the
+// inventory-service to apply against MongoDB. Unlike UI/CSV, there's no "whole file"
+// to rebuild, so the full export IS a patch by nature.
+async function buildMongoFiles(ds: TranslationDataset, langs: string[]): Promise<OutFile[]> {
+  const snapshot = JSON.parse(ds.english_source) as MongoSnapshot
+  const out: OutFile[] = []
+  for (const lang of langs) {
+    const edits = await getDatasetEdits(ds.id, lang)
+    const changes: { _id: string; displayName: string; fields: Record<string, string> }[] = []
+    let edited = 0
+    let blank = 0
+    for (const doc of snapshot.entries) {
+      const fields: Record<string, string> = {}
+      for (const [fieldPath, locales] of Object.entries(doc.fields)) {
+        const entryKey = `${snapshot.collection}.${doc._id}.${fieldPath}`
+        const original = locales[lang] ?? ''
+        const value = edits.has(entryKey) ? edits.get(entryKey)! : original
+        const english = locales['en'] ?? ''
+        if (value !== original) edited++
+        if (value.trim() === '' && english.trim() !== '') blank++
+        if (value.trim() === '') continue // nothing to write for this field/locale
+        fields[fieldPath] = value
+      }
+      if (Object.keys(fields).length > 0) changes.push({ _id: doc._id, displayName: doc.displayName, fields })
+    }
+    const content =
+      JSON.stringify(
+        { collection: snapshot.collection, exportedAt: new Date().toISOString(), lang: denormalizeLocale(lang), changes },
+        null,
+        2,
+      ) + '\n'
+    out.push({ path: `${sanitize(ds.name)}/${sanitize(ds.name)}-${lang}-patch.json`, content, edited, blank, warnings: 0 })
+  }
+  return out
+}
+
+// Changes-only patch for Devin handoff: only fields actually edited in this session.
+async function buildMongoPatchFiles(ds: TranslationDataset, langs: string[]): Promise<OutFile[]> {
+  const snapshot = JSON.parse(ds.english_source) as MongoSnapshot
+  const out: OutFile[] = []
+  for (const lang of langs) {
+    const edits = await getDatasetEdits(ds.id, lang)
+    const changes: { _id: string; displayName: string; fieldPath: string; previousValue: string; newValue: string }[] = []
+    for (const doc of snapshot.entries) {
+      for (const [fieldPath, locales] of Object.entries(doc.fields)) {
+        const entryKey = `${snapshot.collection}.${doc._id}.${fieldPath}`
+        const edit = edits.get(entryKey)
+        if (edit === undefined) continue
+        const original = locales[lang] ?? ''
+        if (edit === original) continue
+        changes.push({ _id: doc._id, displayName: doc.displayName, fieldPath, previousValue: original, newValue: edit })
+      }
+    }
+    if (changes.length === 0) continue
+    const content =
+      JSON.stringify({ collection: snapshot.collection, lang: denormalizeLocale(lang), changedCount: changes.length, changes }, null, 2) +
+      '\n'
+    out.push({
+      path: `${sanitize(ds.name)}/${sanitize(ds.name)}-${lang}.mongo-changes.json`,
+      content,
+      edited: changes.length,
+      blank: 0,
+      warnings: 0,
+    })
+  }
+  return out
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -144,6 +218,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   for (const ds of datasets) {
     if (ds.kind === 'ui') {
       files.push(...(patchMode ? await buildUiPatchFiles(ds, langs) : await buildUiFiles(ds, langs, fillEnglish)))
+    } else if (ds.kind === 'mongo') {
+      if (patchMode) {
+        const mongoFiles = await buildMongoPatchFiles(ds, langs)
+        if (mongoFiles.length === 0) notes.push(`No edited Mongo strings to export for "${ds.name}".`)
+        else files.push(...mongoFiles)
+      } else {
+        files.push(...(await buildMongoFiles(ds, langs)))
+      }
     } else if (patchMode) {
       // The changes-only JSON patch is for UI dictionaries; CSV/DB content uses the
       // column-stable CSV export instead.

@@ -1,6 +1,6 @@
 // Shared types for the Translation Review tool.
 
-export type DatasetKind = 'ui' | 'csv'
+export type DatasetKind = 'ui' | 'csv' | 'mongo'
 
 export interface TranslationProject {
   id: string
@@ -38,13 +38,37 @@ export interface CsvDatasetConfig {
   eol: '\r\n' | '\n'
 }
 
+// A MongoDB snapshot export as produced by scripts/export-mongo-translations.ts.
+export interface MongoSnapshot {
+  collection: 'locations' | 'amenities'
+  exportedAt: string
+  entries: MongoSnapshotEntry[]
+}
+
+export interface MongoSnapshotEntry {
+  _id: string
+  displayName: string
+  fields: {
+    [fieldPath: string]: {
+      [locale: string]: string
+    }
+  }
+}
+
+// config_json shape for a Mongo snapshot dataset.
+export interface MongoDatasetConfig {
+  collection: 'locations' | 'amenities'
+  exportedAt: string
+  entryCount: number
+}
+
 export interface TranslationDataset {
   id: string
   project_id: string
   kind: DatasetKind
   name: string
   english_source: string
-  config: UiDatasetConfig | CsvDatasetConfig
+  config: UiDatasetConfig | CsvDatasetConfig | MongoDatasetConfig
   created_at: string
 }
 
@@ -53,7 +77,7 @@ export interface DatasetMeta {
   id: string
   kind: DatasetKind
   name: string
-  config: UiDatasetConfig | CsvDatasetConfig
+  config: UiDatasetConfig | CsvDatasetConfig | MongoDatasetConfig
 }
 
 export interface TranslationEdit {
@@ -71,7 +95,7 @@ export interface Entry {
   id: string
   datasetId: string
   datasetName: string
-  source: 'UI' | 'DB'
+  source: 'UI' | 'DB' | 'MONGO'
   entryKey: string
   // human-readable label (key path or CSV row label)
   label: string

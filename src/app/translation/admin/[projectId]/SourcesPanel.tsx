@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import type { DatasetMeta, UiDatasetConfig, CsvDatasetConfig } from '@/lib/translation/types'
+import type { DatasetMeta, UiDatasetConfig, CsvDatasetConfig, MongoDatasetConfig } from '@/lib/translation/types'
 import { ConfirmDialog } from '@/components/ui'
 
 interface CsvDetect {
@@ -28,9 +28,11 @@ export function SourcesPanel({
   const enRef = useRef<HTMLInputElement>(null)
   const targetRef = useRef<HTMLInputElement>(null)
   const csvRef = useRef<HTMLInputElement>(null)
+  const mongoRef = useRef<HTMLInputElement>(null)
   const [enFile, setEnFile] = useState<File | null>(null)
   const [targetFiles, setTargetFiles] = useState<File[]>([])
   const [csvDetect, setCsvDetect] = useState<CsvDetect | null>(null)
+  const [mongoFile, setMongoFile] = useState<File | null>(null)
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
   async function loadUi() {
@@ -122,6 +124,32 @@ export function SourcesPanel({
     }
   }
 
+  async function loadMongo() {
+    if (!mongoFile) {
+      setError('Choose a MongoDB snapshot JSON file.')
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const snapshotText = await mongoFile.text()
+      const res = await fetch(`/api/translation/projects/${projectId}/datasets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'mongo', name: mongoFile.name, snapshotText }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Could not load Mongo snapshot')
+      setMongoFile(null)
+      if (mongoRef.current) mongoRef.current.value = ''
+      onChanged()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function removeDataset(id: string) {
     setBusy(true)
     try {
@@ -160,7 +188,7 @@ export function SourcesPanel({
 
   return (
     <div className="mb-6">
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-3 gap-4">
         {/* UI dictionary card */}
         <div className="bg-surface border border-line rounded-lg p-5">
           <h3 className="text-sm font-semibold text-ink">UI dictionary (JSON)</h3>
@@ -220,6 +248,30 @@ export function SourcesPanel({
             />
           </div>
         </div>
+
+        {/* MongoDB snapshot card */}
+        <div className="bg-surface border border-line rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-ink">MongoDB Snapshot</h3>
+          <p className="text-xs text-ink-muted mt-1">
+            Upload a JSON snapshot exported from the inventory-service (locations or amenities).
+          </p>
+          <div className="mt-3">
+            <input
+              ref={mongoRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={(e) => setMongoFile(e.target.files?.[0] ?? null)}
+              className="block w-full text-xs text-ink-soft file:mr-3 file:py-1.5 file:px-3 file:rounded-xs file:border file:border-line file:bg-canvas file:text-ink-soft file:text-xs"
+            />
+            <button
+              onClick={loadMongo}
+              disabled={busy}
+              className="mt-2 px-3 py-1.5 text-sm font-medium bg-ink text-white rounded-sm disabled:opacity-50"
+            >
+              Load snapshot
+            </button>
+          </div>
+        </div>
       </div>
 
       {error && <p className="text-sm text-fail mt-3">{error}</p>}
@@ -231,15 +283,23 @@ export function SourcesPanel({
             const langs =
               d.kind === 'ui'
                 ? Object.keys((d.config as UiDatasetConfig).targets)
-                : Object.keys((d.config as CsvDatasetConfig).langColumns)
+                : d.kind === 'csv'
+                  ? Object.keys((d.config as CsvDatasetConfig).langColumns)
+                  : []
             const mismatches = d.kind === 'ui' ? (d.config as UiDatasetConfig).mismatches : undefined
+            const kindLabel = d.kind === 'ui' ? 'UI JSON' : d.kind === 'csv' ? 'CSV' : 'DB'
+            const mongoConfig = d.kind === 'mongo' ? (d.config as MongoDatasetConfig) : null
             return (
               <div key={d.id} className="flex items-start justify-between bg-surface border border-line rounded-md px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-ink">
-                    {d.name} <span className="text-xs text-ink-muted">({d.kind === 'ui' ? 'UI JSON' : 'CSV'})</span>
+                    {d.name} <span className="text-xs text-ink-muted">({kindLabel})</span>
                   </p>
-                  <p className="text-xs text-ink-muted mt-0.5">{langs.join(', ') || 'no languages detected'}</p>
+                  <p className="text-xs text-ink-muted mt-0.5">
+                    {mongoConfig
+                      ? `${mongoConfig.collection} · ${mongoConfig.entryCount.toLocaleString()} entries`
+                      : langs.join(', ') || 'no languages detected'}
+                  </p>
                   {mismatches && Object.keys(mismatches).length > 0 && (
                     <p className="text-[11px] text-blocked mt-1">
                       ⚠ Structural mismatch:{' '}

@@ -5,7 +5,7 @@ import { isTranslationOwner } from '@/lib/translation/access'
 import { getProject, createDataset } from '@/lib/db/translation'
 import { compareStructure } from '@/lib/translation/json'
 import { parseCsv } from '@/lib/translation/csv'
-import type { UiDatasetConfig, CsvDatasetConfig } from '@/lib/translation/types'
+import type { UiDatasetConfig, CsvDatasetConfig, MongoDatasetConfig, MongoSnapshot } from '@/lib/translation/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,12 +30,39 @@ const CsvSchema = z.object({
   }),
 })
 
-const BodySchema = z.discriminatedUnion('kind', [UiSchema, CsvSchema])
+const MongoSchema = z.object({
+  kind: z.literal('mongo'),
+  name: z.string().trim().max(120).optional(),
+  snapshotText: z.string().min(1),
+})
+
+const BodySchema = z.discriminatedUnion('kind', [UiSchema, CsvSchema, MongoSchema])
 
 // Strip directory + .json extension to get a locale code from a target filename.
 function localeFromFileName(fileName: string): string {
   const base = fileName.split(/[\\/]/).pop() ?? fileName
   return base.replace(/\.json$/i, '')
+}
+
+// `zh_Hans` -> `zh-Hans`; applied to every locale key in a Mongo snapshot so entries.ts
+// and export can treat locales the same way UI/CSV datasets do.
+function normalizeLocale(locale: string): string {
+  return locale.replace(/_/g, '-')
+}
+
+function normalizeMongoSnapshot(snapshot: MongoSnapshot): MongoSnapshot {
+  return {
+    ...snapshot,
+    entries: snapshot.entries.map((entry) => ({
+      ...entry,
+      fields: Object.fromEntries(
+        Object.entries(entry.fields).map(([fieldPath, locales]) => [
+          fieldPath,
+          Object.fromEntries(Object.entries(locales).map(([locale, value]) => [normalizeLocale(locale), value])),
+        ]),
+      ),
+    })),
+  }
 }
 
 // Owner-only: add a UI (JSON) or CSV (DB export) dataset to a project.
@@ -81,6 +108,40 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       mismatches: Object.keys(mismatches).length ? mismatches : undefined,
     }
     const dataset = await createDataset(id, 'ui', body.name?.trim() || 'UI dictionary', body.english.text, config)
+    return NextResponse.json({ dataset })
+  }
+
+  if (body.kind === 'mongo') {
+    let snapshot: MongoSnapshot
+    try {
+      snapshot = JSON.parse(body.snapshotText) as MongoSnapshot
+    } catch {
+      return NextResponse.json({ error: 'Could not parse the Mongo snapshot JSON.' }, { status: 400 })
+    }
+    if (snapshot.collection !== 'locations' && snapshot.collection !== 'amenities') {
+      return NextResponse.json({ error: 'Snapshot "collection" must be "locations" or "amenities".' }, { status: 400 })
+    }
+    if (!Array.isArray(snapshot.entries)) {
+      return NextResponse.json({ error: 'Snapshot is missing an "entries" array.' }, { status: 400 })
+    }
+    for (const entry of snapshot.entries) {
+      if (typeof entry._id !== 'string' || typeof entry.displayName !== 'string' || typeof entry.fields !== 'object' || entry.fields === null) {
+        return NextResponse.json({ error: 'Each snapshot entry needs an _id, displayName, and fields object.' }, { status: 400 })
+      }
+    }
+    const normalized = normalizeMongoSnapshot(snapshot)
+    const config: MongoDatasetConfig = {
+      collection: normalized.collection,
+      exportedAt: normalized.exportedAt,
+      entryCount: normalized.entries.length,
+    }
+    const dataset = await createDataset(
+      id,
+      'mongo',
+      body.name?.trim() || 'MongoDB snapshot',
+      JSON.stringify(normalized),
+      config,
+    )
     return NextResponse.json({ dataset })
   }
 
