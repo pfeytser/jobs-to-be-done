@@ -19,6 +19,18 @@ const PAGE_SIZE = 50
 // Which side the search box matches against (across all sources).
 type ScopeSide = 'target' | 'english'
 
+const LANGUAGE_DISPLAY = new Intl.DisplayNames(['en'], { type: 'language' })
+
+// Friendly name for a locale code (e.g. `zh-Hans` -> "Chinese (Simplified)"). Falls
+// back to the raw code for anything Intl doesn't recognize as a language tag.
+function languageLabel(code: string): string {
+  try {
+    return LANGUAGE_DISPLAY.of(code) ?? code
+  } catch {
+    return code
+  }
+}
+
 // The reviewer's workflow is find-and-fix: they spot a translation on the live
 // site they dislike, come here, and paste it to locate the row. So search is the
 // entry point — we load NOTHING on landing and lazily fetch the full entry set
@@ -306,13 +318,14 @@ export function Editor({
                 <button
                   key={lang}
                   onClick={() => setActiveLang(lang)}
+                  title={lang}
                   className={`px-3.5 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                     activeLang === lang
                       ? 'bg-ink text-white border-ink'
                       : 'bg-surface text-ink-soft border-line hover:border-ink'
                   }`}
                 >
-                  {lang}
+                  {languageLabel(lang)}
                 </button>
               ))}
             </div>
@@ -321,7 +334,7 @@ export function Editor({
                 onClick={() => runExport('lang')}
                 className="px-3 py-1.5 text-sm font-medium border border-line rounded-sm bg-surface hover:border-ink"
               >
-                ⤓ Export {activeLang}
+                ⤓ Export {languageLabel(activeLang)}
               </button>
               <button
                 onClick={() => runExport('all')}
@@ -355,7 +368,7 @@ export function Editor({
               title="Choose which side to search"
               className="px-3 py-2 text-sm border border-line rounded-sm bg-surface focus:outline-none focus:border-ink"
             >
-              <option value="target">Search {activeLang} (translation)</option>
+              <option value="target">Search {languageLabel(activeLang)} (translation)</option>
               <option value="english">Search English</option>
             </select>
           </div>
@@ -376,7 +389,7 @@ export function Editor({
                 Search to begin — paste a phrase you saw on the site to find the row and fix it.
               </p>
               <p className="text-xs mt-1.5">
-                Searching the {activeLang} translation by default. Switch the dropdown to search English instead.
+                Searching the {languageLabel(activeLang)} translation by default. Switch the dropdown to search English instead.
               </p>
             </div>
           ) : (
@@ -384,7 +397,7 @@ export function Editor({
               <div className="grid grid-cols-[minmax(220px,1fr)_minmax(220px,1.3fr)_minmax(220px,1.3fr)] bg-canvas border-b border-line text-[11px] uppercase tracking-wide text-ink-muted font-medium">
                 <div className="px-4 py-2.5">Key / Source</div>
                 <div className="px-4 py-2.5 border-l border-line">English</div>
-                <div className="px-4 py-2.5 border-l border-line">Translation — {activeLang}</div>
+                <div className="px-4 py-2.5 border-l border-line">Translation — {languageLabel(activeLang)}</div>
               </div>
               {pageItems.length === 0 ? (
                 <div className="p-10 text-center text-ink-muted text-sm">No matching strings.</div>
