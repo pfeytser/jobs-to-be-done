@@ -570,6 +570,27 @@ export async function runMigrations(): Promise<void> {
       // Column already exists
     }
 
+    // Prototypes feature — hosted HTML prototypes, one file each
+    await turso.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS prototypes (
+        id TEXT PRIMARY KEY,
+        slug TEXT NOT NULL,
+        name TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        blob_pathname TEXT NOT NULL,
+        blob_url TEXT NOT NULL,
+        file_size INTEGER NOT NULL DEFAULT 0,
+        created_by TEXT NOT NULL,
+        created_by_name TEXT NOT NULL DEFAULT '',
+        created_via TEXT NOT NULL DEFAULT 'web',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_prototypes_slug ON prototypes(slug);
+      CREATE INDEX IF NOT EXISTS idx_prototypes_status ON prototypes(status);
+    `)
+
     // Seed the two default translation projects. Fixed ids + INSERT OR IGNORE means a
     // rename sticks and re-runs never duplicate; only ever inserted when absent.
     {

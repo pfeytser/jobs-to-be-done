@@ -13,6 +13,7 @@ const SECTIONS: Array<{ prefix: string; label: string; href: string }> = [
   { prefix: '/storyboard', label: 'Storyboard', href: '/storyboard' },
   { prefix: '/on-site', label: 'On-site', href: '/on-site' },
   { prefix: '/two-truths', label: 'Two Truths & A Lie', href: '/two-truths' },
+  { prefix: '/prototypes', label: 'Prototypes', href: '/prototypes' },
   { prefix: '/code-review', label: 'Code Review', href: '/code-review' },
   { prefix: '/admin', label: 'Admin', href: '/admin' },
 ]

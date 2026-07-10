@@ -7,6 +7,10 @@ const PUBLIC_PATTERNS = [
   /^\/api\/auth\/.*/,
   /^\/api\/health$/,
   /^\/auth\/.*/,
+  // Prototypes' create/update endpoint checks its own auth (admin session OR
+  // PROTOTYPES_API_TOKEN bearer token), so it can't be gated by the blanket
+  // session redirect below — a token-only request has no session cookie at all.
+  /^\/api\/prototypes$/,
 ]
 
 const ADMIN_PATTERNS = [
