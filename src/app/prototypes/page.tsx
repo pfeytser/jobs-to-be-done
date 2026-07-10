@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth/config'
 import { getAllPrototypes, getActivePrototypes } from '@/lib/db/prototypes'
 import { PrototypeRowControls } from './PrototypeRowControls'
+import { CopyLinkButton } from './CopyLinkButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,9 +75,12 @@ export default async function PrototypesPage() {
                     /prototypes/{p.slug} · {formatBytes(p.file_size)} · updated {new Date(p.updated_at).toLocaleDateString()}
                   </p>
                 </div>
-                {isAdmin && (
-                  <PrototypeRowControls id={p.id} name={p.name} status={p.status} />
-                )}
+                <div className="flex items-start gap-2 shrink-0 flex-wrap justify-end">
+                  <CopyLinkButton slug={p.slug} />
+                  {isAdmin && (
+                    <PrototypeRowControls id={p.id} name={p.name} status={p.status} />
+                  )}
+                </div>
               </div>
             </div>
           ))}
