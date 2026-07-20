@@ -56,8 +56,12 @@ export function detectColumns(headers: string[], eol: '\r\n' | '\n'): CsvDataset
 }
 
 function quoteField(field: string): string {
-  if (/[",\r\n]/.test(field)) return '"' + field.replace(/"/g, '""') + '"'
-  return field
+  let value = field
+  // Neutralize spreadsheet formula injection: cells a spreadsheet would treat
+  // as a formula get a leading apostrophe so they render as literal text.
+  if (/^[=+\-@\t\r]/.test(value)) value = "'" + value
+  if (/[",\r\n]/.test(value)) return '"' + value.replace(/"/g, '""') + '"'
+  return value
 }
 
 // Serialize a matrix (header + data rows) with RFC-4180 quoting and the given EOL.

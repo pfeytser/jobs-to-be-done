@@ -6,8 +6,13 @@ const ALLOWED_EMAILS = ['p.feytser.jr@gmail.com']
 const ADMIN_EMAIL = 'pfeytser@industriousoffice.com'
 
 function isAllowedEmail(email: string): boolean {
-  if (ALLOWED_EMAILS.includes(email)) return true
-  const domain = email.split('@')[1]
+  const normalized = email.trim().toLowerCase()
+  // Reject anything that isn't a single, well-formed address. Guards against
+  // tricks like `x@industriousoffice.com@evil.com` where naive `split('@')[1]`
+  // would read the wrong segment.
+  if (!/^[^@\s]+@[^@\s]+$/.test(normalized)) return false
+  if (ALLOWED_EMAILS.includes(normalized)) return true
+  const domain = normalized.slice(normalized.lastIndexOf('@') + 1)
   return ALLOWED_DOMAINS.includes(domain)
 }
 
@@ -20,11 +25,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   session: {
     strategy: 'jwt',
+    // Tighter than the 30-day default: shortens the window in which a stolen
+    // session cookie is usable. Stateless JWTs can't be revoked server-side.
+    maxAge: 24 * 60 * 60,
   },
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account, profile }) {
       const email = user.email
       if (!email) return false
+      // The domain allowlist is only meaningful if the provider actually
+      // verified ownership of the address. Never trust an unverified email.
+      if (account?.provider === 'google') {
+        const verified = (profile as { email_verified?: boolean } | undefined)?.email_verified
+        if (verified !== true) return false
+      }
       return isAllowedEmail(email)
     },
 

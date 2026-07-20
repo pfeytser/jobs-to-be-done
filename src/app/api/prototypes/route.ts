@@ -9,7 +9,6 @@ import {
   reserveSlug,
 } from '@/lib/db/prototypes'
 import { storePrototypeHtml, isHtmlFileName, MAX_PROTOTYPE_BYTES } from '@/lib/prototypes/storage'
-import { isValidApiToken } from '@/lib/prototypes/api-auth'
 
 export async function GET() {
   const session = await auth()
@@ -27,9 +26,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await auth()
-  const isAdmin = !!session?.user && session.user.role === 'admin'
-  const isApiToken = isValidApiToken(req)
-  if (!isAdmin && !isApiToken) {
+  if (!session?.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -67,9 +64,9 @@ export async function POST(req: NextRequest) {
     }
 
     const id = `pt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-    const created_by = isAdmin ? session!.user.userId : 'api'
-    const created_by_name = isAdmin ? (session!.user.name ?? session!.user.email ?? '') : 'Claude (API)'
-    const created_via = isAdmin ? 'web' : 'api'
+    const created_by = session.user.userId
+    const created_by_name = session.user.name ?? session.user.email ?? ''
+    const created_via = 'web'
 
     const resolvedSlug = await reserveSlug(name.trim(), id.slice(-8))
     const pathname = `prototypes/${resolvedSlug}.html`

@@ -17,7 +17,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid url' }, { status: 400 })
   }
 
-  if (!parsed.hostname.endsWith(ALLOWED_HOSTNAME)) {
+  // Exact host match (or a subdomain of it) — not a loose suffix that would also
+  // accept e.g. `notblob.vercel-storage.com`.
+  const host = parsed.hostname
+  if (host !== ALLOWED_HOSTNAME && !host.endsWith(`.${ALLOWED_HOSTNAME}`)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // This proxy exists only to serve QA screenshots with the store token. Scope it
+  // to that prefix so it can't be turned into a reader for other features'
+  // private blobs (expense receipts, prototypes, etc.).
+  if (!parsed.pathname.replace(/^\/+/, '').startsWith('qa-screenshots/')) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

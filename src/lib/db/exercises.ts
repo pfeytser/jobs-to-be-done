@@ -194,9 +194,14 @@ export async function updateExercisePrompt(
 
 export async function setActiveExercise(id: string): Promise<void> {
   await runMigrations()
-  await turso.executeMultiple(
-    `UPDATE exercises SET isActive = 0;
-     UPDATE exercises SET isActive = 1 WHERE id = '${id}';`
+  // Parameterized + atomic. Never interpolate `id` into SQL — it reaches here
+  // from a URL path segment.
+  await turso.batch(
+    [
+      { sql: 'UPDATE exercises SET isActive = 0', args: [] },
+      { sql: 'UPDATE exercises SET isActive = 1 WHERE id = ?', args: [id] },
+    ],
+    'write'
   )
 }
 

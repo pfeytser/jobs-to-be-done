@@ -12,7 +12,10 @@ function slugify(str: string): string {
 
 function escapeCSV(val: unknown): string {
   if (val == null) return ''
-  const s = String(val)
+  let s = String(val)
+  // Neutralize spreadsheet formula injection: prefix cells a spreadsheet would
+  // evaluate as a formula with an apostrophe so they render as literal text.
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`
   if (s.includes(',') || s.includes('"') || s.includes('\n')) {
     return `"${s.replace(/"/g, '""')}"`
   }
@@ -128,10 +131,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       await Promise.all(
         screenshotResults.map(async (r) => {
           try {
+            // Defense in depth: only ever fetch our own blob store (guards against
+            // any legacy rows with an attacker-controlled screenshot_url — SSRF).
+            let host: string
+            try {
+              host = new URL(r.screenshot_url!).hostname
+            } catch {
+              return
+            }
+            if (host !== 'blob.vercel-storage.com' && !host.endsWith('.blob.vercel-storage.com')) {
+              return
+            }
             const res = await fetch(r.screenshot_url!)
             if (res.ok) {
               const buffer = await res.arrayBuffer()
-              screenshotsFolder.file(r.screenshot_filename!, buffer)
+              // Strip path components so a crafted filename can't traverse (Zip Slip).
+              const safeName = r.screenshot_filename!.replace(/^.*[\\/]/, '').replace(/[^\w.\-]+/g, '_')
+              screenshotsFolder.file(safeName || 'screenshot.png', buffer)
             }
           } catch {
             // Skip failed screenshot fetches silently

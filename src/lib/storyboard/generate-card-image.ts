@@ -88,7 +88,10 @@ export async function generateCardImage(useCaseId: string, cardId: string, userI
         const blob = await put(
           `storyboard-cards/${cardId}.png`,
           imageBuffer,
-          { access: 'public', contentType: 'image/png', addRandomSuffix: false }
+          // Random suffix makes the public URL unguessable, so card images can't
+          // be enumerated by cardId (preserves the "secret until presentation"
+          // control). The unguessable URL is persisted via saveImageIfLatest.
+          { access: 'public', contentType: 'image/png', addRandomSuffix: true }
         )
         finalUrl = blob.url
         console.log(`[generate-card-image] Blob upload complete: ${finalUrl}`)
