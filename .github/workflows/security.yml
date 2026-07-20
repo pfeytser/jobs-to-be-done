@@ -1,0 +1,29 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # Invariant #1: every API route authorizes itself.
+      - name: Route auth coverage
+        run: node scripts/check-route-auth.mjs
+
+      # Fail on any high/critical dependency advisory in production deps.
+      - name: Dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
+      # Type-check + build must pass.
+      - name: Build
+        run: npm run build
