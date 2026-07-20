@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/config'
 import { getUserProfile, saveSeaCreatureAvatar } from '@/lib/db/user-profiles'
+import { rateLimit } from '@/lib/rate-limit'
 import OpenAI from 'openai'
 
 export const maxDuration = 60
@@ -12,6 +13,16 @@ function getOpenAI() {
 export async function POST() {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Cap DALL-E avatar regenerations per user (the avatar overwrites itself, so
+  // real usage is low) to prevent cost-abuse loops.
+  const limit = await rateLimit(`avatar:${session.user.userId}`, 10, 60 * 60)
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. Try again later.' },
+      { status: 429 }
+    )
+  }
 
   try {
     const profile = await getUserProfile(session.user.userId)

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import DOMPurify from 'isomorphic-dompurify'
 import type { QATestItem } from '@/lib/db/qa-test-items'
 import type { QAResult } from '@/lib/db/qa-results'
 import type { QASession } from '@/lib/db/qa-sessions'
@@ -188,7 +189,7 @@ export function TestChecklist({
             <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">Setup instructions</p>
             <div
               className="prose prose-sm max-w-none text-ink"
-              dangerouslySetInnerHTML={{ __html: setupInstructions }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(setupInstructions) }}
             />
           </div>
         </div>

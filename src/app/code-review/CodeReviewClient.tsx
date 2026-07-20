@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { marked } from 'marked'
+import DOMPurify from 'isomorphic-dompurify'
 
 type Phase = 'idle' | 'fetching' | 'reviewing' | 'done' | 'error'
 
@@ -16,7 +17,9 @@ export function CodeReviewClient() {
 
   const flushReview = useCallback(() => {
     const html = marked.parse(reviewAccumRef.current) as string
-    setReviewHtml(html)
+    // Sanitize: the review text can echo untrusted PR content (titles, comments,
+    // file contents), so treat marked's HTML output as untrusted.
+    setReviewHtml(DOMPurify.sanitize(html))
   }, [])
 
   const handleSubmit = useCallback(async () => {

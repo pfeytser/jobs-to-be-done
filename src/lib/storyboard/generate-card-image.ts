@@ -1,7 +1,14 @@
 import { getUseCaseById } from '@/lib/db/storyboard-use-cases'
 import { getStoryboard } from '@/lib/db/storyboards'
 import { getCardById, updateCard, saveImageIfLatest } from '@/lib/db/storyboard-cards'
+import { rateLimit } from '@/lib/rate-limit'
 import OpenAI from 'openai'
+
+// Per-user cap on DALL-E generations. Generous for real use, tight against a
+// scripted loop. This is the shared chokepoint for both the explicit
+// generate-image POST and the scene_description PATCH auto-trigger.
+const DALLE_LIMIT = 40
+const DALLE_WINDOW_SEC = 60 * 60
 
 function getOpenAI() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -30,6 +37,12 @@ export async function generateCardImage(useCaseId: string, cardId: string, userI
     }
     if (!card.scene_description.trim()) {
       console.log('[generate-card-image] empty description — skipping')
+      return
+    }
+
+    const limit = await rateLimit(`dalle-card:${userId}`, DALLE_LIMIT, DALLE_WINDOW_SEC)
+    if (!limit.allowed) {
+      console.warn(`[generate-card-image] rate limit exceeded for userId=${userId} — skipping`)
       return
     }
 
