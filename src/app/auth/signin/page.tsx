@@ -5,9 +5,18 @@ import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { Bee } from '@/components/ui'
 
+// Only allow same-origin, non-protocol-relative paths as the post-login target,
+// so a crafted ?callbackUrl= can never bounce a user to an external site
+// (defense in depth; NextAuth's default redirect handling also rejects these).
+function safeCallbackUrl(raw: string | null): string {
+  if (!raw) return '/'
+  if (raw.startsWith('/') && !raw.startsWith('//') && !raw.startsWith('/\\')) return raw
+  return '/'
+}
+
 function SignInContent() {
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/'
+  const callbackUrl = safeCallbackUrl(searchParams.get('callbackUrl'))
   const error = searchParams.get('error')
 
   return (

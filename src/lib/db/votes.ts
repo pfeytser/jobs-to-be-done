@@ -116,43 +116,55 @@ export async function submitVote(data: {
 }): Promise<{ success: boolean; error?: string; usedVotes: number }> {
   await runMigrations()
 
-  const usedVotes = await getUserVoteCount(data.exerciseId, data.userId)
+  const id = crypto.randomUUID()
+  const timestamp = new Date().toISOString()
 
-  if (data.action === 'add' && usedVotes >= MAX_VOTES_PER_USER) {
+  if (data.action === 'add') {
+    // Atomic budget check + insert: the row is inserted only if the user is
+    // still under the cap. SQLite serializes writes, so two concurrent adds
+    // can't both pass the check — this closes the check-then-insert race that
+    // otherwise lets a user exceed MAX_VOTES_PER_USER.
+    const result = await turso.execute({
+      sql: `INSERT INTO vote_transactions (id, exerciseId, entryId, userId, action, timestamp)
+        SELECT ?, ?, ?, ?, 'add', ?
+        WHERE (
+          SELECT COALESCE(SUM(CASE WHEN action = 'add' THEN 1 ELSE -1 END), 0)
+          FROM vote_transactions WHERE exerciseId = ? AND userId = ?
+        ) < ?`,
+      args: [
+        id, data.exerciseId, data.entryId, data.userId, timestamp,
+        data.exerciseId, data.userId, MAX_VOTES_PER_USER,
+      ],
+    })
+    const usedVotes = await getUserVoteCount(data.exerciseId, data.userId)
+    if (!result.rowsAffected) {
+      return {
+        success: false,
+        error: `You have used all ${MAX_VOTES_PER_USER} votes`,
+        usedVotes,
+      }
+    }
+    return { success: true, usedVotes }
+  }
+
+  // remove
+  const usedVotes = await getUserVoteCount(data.exerciseId, data.userId)
+  const entryCount = await getEntryVoteCountForUser(data.entryId, data.userId)
+  if (entryCount <= 0) {
     return {
       success: false,
-      error: `You have used all ${MAX_VOTES_PER_USER} votes`,
+      error: 'No votes to remove on this entry',
       usedVotes,
     }
   }
 
-  if (data.action === 'remove') {
-    const entryCount = await getEntryVoteCountForUser(
-      data.entryId,
-      data.userId
-    )
-    if (entryCount <= 0) {
-      return {
-        success: false,
-        error: 'No votes to remove on this entry',
-        usedVotes,
-      }
-    }
-  }
-
-  const id = crypto.randomUUID()
-  const timestamp = new Date().toISOString()
-
   await turso.execute({
     sql: `INSERT INTO vote_transactions (id, exerciseId, entryId, userId, action, timestamp)
-      VALUES (?, ?, ?, ?, ?, ?)`,
-    args: [id, data.exerciseId, data.entryId, data.userId, data.action, timestamp],
+      VALUES (?, ?, ?, ?, 'remove', ?)`,
+    args: [id, data.exerciseId, data.entryId, data.userId, timestamp],
   })
 
-  const newUsed =
-    data.action === 'add' ? usedVotes + 1 : Math.max(0, usedVotes - 1)
-
-  return { success: true, usedVotes: newUsed }
+  return { success: true, usedVotes: Math.max(0, usedVotes - 1) }
 }
 
 export async function getPerUserVoteSpend(

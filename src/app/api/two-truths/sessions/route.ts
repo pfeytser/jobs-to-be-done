@@ -14,8 +14,15 @@ export async function GET() {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const sessions =
+    const raw =
       session.user.role === 'admin' ? await getAllSessions() : await getVisibleSessions()
+    // Never expose author_email in the list — the UI only needs author_name, and
+    // this endpoint is reachable directly. Drop it to avoid over-sharing emails.
+    const sessions = raw.map((s) => {
+      const copy = { ...s } as Partial<Pick<typeof s, 'author_email'>> & Omit<typeof s, 'author_email'>
+      delete copy.author_email
+      return copy
+    })
     return NextResponse.json({ sessions })
   } catch (error) {
     console.error('[two-truths/sessions GET]', error)

@@ -47,13 +47,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.email = user.email
         token.name = user.name
         token.picture = user.image
-        token.role = user.email === ADMIN_EMAIL ? 'admin' : 'collaborator'
+        token.role = user.email.toLowerCase() === ADMIN_EMAIL ? 'admin' : 'collaborator'
         token.userId = token.sub ?? user.email
       }
 
       if (!token.role && token.email) {
         token.role =
-          token.email === ADMIN_EMAIL ? 'admin' : 'collaborator'
+          (token.email as string).toLowerCase() === ADMIN_EMAIL ? 'admin' : 'collaborator'
       }
 
       return token

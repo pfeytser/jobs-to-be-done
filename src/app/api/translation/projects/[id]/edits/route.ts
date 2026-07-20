@@ -7,11 +7,13 @@ import { validateMarkup } from '@/lib/translation/markup'
 
 export const dynamic = 'force-dynamic'
 
+// Bounds keep this endpoint — the one write open to any authenticated user —
+// from being used to store oversized values that amplify memory at export time.
 const EditSchema = z.object({
-  datasetId: z.string().min(1),
-  lang: z.string().min(1),
-  entryKey: z.string(),
-  value: z.string(),
+  datasetId: z.string().min(1).max(200),
+  lang: z.string().min(1).max(20),
+  entryKey: z.string().max(500),
+  value: z.string().max(20000),
 })
 
 // Any logged-in user may edit a translation value. Autosave posts here.
