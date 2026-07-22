@@ -55,25 +55,71 @@ function columnId(col: BoardColumn) {
 
 // ── Rank column (drag to order) ────────────────────────────────────────────────
 
-function SortableCard({ card, index, showBadge }: { card: BoardCard; index: number; showBadge: boolean }) {
+type MoveKind = 'top' | 'up' | 'down' | 'bottom'
+
+function MoveButton({
+  label,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string
+  disabled: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      // Stop dnd-kit from starting a drag when the control is pressed.
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={onClick}
+      className="w-6 h-5 flex items-center justify-center rounded text-ink-muted hover:text-ink hover:bg-canvas border border-transparent hover:border-line disabled:opacity-25 disabled:pointer-events-none transition-colors"
+    >
+      {children}
+    </button>
+  )
+}
+
+function SortableCard({
+  card,
+  index,
+  total,
+  showBadge,
+  onMove,
+}: {
+  card: BoardCard
+  index: number
+  total: number
+  showBadge: boolean
+  onMove: (from: number, kind: MoveKind) => void
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id })
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
   }
+  const isFirst = index === 0
+  const isLast = index === total - 1
   return (
     <li
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="group flex items-start gap-3 p-3 bg-surface border border-line rounded-lg cursor-grab active:cursor-grabbing hover:border-ink touch-none select-none transition-colors"
+      className="group flex items-start gap-3 p-3 bg-surface border border-line rounded-lg hover:border-ink transition-colors"
     >
       <span className="shrink-0 mt-0.5 w-6 h-6 flex items-center justify-center rounded-md bg-canvas border border-line text-xs font-bold text-ink-soft">
         {index + 1}
       </span>
-      <div className="min-w-0 flex-1">
+      {/* The content is the drag handle. */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="min-w-0 flex-1 cursor-grab active:cursor-grabbing touch-none select-none"
+      >
         {showBadge && card.category && (
           <span className="inline-block mb-1 px-2 py-0.5 rounded-full bg-accent/20 border border-accent/40 text-[10px] font-bold uppercase tracking-wide text-ink-soft">
             {card.category}
@@ -82,9 +128,29 @@ function SortableCard({ card, index, showBadge }: { card: BoardCard; index: numb
         <p className="text-sm font-semibold text-ink leading-snug">{card.title}</p>
         {card.description && <p className="text-xs text-ink-muted mt-0.5 leading-snug">{card.description}</p>}
       </div>
-      <svg className="shrink-0 w-4 h-4 text-ink-muted/50 group-hover:text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-      </svg>
+      {/* Reorder controls (in addition to drag-and-drop). */}
+      <div className="shrink-0 flex flex-col gap-0.5">
+        <MoveButton label="Move to top" disabled={isFirst} onClick={() => onMove(index, 'top')}>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 16 16">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 3h9M4 11l4-4 4 4" />
+          </svg>
+        </MoveButton>
+        <MoveButton label="Move up" disabled={isFirst} onClick={() => onMove(index, 'up')}>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 16 16">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 10l4-4 4 4" />
+          </svg>
+        </MoveButton>
+        <MoveButton label="Move down" disabled={isLast} onClick={() => onMove(index, 'down')}>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 16 16">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6l4 4 4-4" />
+          </svg>
+        </MoveButton>
+        <MoveButton label="Move to bottom" disabled={isLast} onClick={() => onMove(index, 'bottom')}>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 16 16">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 5l4 4 4-4M3.5 13h9" />
+          </svg>
+        </MoveButton>
+      </div>
     </li>
   )
 }
@@ -151,12 +217,26 @@ function RankColumn({
     [persist]
   )
 
+  const moveCard = useCallback(
+    (from: number, kind: MoveKind) => {
+      setCards((prev) => {
+        const to = kind === 'top' ? 0 : kind === 'bottom' ? prev.length - 1 : kind === 'up' ? from - 1 : from + 1
+        if (to < 0 || to >= prev.length || to === from) return prev
+        const next = arrayMove(prev, from, to)
+        cardsRef.current = next
+        void persist(next.map((c) => c.id))
+        return next
+      })
+    },
+    [persist]
+  )
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
         <ul className="space-y-2">
           {cards.map((card, i) => (
-            <SortableCard key={card.id} card={card} index={i} showBadge={showBadge} />
+            <SortableCard key={card.id} card={card} index={i} total={cards.length} showBadge={showBadge} onMove={moveCard} />
           ))}
         </ul>
       </SortableContext>

@@ -76,41 +76,47 @@ export function CombinedMatrix({
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="relative w-full aspect-[3/2] rounded-lg border border-line bg-canvas overflow-hidden">
-            {options.map((o) => {
-              const left = INSET + (o.value / maxVal) * SPAN
-              return (
-                <div key={o.key} className="absolute top-0 bottom-0 border-l border-line/60" style={{ left: `${left}%` }} />
-              )
-            })}
-            <div className="absolute left-0 right-0 top-1/2 border-t border-line/60" />
+          <div className="relative w-full aspect-[3/2] rounded-lg border border-line bg-canvas">
+            {/* Gridlines are clipped to the rounded corners… */}
+            <div className="absolute inset-0 overflow-hidden rounded-lg">
+              {options.map((o) => {
+                const left = INSET + (o.value / maxVal) * SPAN
+                return (
+                  <div key={o.key} className="absolute top-0 bottom-0 border-l border-line/60" style={{ left: `${left}%` }} />
+                )
+              })}
+              <div className="absolute left-0 right-0 top-1/2 border-t border-line/60" />
+            </div>
 
-            {points.map(({ key, it, category, x, y, color }) => {
-              const isHovered = hovered === key
-              return (
-                <div
-                  key={key}
-                  className="absolute -translate-x-1/2 -translate-y-1/2"
-                  style={{ left: `${x}%`, top: `${y}%`, zIndex: isHovered ? 20 : 1 }}
-                  onMouseEnter={() => setHovered(key)}
-                  onMouseLeave={() => setHovered((h) => (h === key ? null : h))}
-                  onClick={() => setHovered((h) => (h === key ? null : key))}
-                >
-                  {isHovered && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded-md bg-ink text-white text-xs font-medium whitespace-nowrap shadow-lg pointer-events-none">
-                      <span className="opacity-70">{category} · </span>
-                      {it.title}
-                    </div>
-                  )}
-                  <span
-                    className={`block rounded-full ring-2 ring-canvas shadow cursor-pointer transition-transform ${
-                      isHovered ? 'w-4 h-4 scale-110' : 'w-3.5 h-3.5'
-                    }`}
-                    style={{ backgroundColor: color }}
-                  />
-                </div>
-              )
-            })}
+            {/* …but dots + tooltips live in an unclipped layer so tooltips can escape. */}
+            <div className="absolute inset-0">
+              {points.map(({ key, it, category, x, y, color }) => {
+                const isHovered = hovered === key
+                return (
+                  <div
+                    key={key}
+                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: `${x}%`, top: `${y}%`, zIndex: isHovered ? 20 : 1 }}
+                    onMouseEnter={() => setHovered(key)}
+                    onMouseLeave={() => setHovered((h) => (h === key ? null : h))}
+                    onClick={() => setHovered((h) => (h === key ? null : key))}
+                  >
+                    {isHovered && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded-md bg-ink text-white text-xs font-medium text-center leading-snug max-w-[220px] w-max shadow-lg pointer-events-none">
+                        <span className="opacity-70">{category} · </span>
+                        {it.title}
+                      </div>
+                    )}
+                    <span
+                      className={`block rounded-full ring-2 ring-canvas shadow cursor-pointer transition-transform ${
+                        isHovered ? 'w-4 h-4 scale-110' : 'w-3.5 h-3.5'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
           <div className="relative h-5 mt-1">
