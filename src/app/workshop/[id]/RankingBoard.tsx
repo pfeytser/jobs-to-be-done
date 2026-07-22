@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   DndContext,
@@ -27,12 +27,33 @@ export interface BoardCard {
   category: string
 }
 
+export interface ChoiceOption {
+  key: string
+  label: string
+}
+
 export interface BoardColumn {
   /** Category key sent to the API (empty string for the combined round). */
   category: string
+  /** Dimension key sent to the API (empty string in single mode). */
+  dimension: string
+  type: 'rank' | 'choice'
+  /** Column header (dimension name in multi mode; blank in single mode). */
   label: string
+  hint?: string
   cards: BoardCard[]
+  /** choice only */
+  options?: ChoiceOption[]
+  initialChoices?: Record<string, string>
 }
+
+type Layout = 'grid' | 'combined' | 'multi'
+
+function columnId(col: BoardColumn) {
+  return `${col.category} ${col.dimension}`
+}
+
+// ── Rank column (drag to order) ────────────────────────────────────────────────
 
 function SortableCard({ card, index, showBadge }: { card: BoardCard; index: number; showBadge: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id })
@@ -68,7 +89,7 @@ function SortableCard({ card, index, showBadge }: { card: BoardCard; index: numb
   )
 }
 
-function Column({
+function RankColumn({
   workshopId,
   column,
   showBadge,
@@ -95,7 +116,13 @@ function Column({
         await fetch(`/api/workshop/sessions/${workshopId}/rankings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'save', category: column.category, orderedItemIds: order }),
+          body: JSON.stringify({
+            action: 'save',
+            kind: 'rank',
+            category: column.category,
+            dimension: column.dimension,
+            orderedItemIds: order,
+          }),
         })
       } catch {
         // Transient — the next drag or the submit call will re-persist.
@@ -103,7 +130,7 @@ function Column({
         onSavingChange(false)
       }
     },
-    [workshopId, column.category, onSavingChange]
+    [workshopId, column.category, column.dimension, onSavingChange]
   )
 
   const handleDragEnd = useCallback(
@@ -125,19 +152,136 @@ function Column({
   )
 
   return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+        <ul className="space-y-2">
+          {cards.map((card, i) => (
+            <SortableCard key={card.id} card={card} index={i} showBadge={showBadge} />
+          ))}
+        </ul>
+      </SortableContext>
+    </DndContext>
+  )
+}
+
+// ── Choice column (label each item) ─────────────────────────────────────────────
+
+function ChoiceColumn({
+  workshopId,
+  column,
+  onSavingChange,
+  onCompleteChange,
+}: {
+  workshopId: string
+  column: BoardColumn
+  onSavingChange: (saving: boolean) => void
+  onCompleteChange: (id: string, complete: boolean) => void
+}) {
+  const options = column.options ?? []
+  const [choices, setChoices] = useState<Record<string, string>>(column.initialChoices ?? {})
+  const choicesRef = useRef(choices)
+  choicesRef.current = choices
+
+  const persist = useCallback(
+    async (next: Record<string, string>) => {
+      onSavingChange(true)
+      try {
+        await fetch(`/api/workshop/sessions/${workshopId}/rankings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'save',
+            kind: 'choice',
+            category: column.category,
+            dimension: column.dimension,
+            choices: next,
+          }),
+        })
+      } catch {
+        // Transient — a later selection or submit re-persists.
+      } finally {
+        onSavingChange(false)
+      }
+    },
+    [workshopId, column.category, column.dimension, onSavingChange]
+  )
+
+  function select(itemId: string, optionKey: string) {
+    setChoices((prev) => {
+      const next = { ...prev, [itemId]: optionKey }
+      choicesRef.current = next
+      onCompleteChange(columnId(column), column.cards.every((c) => next[c.id]))
+      void persist(next)
+      return next
+    })
+  }
+
+  return (
+    <ul className="space-y-2">
+      {column.cards.map((card) => {
+        const chosen = choices[card.id]
+        return (
+          <li key={card.id} className="p-3 bg-surface border border-line rounded-lg">
+            <p className="text-sm font-semibold text-ink leading-snug">{card.title}</p>
+            {card.description && <p className="text-xs text-ink-muted mt-0.5 leading-snug">{card.description}</p>}
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {options.map((opt) => {
+                const active = chosen === opt.key
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => select(card.id, opt.key)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      active
+                        ? 'bg-ink text-white border-ink'
+                        : 'bg-canvas text-ink-soft border-line hover:border-ink'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+// ── Board ────────────────────────────────────────────────────────────────────
+
+function DimensionBoard({
+  workshopId,
+  column,
+  showBadge,
+  onSavingChange,
+  onCompleteChange,
+}: {
+  workshopId: string
+  column: BoardColumn
+  showBadge: boolean
+  onSavingChange: (saving: boolean) => void
+  onCompleteChange: (id: string, complete: boolean) => void
+}) {
+  return (
     <div className="flex flex-col">
       {column.label && (
-        <h3 className="text-sm font-bold uppercase tracking-widest text-ink-muted mb-3 px-1">{column.label}</h3>
+        <h4 className="text-sm font-bold uppercase tracking-widest text-ink-muted mb-1 px-1">{column.label}</h4>
       )}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-          <ul className="space-y-2">
-            {cards.map((card, i) => (
-              <SortableCard key={card.id} card={card} index={i} showBadge={showBadge} />
-            ))}
-          </ul>
-        </SortableContext>
-      </DndContext>
+      {column.hint && <p className="text-xs text-ink-muted mb-3 px-1">{column.hint}</p>}
+      {!column.hint && column.label && <div className="mb-3" />}
+      {column.type === 'choice' ? (
+        <ChoiceColumn
+          workshopId={workshopId}
+          column={column}
+          onSavingChange={onSavingChange}
+          onCompleteChange={onCompleteChange}
+        />
+      ) : (
+        <RankColumn workshopId={workshopId} column={column} showBadge={showBadge} onSavingChange={onSavingChange} />
+      )}
     </div>
   )
 }
@@ -145,17 +289,33 @@ function Column({
 export function RankingBoard({
   workshopId,
   columns,
-  combined,
+  layout,
 }: {
   workshopId: string
   columns: BoardColumn[]
-  /** True for the single merged round-2 list (shows category badges, one column). */
-  combined: boolean
+  layout: Layout
 }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Choice columns report completeness so we can gate the submit button.
+  const choiceIds = useMemo(
+    () => columns.filter((c) => c.type === 'choice').map((c) => columnId(c)),
+    [columns]
+  )
+  const [complete, setComplete] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(
+      columns
+        .filter((c) => c.type === 'choice')
+        .map((c) => [columnId(c), c.cards.every((card) => (c.initialChoices ?? {})[card.id])])
+    )
+  )
+  const onCompleteChange = useCallback((id: string, value: boolean) => {
+    setComplete((prev) => (prev[id] === value ? prev : { ...prev, [id]: value }))
+  }, [])
+  const allChoicesDone = choiceIds.every((id) => complete[id])
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -177,13 +337,31 @@ export function RankingBoard({
     }
   }
 
+  const instructions =
+    layout === 'combined'
+      ? 'Drag cards so the highest priority sits at the top. This is the final combined list.'
+      : layout === 'multi'
+        ? 'For each category, drag to rank one axis and pick a label per item on the other.'
+        : 'Drag cards so the highest priority sits at the top. Rank each category independently.'
+
+  // Group columns by category for the multi layout.
+  const groups = useMemo(() => {
+    const order: string[] = []
+    const byCat = new Map<string, BoardColumn[]>()
+    for (const col of columns) {
+      if (!byCat.has(col.category)) {
+        byCat.set(col.category, [])
+        order.push(col.category)
+      }
+      byCat.get(col.category)!.push(col)
+    }
+    return order.map((cat) => ({ category: cat, cols: byCat.get(cat)! }))
+  }, [columns])
+
   return (
     <div>
       <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-        <p className="text-sm text-ink-soft">
-          Drag cards so the <strong className="text-ink">highest priority sits at the top</strong>.
-          {combined ? ' This is the final combined list.' : ' Rank each category independently.'}
-        </p>
+        <p className="text-sm text-ink-soft">{instructions}</p>
         <div className="flex items-center gap-3">
           {saving ? (
             <span className="text-xs text-ink-muted">Saving…</span>
@@ -192,7 +370,8 @@ export function RankingBoard({
           )}
           <button
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || !allChoicesDone}
+            title={!allChoicesDone ? 'Label every item first' : undefined}
             className="px-4 py-2 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
             {submitting ? 'Submitting…' : 'Submit my ranking'}
@@ -204,28 +383,54 @@ export function RankingBoard({
         <div className="mb-4 p-3 bg-fail-soft border border-fail-line rounded-md text-fail text-sm">{error}</div>
       )}
 
-      {combined ? (
+      {layout === 'combined' && (
         <div className="max-w-2xl">
           {columns.map((col) => (
-            <Column
-              key={col.category || 'combined'}
+            <DimensionBoard
+              key={columnId(col)}
               workshopId={workshopId}
               column={col}
               showBadge
               onSavingChange={setSaving}
+              onCompleteChange={onCompleteChange}
             />
           ))}
         </div>
-      ) : (
+      )}
+
+      {layout === 'grid' && (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {columns.map((col) => (
-            <Column
-              key={col.category}
+            <DimensionBoard
+              key={columnId(col)}
               workshopId={workshopId}
               column={col}
               showBadge={false}
               onSavingChange={setSaving}
+              onCompleteChange={onCompleteChange}
             />
+          ))}
+        </div>
+      )}
+
+      {layout === 'multi' && (
+        <div className="space-y-8">
+          {groups.map((group) => (
+            <section key={group.category}>
+              <h3 className="text-base font-semibold text-ink mb-3 pb-1 border-b border-line">{group.category}</h3>
+              <div className="grid gap-6 md:grid-cols-2">
+                {group.cols.map((col) => (
+                  <DimensionBoard
+                    key={columnId(col)}
+                    workshopId={workshopId}
+                    column={col}
+                    showBadge={false}
+                    onSavingChange={setSaving}
+                    onCompleteChange={onCompleteChange}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

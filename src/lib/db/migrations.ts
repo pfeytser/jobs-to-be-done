@@ -118,6 +118,10 @@ export async function runMigrations(): Promise<void> {
       "ALTER TABLE qa_projects ADD COLUMN user_type_instructions TEXT NOT NULL DEFAULT '{}'",
       "ALTER TABLE qa_sessions ADD COLUMN status TEXT NOT NULL DEFAULT 'in_progress'",
       "ALTER TABLE qa_test_items ADD COLUMN viewport TEXT NOT NULL DEFAULT ''",
+      // Workshop multi-dimension mode (Stickiness × Differentiation matrix).
+      "ALTER TABLE workshops ADD COLUMN mode TEXT NOT NULL DEFAULT 'single'",
+      "ALTER TABLE workshops ADD COLUMN dimensions TEXT NOT NULL DEFAULT '[]'",
+      "ALTER TABLE workshop_rankings ADD COLUMN dimension TEXT NOT NULL DEFAULT ''",
     ]
     for (const sql of safeAlters) {
       try {
@@ -601,6 +605,8 @@ export async function runMigrations(): Promise<void> {
         name TEXT NOT NULL,
         description TEXT NOT NULL DEFAULT '',
         status TEXT NOT NULL DEFAULT 'draft',
+        mode TEXT NOT NULL DEFAULT 'single',
+        dimensions TEXT NOT NULL DEFAULT '[]',
         top_n INTEGER NOT NULL DEFAULT 2,
         created_by TEXT NOT NULL,
         created_by_name TEXT NOT NULL DEFAULT '',
@@ -640,16 +646,25 @@ export async function runMigrations(): Promise<void> {
         user_email TEXT NOT NULL DEFAULT '',
         phase TEXT NOT NULL,
         category TEXT NOT NULL DEFAULT '',
+        dimension TEXT NOT NULL DEFAULT '',
         ordered_item_ids TEXT NOT NULL DEFAULT '[]',
         submitted INTEGER NOT NULL DEFAULT 0,
         submitted_at TEXT,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (workshop_id) REFERENCES workshops(id) ON DELETE CASCADE
       );
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_workshop_rankings_unique
-        ON workshop_rankings(workshop_id, user_id, phase, category);
       CREATE INDEX IF NOT EXISTS idx_workshop_rankings_lookup
         ON workshop_rankings(workshop_id, phase);
+    `)
+
+    // The rankings unique key gained a `dimension` column (multi-dimension mode
+    // stores one row per category × dimension). The prior index was created with
+    // IF NOT EXISTS, so drop and recreate it to widen the key. Existing rows all
+    // carry dimension='' and stay unique on the old 4-column key.
+    await turso.executeMultiple(`
+      DROP INDEX IF EXISTS idx_workshop_rankings_unique;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_workshop_rankings_unique
+        ON workshop_rankings(workshop_id, user_id, phase, category, dimension);
     `)
 
     // Seed the two default translation projects. Fixed ids + INSERT OR IGNORE means a

@@ -104,6 +104,10 @@ export const PATCH = route(async (req: NextRequest, { params }: { params: Promis
   }
 
   if (action === 'advance') {
+    // Only single mode has a combined round; multi mode reveals from categories.
+    if (workshop.mode === 'multi') {
+      return NextResponse.json({ error: 'This workshop reveals directly from the ranking round' }, { status: 409 })
+    }
     if (workshop.status !== 'ranking_categories') {
       return NextResponse.json({ error: 'Workshop is not in the category round' }, { status: 409 })
     }
@@ -118,13 +122,20 @@ export const PATCH = route(async (req: NextRequest, { params }: { params: Promis
   }
 
   if (action === 'reveal') {
-    if (workshop.status !== 'ranking_combined') {
-      return NextResponse.json({ error: 'Workshop is not in the combined round' }, { status: 409 })
+    // Single mode reveals from the combined round; multi mode from the category round.
+    const revealPhase =
+      workshop.mode === 'multi' && workshop.status === 'ranking_categories'
+        ? 'categories'
+        : workshop.status === 'ranking_combined'
+          ? 'combined'
+          : null
+    if (!revealPhase) {
+      return NextResponse.json({ error: 'Workshop is not ready to reveal' }, { status: 409 })
     }
-    const stats = await getSubmissionStats(id, 'combined')
+    const stats = await getSubmissionStats(id, revealPhase)
     if (stats.submittedCount === 0) {
       return NextResponse.json(
-        { error: 'No one has submitted the combined ranking yet.' },
+        { error: 'No one has submitted their rankings yet.' },
         { status: 409 }
       )
     }

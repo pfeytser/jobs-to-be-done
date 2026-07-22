@@ -22,9 +22,11 @@ type Action = 'advance' | 'reveal' | 'reopen' | 'archive' | 'unarchive'
 export function AdminControls({
   workshopId,
   status,
+  mode = 'single',
 }: {
   workshopId: string
   status: string
+  mode?: 'single' | 'multi'
 }) {
   const router = useRouter()
   const { data } = useSWR<StatusData>(`/api/workshop/sessions/${workshopId}`, fetcher, {
@@ -62,7 +64,9 @@ export function AdminControls({
 
   const primary: { action: Action; label: string } | null =
     status === 'ranking_categories'
-      ? { action: 'advance', label: 'Advance to combined round →' }
+      ? mode === 'multi'
+        ? { action: 'reveal', label: 'Reveal group priorities →' }
+        : { action: 'advance', label: 'Advance to combined round →' }
       : status === 'ranking_combined'
         ? { action: 'reveal', label: 'Reveal group priorities →' }
         : null
@@ -116,7 +120,7 @@ export function AdminControls({
                 disabled={busy}
                 className="px-3 py-2 bg-canvas border border-line text-ink-soft text-sm font-medium rounded-md hover:border-ink transition-colors disabled:opacity-40"
               >
-                ← Reopen combined round
+                {mode === 'multi' ? '← Reopen ranking round' : '← Reopen combined round'}
               </button>
               <button
                 onClick={() => run('archive')}

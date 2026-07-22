@@ -1,13 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUser, requireAdmin, route } from '@/lib/auth/guards'
-import { getAllWorkshops, getVisibleWorkshops, createWorkshop } from '@/lib/db/workshops'
+import {
+  getAllWorkshops,
+  getVisibleWorkshops,
+  createWorkshop,
+  DEFAULT_DIMENSIONS,
+  type Dimension,
+} from '@/lib/db/workshops'
 import { z } from 'zod'
+
+// Callers may rename/redescribe the multi-mode dimensions but cannot change their
+// structure — the server rebuilds each dimension from DEFAULT_DIMENSIONS (fixed
+// type + fixed Differentiation options), so no arbitrary type/options get injected.
+const DimensionEditSchema = z.object({
+  key: z.enum(['stickiness', 'differentiation']),
+  name: z.string().min(1).max(60),
+  description: z.string().max(200).optional().default(''),
+})
 
 const CreateSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(2000).optional().default(''),
+  mode: z.enum(['single', 'multi']).optional().default('single'),
+  dimensions: z.array(DimensionEditSchema).max(2).optional(),
   topN: z.number().int().min(1).max(10).optional().default(2),
 })
+
+/** Builds the fixed multi-mode dimensions, applying only caller name/description edits. */
+function resolveDimensions(edits: z.infer<typeof DimensionEditSchema>[] | undefined): Dimension[] {
+  const byKey = new Map((edits ?? []).map((e) => [e.key, e]))
+  return DEFAULT_DIMENSIONS.map((dim) => {
+    const edit = byKey.get(dim.key as 'stickiness' | 'differentiation')
+    return edit ? { ...dim, name: edit.name, description: edit.description } : dim
+  })
+}
 
 export const GET = route(async () => {
   const user = await requireUser()
@@ -24,11 +50,16 @@ export const POST = route(async (req: NextRequest) => {
     return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
   }
 
+  const mode = parsed.data.mode
+  const dimensions = mode === 'multi' ? resolveDimensions(parsed.data.dimensions) : []
+
   const id = `ws_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   const created = await createWorkshop({
     id,
     name: parsed.data.name,
     description: parsed.data.description,
+    mode,
+    dimensions,
     top_n: parsed.data.topN,
     created_by: user.userId,
     created_by_name: user.name ?? user.email ?? '',
