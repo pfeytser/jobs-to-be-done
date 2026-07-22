@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 type Mode = 'single' | 'multi'
 
-const DIFFERENTIATION_LABELS = ['Not necessary', 'Table stakes', 'Differentiator']
+const DIFFERENTIATION_LABELS = ['Would be nice', 'Table stakes', 'Makes it Indy']
 
 export function CreateWorkshopForm() {
   const router = useRouter()

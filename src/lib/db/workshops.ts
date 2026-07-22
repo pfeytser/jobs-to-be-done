@@ -43,11 +43,12 @@ export interface Dimension {
   options?: ChoiceOption[]
 }
 
-/** The three fixed Differentiation buckets, low → high. */
+/** The three fixed Differentiation buckets, low → high. (Keys are stable
+ *  internal ids — only the labels are surfaced to participants.) */
 export const DIFFERENTIATION_OPTIONS: ChoiceOption[] = [
-  { key: 'not_necessary', label: 'Not necessary', value: 0 },
+  { key: 'not_necessary', label: 'Would be nice', value: 0 },
   { key: 'table_stakes', label: 'Table stakes', value: 1 },
-  { key: 'differentiator', label: 'Differentiator', value: 2 },
+  { key: 'differentiator', label: 'Makes it Indy', value: 2 },
 ]
 
 /** The two axes of multi mode. The server always builds a workshop's dimensions
