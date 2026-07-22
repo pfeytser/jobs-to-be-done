@@ -653,6 +653,21 @@ export async function submitRankings(
   })
 }
 
+/** Reverts a user's own submission for the phase so they can edit and re-submit. */
+export async function unsubmitRankings(
+  workshopId: string,
+  userId: string,
+  phase: WorkshopPhase
+): Promise<void> {
+  await runMigrations()
+  const now = new Date().toISOString()
+  await turso.execute({
+    sql: `UPDATE workshop_rankings SET submitted = 0, submitted_at = NULL, updated_at = ?
+          WHERE workshop_id = ? AND user_id = ? AND phase = ?`,
+    args: [now, workshopId, userId, phase],
+  })
+}
+
 export interface SubmissionStats {
   participantCount: number
   submittedCount: number

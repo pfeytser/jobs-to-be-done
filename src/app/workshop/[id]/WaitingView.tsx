@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 
 const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then((r) => r.json())
@@ -7,7 +9,8 @@ const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then((r) => r
 /**
  * Shown after a participant submits: a live tally of how many colleagues have
  * finished this round. Refreshes on its own; the StatusPoller moves everyone on
- * when the admin advances.
+ * when the admin advances. Participants can un-submit to edit while the round
+ * is still live.
  */
 export function WaitingView({
   workshopId,
@@ -16,6 +19,7 @@ export function WaitingView({
   workshopId: string
   roundLabel: string
 }) {
+  const router = useRouter()
   const { data } = useSWR<{ submittedCount: number; participantCount: number }>(
     `/api/workshop/sessions/${workshopId}`,
     fetcher,
@@ -23,6 +27,29 @@ export function WaitingView({
   )
   const submitted = data?.submittedCount ?? 0
   const total = data?.participantCount ?? 0
+
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function unsubmit() {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/workshop/sessions/${workshopId}/rankings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'unsubmit' }),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        throw new Error(d.error ?? 'Could not reopen your ranking')
+      }
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not reopen your ranking')
+      setBusy(false)
+    }
+  }
 
   return (
     <div className="max-w-md mx-auto text-center py-16">
@@ -42,6 +69,17 @@ export function WaitingView({
         <span className="text-sm font-semibold text-ink">
           {submitted} of {total} submitted
         </span>
+      </div>
+
+      <div className="mt-6">
+        <button
+          onClick={unsubmit}
+          disabled={busy}
+          className="text-sm font-medium text-ink-soft underline underline-offset-4 hover:text-ink disabled:opacity-40 transition-colors"
+        >
+          {busy ? 'Reopening…' : 'Change my ranking'}
+        </button>
+        {error && <p className="mt-2 text-xs text-fail">{error}</p>}
       </div>
     </div>
   )
