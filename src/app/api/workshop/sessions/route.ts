@@ -4,8 +4,7 @@ import {
   getAllWorkshops,
   getVisibleWorkshops,
   createWorkshop,
-  DEFAULT_DIMENSIONS,
-  type Dimension,
+  applyDimensionEdits,
 } from '@/lib/db/workshops'
 import { z } from 'zod'
 
@@ -26,15 +25,6 @@ const CreateSchema = z.object({
   topN: z.number().int().min(1).max(10).optional().default(2),
 })
 
-/** Builds the fixed multi-mode dimensions, applying only caller name/description edits. */
-function resolveDimensions(edits: z.infer<typeof DimensionEditSchema>[] | undefined): Dimension[] {
-  const byKey = new Map((edits ?? []).map((e) => [e.key, e]))
-  return DEFAULT_DIMENSIONS.map((dim) => {
-    const edit = byKey.get(dim.key as 'stickiness' | 'differentiation')
-    return edit ? { ...dim, name: edit.name, description: edit.description } : dim
-  })
-}
-
 export const GET = route(async () => {
   const user = await requireUser()
   const workshops = user.role === 'admin' ? await getAllWorkshops() : await getVisibleWorkshops()
@@ -51,7 +41,7 @@ export const POST = route(async (req: NextRequest) => {
   }
 
   const mode = parsed.data.mode
-  const dimensions = mode === 'multi' ? resolveDimensions(parsed.data.dimensions) : []
+  const dimensions = mode === 'multi' ? applyDimensionEdits(parsed.data.dimensions ?? []) : []
 
   const id = `ws_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   const created = await createWorkshop({

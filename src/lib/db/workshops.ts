@@ -59,11 +59,29 @@ export const DEFAULT_DIMENSIONS: Dimension[] = [
   {
     key: 'differentiation',
     name: 'Differentiation',
-    description: 'Does this make us meaningfully different?',
+    description: 'Does this make us meaningfully Indy?',
     type: 'choice',
     options: DIFFERENTIATION_OPTIONS,
   },
 ]
+
+/**
+ * Rebuilds the fixed multi-mode dimensions, applying only caller-editable
+ * name/description overrides by key. Structure, type, and choice options always
+ * come from DEFAULT_DIMENSIONS, so no arbitrary type/options can be injected —
+ * used at both create and later settings edits.
+ */
+export function applyDimensionEdits(
+  edits: Array<{ key: string; name: string; description?: string }>
+): Dimension[] {
+  const byKey = new Map(edits.map((e) => [e.key, e]))
+  return DEFAULT_DIMENSIONS.map((dim) => {
+    const edit = byKey.get(dim.key)
+    return edit
+      ? { ...dim, name: edit.name, description: edit.description ?? '' }
+      : dim
+  })
+}
 
 /** The combined round stores rankings under this sentinel category (the schema's
  *  UNIQUE index treats NULLs as distinct, so we use '' rather than NULL). */
@@ -278,6 +296,19 @@ export async function createWorkshop(data: {
     ],
   })
   return (await getWorkshopById(data.id))!
+}
+
+/** Updates a multi-mode workshop's dimension labels (name/description only). */
+export async function updateWorkshopDimensions(
+  id: string,
+  edits: Array<{ key: string; name: string; description?: string }>
+): Promise<Workshop | null> {
+  await runMigrations()
+  const workshop = await getWorkshopById(id)
+  if (!workshop || workshop.mode !== 'multi') return workshop
+  const dimensions = applyDimensionEdits(edits)
+  await touch(id, ['dimensions = ?'], [JSON.stringify(dimensions)])
+  return getWorkshopById(id)
 }
 
 export async function deleteWorkshop(id: string): Promise<void> {

@@ -20,10 +20,23 @@ import { RankingBoard, type BoardColumn } from './RankingBoard'
 import { WaitingView } from './WaitingView'
 import { ResultsView, type ResultRow } from './ResultsView'
 import { MultiResultsView, type MatrixCategory } from './MultiResultsView'
+import { DimensionSettings, type EditableDimension } from './DimensionSettings'
 import { StatusPoller } from './StatusPoller'
 import { AdminControls } from './AdminControls'
+import type { Workshop } from '@/lib/db/workshops'
 
 export const dynamic = 'force-dynamic'
+
+/** Maps a multi workshop's stored dimensions to the settings editor's shape. */
+function toEditableDimensions(workshop: Workshop): EditableDimension[] {
+  return workshop.dimensions.map((d) => ({
+    key: d.key,
+    name: d.name,
+    description: d.description,
+    type: d.type,
+    options: d.options?.map((o) => ({ key: o.key, label: o.label })),
+  }))
+}
 
 const STATUS_LABEL: Record<string, string> = {
   ranking_categories: 'Round 1 · rank each category',
@@ -51,13 +64,20 @@ export default async function WorkshopPage({ params }: { params: Promise<{ id: s
     if (!canManage) notFound()
     const items = await getItems(id)
     return (
-      <SetupView
-        workshopId={id}
-        name={workshop.name}
-        description={workshop.description}
-        mode="draft"
-        initialItems={items.map((i) => ({ id: i.id, category: i.category, title: i.title, description: i.description }))}
-      />
+      <>
+        {workshop.mode === 'multi' && (
+          <div className="max-w-content mx-auto px-5 pt-6">
+            <DimensionSettings workshopId={id} dimensions={toEditableDimensions(workshop)} />
+          </div>
+        )}
+        <SetupView
+          workshopId={id}
+          name={workshop.name}
+          description={workshop.description}
+          mode="draft"
+          initialItems={items.map((i) => ({ id: i.id, category: i.category, title: i.title, description: i.description }))}
+        />
+      </>
     )
   }
 
@@ -90,6 +110,7 @@ export default async function WorkshopPage({ params }: { params: Promise<{ id: s
           {canManage && (
             <div className="max-w-content mx-auto px-5 pt-6">
               <AdminControls workshopId={id} status={workshop.status} mode={workshop.mode} />
+              <DimensionSettings workshopId={id} dimensions={toEditableDimensions(workshop)} />
             </div>
           )}
           <StatusPoller workshopId={id} currentStatus={workshop.status} currentUpdatedAt={workshop.updated_at} />
@@ -225,6 +246,9 @@ export default async function WorkshopPage({ params }: { params: Promise<{ id: s
 
         <StatusPoller workshopId={id} currentStatus={workshop.status} currentUpdatedAt={workshop.updated_at} />
         {canManage && <AdminControls workshopId={id} status={workshop.status} mode={workshop.mode} />}
+        {canManage && workshop.mode === 'multi' && (
+          <DimensionSettings workshopId={id} dimensions={toEditableDimensions(workshop)} />
+        )}
 
         {mySubmitted ? (
           <WaitingView workshopId={id} roundLabel={phase === 'categories' ? 'category' : 'combined'} />

@@ -10,15 +10,24 @@ import {
   unarchiveWorkshop,
   reopenWorkshop,
   deleteWorkshop,
+  updateWorkshopDimensions,
   getSubmissionStats,
   getRankingsForUserPhase,
   phaseForStatus,
 } from '@/lib/db/workshops'
 import { z } from 'zod'
 
-const PatchSchema = z.object({
-  action: z.enum(['activate', 'advance', 'reveal', 'reopen', 'archive', 'unarchive']),
+const DimensionEditSchema = z.object({
+  key: z.enum(['stickiness', 'differentiation']),
+  name: z.string().min(1).max(60),
+  description: z.string().max(200).optional().default(''),
 })
+
+// `update-dimensions` carries a payload; the other actions are bare.
+const PatchSchema = z.union([
+  z.object({ action: z.literal('update-dimensions'), dimensions: z.array(DimensionEditSchema).max(2) }),
+  z.object({ action: z.enum(['activate', 'advance', 'reveal', 'reopen', 'archive', 'unarchive']) }),
+])
 
 function canManage(user: { role: string; userId: string }, createdBy: string): boolean {
   return user.role === 'admin' || createdBy === user.userId
@@ -88,6 +97,13 @@ export const PATCH = route(async (req: NextRequest, { params }: { params: Promis
   }
 
   const { action } = parsed.data
+
+  if (action === 'update-dimensions') {
+    if (workshop.mode !== 'multi') {
+      return NextResponse.json({ error: 'This workshop has no dimensions to edit' }, { status: 409 })
+    }
+    return NextResponse.json({ workshop: await updateWorkshopDimensions(id, parsed.data.dimensions) })
+  }
 
   if (action === 'activate') {
     if (workshop.status !== 'draft') {
