@@ -28,6 +28,17 @@ export interface AxisOption {
 const INSET = 6
 const SPAN = 100 - INSET * 2
 
+/** Categorical palette for the combined matrix (cycles if there are more). */
+const CATEGORY_COLORS = [
+  '#2563eb', '#db2777', '#16a34a', '#d97706',
+  '#7c3aed', '#0891b2', '#dc2626', '#4b5563',
+]
+
+/** Within-category vertical position: rank 1 (most sticky) → top. */
+function stickinessY(rank: number, n: number): number {
+  return n > 1 && rank > 0 ? INSET + ((rank - 1) / (n - 1)) * SPAN : 50
+}
+
 function MatrixPlot({
   items,
   options,
@@ -70,7 +81,7 @@ function MatrixPlot({
           {/* Points */}
           {items.map((it) => {
             const x = INSET + ((it.diffMean ?? 0) / maxVal) * SPAN
-            const y = n > 1 && it.stickinessRank > 0 ? INSET + ((it.stickinessRank - 1) / (n - 1)) * SPAN : 50
+            const y = stickinessY(it.stickinessRank, n)
             return (
               <div
                 key={it.id}
@@ -109,6 +120,106 @@ function MatrixPlot({
   )
 }
 
+/**
+ * The portfolio view: every item across all categories on one larger matrix,
+ * colored by category. Differentiation (X) is an absolute label so it compares
+ * across categories directly; stickiness (Y) is normalized within each category
+ * (rank → percentile), since participants only rank stickiness within a category.
+ */
+function CombinedMatrix({
+  categories,
+  colorByCategory,
+  options,
+  stickinessName,
+  differentiationName,
+}: {
+  categories: MatrixCategory[]
+  colorByCategory: Map<string, string>
+  options: AxisOption[]
+  stickinessName: string
+  differentiationName: string
+}) {
+  const maxVal = Math.max(1, ...options.map((o) => o.value))
+  const points = categories.flatMap((cat) =>
+    cat.items.map((it) => ({
+      it,
+      category: cat.category,
+      x: INSET + ((it.diffMean ?? 0) / maxVal) * SPAN,
+      y: stickinessY(it.stickinessRank, cat.items.length),
+      color: colorByCategory.get(cat.category) ?? '#4b5563',
+    }))
+  )
+
+  return (
+    <div>
+      {/* Category legend */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-3">
+        {categories.map((cat) => (
+          <span key={cat.category} className="inline-flex items-center gap-1.5 text-xs text-ink-soft">
+            <span
+              className="w-3 h-3 rounded-full shrink-0"
+              style={{ backgroundColor: colorByCategory.get(cat.category) ?? '#4b5563' }}
+            />
+            {cat.category}
+          </span>
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <div className="flex flex-col items-center justify-center py-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-ink-muted [writing-mode:vertical-rl] rotate-180">
+            {stickinessName} (within category) →
+          </span>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="relative w-full aspect-[3/2] rounded-lg border border-line bg-canvas overflow-hidden">
+            {options.map((o) => {
+              const left = INSET + (o.value / maxVal) * SPAN
+              return (
+                <div key={o.key} className="absolute top-0 bottom-0 border-l border-line/60" style={{ left: `${left}%` }} />
+              )
+            })}
+            <div className="absolute left-0 right-0 top-1/2 border-t border-line/60" />
+
+            {points.map(({ it, category, x, y, color }) => (
+              <div
+                key={`${category} ${it.id}`}
+                className="absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: `${x}%`, top: `${y}%` }}
+                title={`${category} · ${it.title} — ${stickinessName} #${it.stickinessRank}${it.diffLabel ? `, ${differentiationName}: ${it.diffLabel}` : ''}`}
+              >
+                <span
+                  className="block w-3.5 h-3.5 rounded-full ring-2 ring-canvas shadow"
+                  style={{ backgroundColor: color }}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="relative h-5 mt-1">
+            {options.map((o) => {
+              const left = INSET + (o.value / maxVal) * SPAN
+              return (
+                <span
+                  key={o.key}
+                  className="absolute -translate-x-1/2 text-[10px] text-ink-muted whitespace-nowrap"
+                  style={{ left: `${left}%` }}
+                >
+                  {o.label}
+                </span>
+              )
+            })}
+          </div>
+          <p className="text-center text-[10px] font-bold uppercase tracking-widest text-ink-muted mt-1">
+            {differentiationName} →
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** Reveal for multi mode: a Stickiness × Differentiation matrix per category. */
 export function MultiResultsView({
   name,
@@ -127,6 +238,11 @@ export function MultiResultsView({
   options: AxisOption[]
   categories: MatrixCategory[]
 }) {
+  const colorByCategory = new Map(
+    categories.map((c, i) => [c.category, CATEGORY_COLORS[i % CATEGORY_COLORS.length]])
+  )
+  const withItems = categories.filter((c) => c.items.length > 0)
+
   return (
     <main className="min-h-screen bg-canvas">
       <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
@@ -188,6 +304,26 @@ export function MultiResultsView({
             </section>
           ))}
         </div>
+
+        {/* Combined portfolio matrix — every item, colored by category */}
+        {withItems.length > 0 && (
+          <section className="mt-12 pt-8 border-t border-line">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-ink-muted mb-1">All categories combined</h2>
+            <p className="text-sm text-ink-muted mb-4">
+              Every item on one matrix. <strong className="text-ink">{differentiationName}</strong> compares directly
+              across categories; <strong className="text-ink">{stickinessName.toLowerCase()}</strong> is relative to
+              each item&apos;s own category (people ranked it within categories, not across them). The top-right is
+              sticky <em>and</em> {differentiationName.toLowerCase()}.
+            </p>
+            <CombinedMatrix
+              categories={withItems}
+              colorByCategory={colorByCategory}
+              options={options}
+              stickinessName={stickinessName}
+              differentiationName={differentiationName}
+            />
+          </section>
+        )}
       </div>
     </main>
   )
