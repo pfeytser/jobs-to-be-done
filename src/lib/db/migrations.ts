@@ -591,6 +591,67 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_prototypes_status ON prototypes(status);
     `)
 
+    // Workshop feature — facilitated group prioritization. An admin drives a
+    // workshop through: draft → ranking_categories → ranking_combined → revealed.
+    // Each participant drag-ranks items per category, then a merged top-N list;
+    // aggregates are computed via Borda count on read.
+    await turso.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS workshops (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'draft',
+        top_n INTEGER NOT NULL DEFAULT 2,
+        created_by TEXT NOT NULL,
+        created_by_name TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        activated_at TEXT,
+        combined_at TEXT,
+        revealed_at TEXT,
+        archived_at TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS workshop_items (
+        id TEXT PRIMARY KEY,
+        workshop_id TEXT NOT NULL,
+        category TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (workshop_id) REFERENCES workshops(id) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_workshop_items_workshop ON workshop_items(workshop_id);
+
+      CREATE TABLE IF NOT EXISTS workshop_combined_items (
+        workshop_id TEXT NOT NULL,
+        item_id TEXT NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (workshop_id, item_id),
+        FOREIGN KEY (workshop_id) REFERENCES workshops(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS workshop_rankings (
+        id TEXT PRIMARY KEY,
+        workshop_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        user_name TEXT NOT NULL DEFAULT '',
+        user_email TEXT NOT NULL DEFAULT '',
+        phase TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT '',
+        ordered_item_ids TEXT NOT NULL DEFAULT '[]',
+        submitted INTEGER NOT NULL DEFAULT 0,
+        submitted_at TEXT,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (workshop_id) REFERENCES workshops(id) ON DELETE CASCADE
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_workshop_rankings_unique
+        ON workshop_rankings(workshop_id, user_id, phase, category);
+      CREATE INDEX IF NOT EXISTS idx_workshop_rankings_lookup
+        ON workshop_rankings(workshop_id, phase);
+    `)
+
     // Seed the two default translation projects. Fixed ids + INSERT OR IGNORE means a
     // rename sticks and re-runs never duplicate; only ever inserted when absent.
     {
