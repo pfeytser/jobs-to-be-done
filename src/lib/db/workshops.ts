@@ -55,7 +55,7 @@ export const DIFFERENTIATION_OPTIONS: ChoiceOption[] = [
  *  from this template (only name/description are caller-editable) so no arbitrary
  *  type/options can be injected. */
 export const DEFAULT_DIMENSIONS: Dimension[] = [
-  { key: 'stickiness', name: 'Stickiness', description: 'Would people miss it if it disappeared?', type: 'rank' },
+  { key: 'stickiness', name: 'Stickiness', description: 'A product users naturally keep coming back to', type: 'rank' },
   {
     key: 'differentiation',
     name: 'Differentiation',

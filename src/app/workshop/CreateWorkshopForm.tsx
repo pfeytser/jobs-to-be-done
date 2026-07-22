@@ -15,7 +15,7 @@ export function CreateWorkshopForm() {
   const [topN, setTopN] = useState(2)
   const [mode, setMode] = useState<Mode>('single')
   // Editable name/help for the two fixed multi-mode axes.
-  const [stickiness, setStickiness] = useState({ name: 'Stickiness', description: 'Would people miss it if it disappeared?' })
+  const [stickiness, setStickiness] = useState({ name: 'Stickiness', description: 'A product users naturally keep coming back to' })
   const [differentiation, setDifferentiation] = useState({ name: 'Differentiation', description: 'Does this make us meaningfully different?' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -250,12 +250,12 @@ function ChoiceColumn({
   workshopId,
   column,
   onSavingChange,
-  onCompleteChange,
+  onRemainingChange,
 }: {
   workshopId: string
   column: BoardColumn
   onSavingChange: (saving: boolean) => void
-  onCompleteChange: (id: string, complete: boolean) => void
+  onRemainingChange: (id: string, remaining: number) => void
 }) {
   const options = column.options ?? []
   const [choices, setChoices] = useState<Record<string, string>>(column.initialChoices ?? {})
@@ -290,7 +290,7 @@ function ChoiceColumn({
     setChoices((prev) => {
       const next = { ...prev, [itemId]: optionKey }
       choicesRef.current = next
-      onCompleteChange(columnId(column), column.cards.every((c) => next[c.id]))
+      onRemainingChange(columnId(column), column.cards.filter((c) => !next[c.id]).length)
       void persist(next)
       return next
     })
@@ -301,8 +301,20 @@ function ChoiceColumn({
       {column.cards.map((card) => {
         const chosen = choices[card.id]
         return (
-          <li key={card.id} className="p-3 bg-surface border border-line rounded-lg">
-            <p className="text-sm font-semibold text-ink leading-snug">{card.title}</p>
+          <li
+            key={card.id}
+            className={`p-3 rounded-lg border transition-colors ${
+              chosen ? 'bg-surface border-line' : 'bg-accent-wash/50 border-accent'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-semibold text-ink leading-snug">{card.title}</p>
+              {!chosen && (
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-ink-soft bg-accent/30 border border-accent/50 rounded-full px-2 py-0.5">
+                  Pick one
+                </span>
+              )}
+            </div>
             {card.description && <p className="text-xs text-ink-muted mt-0.5 leading-snug">{card.description}</p>}
             <div className="mt-2 flex flex-wrap gap-1.5">
               {options.map((opt) => {
@@ -337,13 +349,13 @@ function DimensionBoard({
   column,
   showBadge,
   onSavingChange,
-  onCompleteChange,
+  onRemainingChange,
 }: {
   workshopId: string
   column: BoardColumn
   showBadge: boolean
   onSavingChange: (saving: boolean) => void
-  onCompleteChange: (id: string, complete: boolean) => void
+  onRemainingChange: (id: string, remaining: number) => void
 }) {
   return (
     <div className="flex flex-col">
@@ -357,7 +369,7 @@ function DimensionBoard({
           workshopId={workshopId}
           column={column}
           onSavingChange={onSavingChange}
-          onCompleteChange={onCompleteChange}
+          onRemainingChange={onRemainingChange}
         />
       ) : (
         <RankColumn workshopId={workshopId} column={column} showBadge={showBadge} onSavingChange={onSavingChange} />
@@ -380,22 +392,20 @@ export function RankingBoard({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Choice columns report completeness so we can gate the submit button.
-  const choiceIds = useMemo(
-    () => columns.filter((c) => c.type === 'choice').map((c) => columnId(c)),
-    [columns]
-  )
-  const [complete, setComplete] = useState<Record<string, boolean>>(() =>
+  // Choice columns report how many items still need a label so we can gate the
+  // submit button and tell the participant exactly how much is left.
+  const [remaining, setRemaining] = useState<Record<string, number>>(() =>
     Object.fromEntries(
       columns
         .filter((c) => c.type === 'choice')
-        .map((c) => [columnId(c), c.cards.every((card) => (c.initialChoices ?? {})[card.id])])
+        .map((c) => [columnId(c), c.cards.filter((card) => !(c.initialChoices ?? {})[card.id]).length])
     )
   )
-  const onCompleteChange = useCallback((id: string, value: boolean) => {
-    setComplete((prev) => (prev[id] === value ? prev : { ...prev, [id]: value }))
+  const onRemainingChange = useCallback((id: string, value: number) => {
+    setRemaining((prev) => (prev[id] === value ? prev : { ...prev, [id]: value }))
   }, [])
-  const allChoicesDone = choiceIds.every((id) => complete[id])
+  const totalRemaining = Object.values(remaining).reduce((sum, n) => sum + n, 0)
+  const allChoicesDone = totalRemaining === 0
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -448,14 +458,20 @@ export function RankingBoard({
           ) : (
             <span className="text-xs text-pass">✓ Saved</span>
           )}
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || !allChoicesDone}
-            title={!allChoicesDone ? 'Label every item first' : undefined}
-            className="px-4 py-2 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 disabled:opacity-40 transition-opacity"
-          >
-            {submitting ? 'Submitting…' : 'Submit my ranking'}
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || !allChoicesDone}
+              className="px-4 py-2 bg-ink text-white text-sm font-semibold rounded-md hover:opacity-90 disabled:opacity-40 transition-opacity"
+            >
+              {submitting ? 'Submitting…' : 'Submit my ranking'}
+            </button>
+            {!allChoicesDone && (
+              <span className="text-xs text-ink-soft">
+                Label {totalRemaining} more {totalRemaining === 1 ? 'item' : 'items'} to submit
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -472,7 +488,7 @@ export function RankingBoard({
               column={col}
               showBadge
               onSavingChange={setSaving}
-              onCompleteChange={onCompleteChange}
+              onRemainingChange={onRemainingChange}
             />
           ))}
         </div>
@@ -487,7 +503,7 @@ export function RankingBoard({
               column={col}
               showBadge={false}
               onSavingChange={setSaving}
-              onCompleteChange={onCompleteChange}
+              onRemainingChange={onRemainingChange}
             />
           ))}
         </div>
@@ -506,7 +522,7 @@ export function RankingBoard({
                     column={col}
                     showBadge={false}
                     onSavingChange={setSaving}
-                    onCompleteChange={onCompleteChange}
+                    onRemainingChange={onRemainingChange}
                   />
                 ))}
               </div>
