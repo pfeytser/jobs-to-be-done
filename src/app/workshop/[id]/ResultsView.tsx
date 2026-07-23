@@ -19,12 +19,14 @@ function medal(rank: number): string {
 
 /** Read-only reveal: the group's aggregate combined ranking, then each category. */
 export function ResultsView({
+  workshopId,
   name,
   description,
   combined,
   categories,
   archived,
 }: {
+  workshopId: string
   name: string
   description: string
   combined: ResultRow[]
@@ -36,9 +38,17 @@ export function ResultsView({
       <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
         <Link href="/workshop" className="text-sm text-ink-muted hover:text-ink">← All workshops</Link>
         <header className="mt-3 mb-8">
-          <span className="inline-block px-2.5 py-0.5 rounded-full bg-pass-soft border border-pass/40 text-[11px] font-bold uppercase tracking-widest text-pass mb-2">
-            {archived ? 'Archived' : 'Group priorities revealed'}
-          </span>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <span className="inline-block px-2.5 py-0.5 rounded-full bg-pass-soft border border-pass/40 text-[11px] font-bold uppercase tracking-widest text-pass mb-2">
+              {archived ? 'Archived' : 'Group priorities revealed'}
+            </span>
+            <a
+              href={`/api/workshop/sessions/${workshopId}/export`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-line text-ink-soft text-sm font-medium rounded-md hover:border-ink transition-colors"
+            >
+              ↓ Export CSV
+            </a>
+          </div>
           <h1 className="font-display text-3xl sm:text-4xl font-light text-ink tracking-tight">{name}</h1>
           {description && <p className="text-ink-soft mt-1">{description}</p>}
         </header>

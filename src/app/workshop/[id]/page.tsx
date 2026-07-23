@@ -115,6 +115,7 @@ export default async function WorkshopPage({ params }: { params: Promise<{ id: s
           )}
           <StatusPoller workshopId={id} currentStatus={workshop.status} currentUpdatedAt={workshop.updated_at} />
           <MultiResultsView
+            workshopId={id}
             name={workshop.name}
             description={workshop.description}
             archived={workshop.status === 'archived'}
@@ -147,6 +148,7 @@ export default async function WorkshopPage({ params }: { params: Promise<{ id: s
         )}
         <StatusPoller workshopId={id} currentStatus={workshop.status} currentUpdatedAt={workshop.updated_at} />
         <ResultsView
+          workshopId={id}
           name={workshop.name}
           description={workshop.description}
           archived={workshop.status === 'archived'}

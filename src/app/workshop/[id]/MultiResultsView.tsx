@@ -117,6 +117,7 @@ function MatrixPlot({
 
 /** Reveal for multi mode: a Stickiness × Differentiation matrix per category. */
 export function MultiResultsView({
+  workshopId,
   name,
   description,
   archived,
@@ -125,6 +126,7 @@ export function MultiResultsView({
   options,
   categories,
 }: {
+  workshopId: string
   name: string
   description: string
   archived: boolean
@@ -140,9 +142,17 @@ export function MultiResultsView({
       <div className="max-w-content mx-auto px-5 py-8 sm:py-12">
         <Link href="/workshop" className="text-sm text-ink-muted hover:text-ink">← All workshops</Link>
         <header className="mt-3 mb-8">
-          <span className="inline-block px-2.5 py-0.5 rounded-full bg-pass-soft border border-pass/40 text-[11px] font-bold uppercase tracking-widest text-pass mb-2">
-            {archived ? 'Archived' : 'Group priorities revealed'}
-          </span>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <span className="inline-block px-2.5 py-0.5 rounded-full bg-pass-soft border border-pass/40 text-[11px] font-bold uppercase tracking-widest text-pass mb-2">
+              {archived ? 'Archived' : 'Group priorities revealed'}
+            </span>
+            <a
+              href={`/api/workshop/sessions/${workshopId}/export`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-line text-ink-soft text-sm font-medium rounded-md hover:border-ink transition-colors"
+            >
+              ↓ Export CSV
+            </a>
+          </div>
           <h1 className="font-display text-3xl sm:text-4xl font-light text-ink tracking-tight">{name}</h1>
           {description && <p className="text-ink-soft mt-1">{description}</p>}
           <p className="text-sm text-ink-muted mt-3">
@@ -215,6 +225,105 @@ export function MultiResultsView({
             />
           </section>
         )}
+
+        {/* Grouped into the differentiation buckets (the group's chosen label) */}
+        {withItems.length > 0 && (() => {
+          const allItems = withItems.flatMap((cat) => cat.items.map((it) => ({ ...it, category: cat.category })))
+          // Columns run low → high to mirror the matrix X axis.
+          const buckets = options.map((opt) => ({
+            opt,
+            items: allItems.filter((it) => it.diffLabel === opt.label),
+          }))
+          const topKey = options.reduce((a, b) => (b.value > a.value ? b : a), options[0])?.key
+          return (
+            <section className="mt-12 pt-8 border-t border-line">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-ink-muted mb-1">
+                {differentiationName} buckets
+              </h2>
+              <p className="text-sm text-ink-muted mb-4">
+                Where the group landed each item on the {differentiationName.toLowerCase()} scale.
+              </p>
+              <div className="grid gap-4 md:grid-cols-3">
+                {buckets.map(({ opt, items }) => (
+                  <div
+                    key={opt.key}
+                    className={`rounded-lg border p-3 ${
+                      opt.key === topKey ? 'border-accent bg-accent-wash/40' : 'border-line bg-surface/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <h3 className="text-sm font-bold text-ink">{opt.label}</h3>
+                      <span className="text-xs font-semibold text-ink-muted">{items.length}</span>
+                    </div>
+                    {items.length === 0 ? (
+                      <p className="text-xs text-ink-muted italic py-2">Nothing here</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {items.map((it) => (
+                          <li key={`${it.category} ${it.id}`} className="p-2 bg-canvas border border-line rounded-md">
+                            <p className="text-sm font-medium text-ink leading-snug">{it.title}</p>
+                            <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-accent/20 border border-accent/40 text-[10px] font-bold uppercase tracking-wide text-ink-soft">
+                              {it.category}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )
+        })()}
+
+        {/* Ranked purely on the differentiation scale, across all categories */}
+        {withItems.length > 0 && (() => {
+          const maxVal = Math.max(1, ...options.map((o) => o.value))
+          const ranked = withItems
+            .flatMap((cat) => cat.items.map((it) => ({ ...it, category: cat.category })))
+            .sort((a, b) => (b.diffMean ?? -1) - (a.diffMean ?? -1) || a.title.localeCompare(b.title))
+          return (
+            <section className="mt-12 pt-8 border-t border-line">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-ink-muted mb-1">
+                Ranked by {differentiationName}
+              </h2>
+              <p className="text-sm text-ink-muted mb-4">
+                Every item across all categories, most {differentiationName.toLowerCase()} first.
+              </p>
+              <ol className="space-y-1.5">
+                {ranked.map((it, i) => (
+                  <li
+                    key={`${it.category} ${it.id}`}
+                    className="flex items-center gap-3 p-2.5 bg-surface border border-line rounded-md"
+                  >
+                    <span className="shrink-0 w-6 text-center text-sm font-bold text-ink-soft">{i + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-ink leading-snug">{it.title}</p>
+                        <span className="px-2 py-0.5 rounded-full bg-accent/20 border border-accent/40 text-[10px] font-bold uppercase tracking-wide text-ink-soft">
+                          {it.category}
+                        </span>
+                      </div>
+                      {/* Scale bar: fill = mean position on the differentiation axis */}
+                      <div className="mt-1.5 h-1.5 w-full max-w-xs rounded-full bg-canvas border border-line overflow-hidden">
+                        <div
+                          className="h-full bg-accent"
+                          style={{ width: `${((it.diffMean ?? 0) / maxVal) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-xs text-ink-muted text-right min-w-[92px]">
+                      {it.diffLabel ?? '—'}
+                      {it.diffMean !== null && (
+                        <span className="block text-[10px] text-ink-muted/70">{it.diffMean.toFixed(1)} avg</span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )
+        })()}
       </div>
     </main>
   )
