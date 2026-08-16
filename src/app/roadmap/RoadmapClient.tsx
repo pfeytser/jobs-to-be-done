@@ -382,6 +382,34 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
     }
   }
 
+  // Button reordering within a cell — resolves to a before-id and reuses the move path.
+  const onReorderInitiative = (id: string, dir: 'top' | 'up' | 'down' | 'bottom') => {
+    const item = initiatives.find((i) => i.id === id)
+    if (!item) return
+    const target =
+      item.unscheduled === 1
+        ? { year: QUARTERS[0].year, quarter: QUARTERS[0].quarter, groupKey: 'all', unscheduled: true }
+        : { year: item.year, quarter: item.quarter, groupKey: groupKeyOf(item) }
+    const peers = initiatives
+      .filter((i) =>
+        item.unscheduled === 1
+          ? i.unscheduled === 1
+          : i.unscheduled !== 1 && i.year === item.year && i.quarter === item.quarter && groupKeyOf(i) === groupKeyOf(item)
+      )
+      .sort((a, b) => a.sort_order - b.sort_order)
+    const idx = peers.findIndex((p) => p.id === id)
+    if (idx < 0) return
+    if ((dir === 'up' || dir === 'top') && idx === 0) return
+    if ((dir === 'down' || dir === 'bottom') && idx === peers.length - 1) return
+
+    let beforeId: string | undefined
+    if (dir === 'top') beforeId = peers[0].id
+    else if (dir === 'up') beforeId = peers[idx - 1].id
+    else if (dir === 'down') beforeId = peers[idx + 2]?.id // undefined → append past the next one
+    else beforeId = undefined // bottom → append
+    onMoveInitiative(id, target, beforeId)
+  }
+
   const nowKey = currentQuarterKey()
 
   return (
@@ -544,6 +572,7 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
             onOpen={(i) => setEditing({ draft: i, isNew: false })}
             onAdd={openNew}
             onMove={onMoveInitiative}
+            onReorder={onReorderInitiative}
           />
         )}
 

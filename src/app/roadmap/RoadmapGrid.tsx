@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-import type { Initiative, Priority } from '@/lib/roadmap/types'
+import { Fragment, useState } from 'react'
+import type { Initiative } from '@/lib/roadmap/types'
 import type { QuarterCapacity, ScheduleSegment } from '@/lib/roadmap/capacity'
 import { roundWeeks, straddleOriginPct } from '@/lib/roadmap/capacity'
-import { BACKLOG_LABEL, PRIORITY_META, QUARTERS, THEME_META, THEME_ORDER, quarterLabel, themeKey } from '@/lib/roadmap/types'
+import { BACKLOG_LABEL, QUARTERS, THEME_META, THEME_ORDER, quarterLabel, themeKey } from '@/lib/roadmap/types'
 import { InitiativeCard } from './InitiativeCard'
 
 export type GroupBy = 'theme' | 'objective' | 'none'
 export type Orientation = 'quarters-cols' | 'quarters-rows'
+export type ReorderDir = 'top' | 'up' | 'down' | 'bottom'
 
 export interface MoveTarget {
   year: number
@@ -16,6 +17,12 @@ export interface MoveTarget {
   groupKey: string
   unscheduled?: boolean
 }
+
+// A thin insertion line shown where a dragged card will drop.
+const DropLine = () => <div className="mx-1 h-[3px] rounded-full bg-ink" />
+
+const reorderBtn =
+  'inline-flex h-5 w-5 items-center justify-center rounded border border-line bg-surface text-[11px] leading-none text-ink-soft hover:border-ink hover:text-ink disabled:opacity-30'
 
 // The roadmap grid. One axis is the quarters, the other is the grouping (theme,
 // objective, or a single "all" band); `orientation` decides which is which. Cards
@@ -30,6 +37,7 @@ export function RoadmapGrid({
   onOpen,
   onAdd,
   onMove,
+  onReorder,
 }: {
   initiatives: Initiative[]
   capacity: QuarterCapacity[]
@@ -39,9 +47,11 @@ export function RoadmapGrid({
   onOpen: (i: Initiative) => void
   onAdd: (year: number, quarter: number) => void
   onMove?: (id: string, target: MoveTarget, beforeId?: string) => void
+  onReorder?: (id: string, dir: ReorderDir) => void
 }) {
   const [dragId, setDragId] = useState<string | null>(null)
   const [overKey, setOverKey] = useState<string | null>(null)
+  const [insertBefore, setInsertBefore] = useState<string | null>(null)
 
   const capByKey = new Map(capacity.map((c) => [`${c.year}-Q${c.quarter}`, c]))
   const flat = groupBy === 'none'
@@ -61,9 +71,8 @@ export function RoadmapGrid({
   const groupOf = (i: Initiative) =>
     groupBy === 'theme' ? themeKey(i.theme) : groupBy === 'objective' ? i.objective ?? '—' : 'all'
 
-  const priorityRank = (p: Priority | null) => (p ? PRIORITY_META[p].rank : 99)
-  const sortCards = (a: Initiative, b: Initiative) =>
-    flat ? priorityRank(a.priority) - priorityRank(b.priority) || a.sort_order - b.sort_order : a.sort_order - b.sort_order
+  // Manual stack order everywhere — it's also the order capacity is consumed in.
+  const sortCards = (a: Initiative, b: Initiative) => a.sort_order - b.sort_order
 
   const cardsFor = (groupKey: string, year: number, quarter: number) =>
     initiatives
@@ -113,43 +122,72 @@ export function RoadmapGrid({
     target,
     cellKey,
     percentThisQuarter,
+    isFirst,
+    isLast,
   }: {
     i: Initiative
     target: MoveTarget
     cellKey: string
     percentThisQuarter?: number | null
-  }) => (
-    <div
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.effectAllowed = 'move'
-        setDragId(i.id)
-      }}
-      onDragEnd={() => {
-        setDragId(null)
-        setOverKey(null)
-      }}
-      onDragOver={(e) => {
-        if (dragId && dragId !== i.id) {
-          e.preventDefault()
-          e.stopPropagation()
-          setOverKey(cellKey)
-        }
-      }}
-      onDrop={(e) => {
-        if (dragId && dragId !== i.id && onMove) {
-          e.preventDefault()
-          e.stopPropagation()
-          onMove(dragId, target, i.id)
-        }
-        setDragId(null)
-        setOverKey(null)
-      }}
-      className={dragId === i.id ? 'opacity-40' : 'cursor-grab active:cursor-grabbing'}
-    >
-      <InitiativeCard initiative={i} onClick={() => onOpen(i)} percentThisQuarter={percentThisQuarter} />
-    </div>
-  )
+    isFirst?: boolean
+    isLast?: boolean
+  }) => {
+    const reorder = (dir: ReorderDir) => (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onReorder?.(i.id, dir)
+    }
+    return (
+      <div
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.effectAllowed = 'move'
+          setDragId(i.id)
+        }}
+        onDragEnd={() => {
+          setDragId(null)
+          setOverKey(null)
+          setInsertBefore(null)
+        }}
+        onDragOver={(e) => {
+          if (dragId && dragId !== i.id) {
+            e.preventDefault()
+            e.stopPropagation()
+            setOverKey(cellKey)
+            setInsertBefore(i.id)
+          }
+        }}
+        onDrop={(e) => {
+          if (dragId && dragId !== i.id && onMove) {
+            e.preventDefault()
+            e.stopPropagation()
+            onMove(dragId, target, i.id)
+          }
+          setDragId(null)
+          setOverKey(null)
+          setInsertBefore(null)
+        }}
+        className={`group/card relative ${dragId === i.id ? 'opacity-40' : 'cursor-grab active:cursor-grabbing'}`}
+      >
+        <InitiativeCard initiative={i} onClick={() => onOpen(i)} percentThisQuarter={percentThisQuarter} />
+        {onReorder && (
+          <div className="absolute right-1 top-1 flex gap-0.5 rounded bg-surface/95 p-0.5 opacity-0 shadow-sm transition-opacity group-hover/card:opacity-100">
+            <button type="button" className={reorderBtn} onClick={reorder('top')} disabled={isFirst} title="Move to top">
+              ⤒
+            </button>
+            <button type="button" className={reorderBtn} onClick={reorder('up')} disabled={isFirst} title="Move up">
+              ↑
+            </button>
+            <button type="button" className={reorderBtn} onClick={reorder('down')} disabled={isLast} title="Move down">
+              ↓
+            </button>
+            <button type="button" className={reorderBtn} onClick={reorder('bottom')} disabled={isLast} title="Move to bottom">
+              ⤓
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   const QuarterMeta = ({ year, quarter }: { year: number; quarter: number }) => {
     const c = capByKey.get(`${year}-Q${quarter}`)
@@ -190,11 +228,12 @@ export function RoadmapGrid({
     const target: MoveTarget = { year, quarter, groupKey }
     return (
       <div
-        className={`min-h-[72px] space-y-2 p-2 transition-colors ${overKey === cellKey && dragId ? 'bg-accent-wash/70' : ''}`}
+        className={`min-h-[72px] space-y-2 p-2 transition-colors ${overKey === cellKey && dragId ? 'bg-accent-wash/40' : ''}`}
         onDragOver={(e) => {
           if (dragId) {
             e.preventDefault()
             setOverKey(cellKey)
+            setInsertBefore(null) // over empty area → append at end
           }
         }}
         onDragLeave={() => setOverKey((k) => (k === cellKey ? null : k))}
@@ -203,22 +242,32 @@ export function RoadmapGrid({
           if (dragId && onMove) onMove(dragId, target)
           setDragId(null)
           setOverKey(null)
+          setInsertBefore(null)
         }}
       >
         {ghosts.map(({ item, pct }) => (
           <GhostCard key={`ghost-${item.id}`} i={item} pct={pct} />
         ))}
-        {cards.map((i) => (
-          <DraggableCard key={i.id} i={i} target={target} cellKey={cellKey} percentThisQuarter={straddleOriginPct(schedule.get(i.id))} />
+        {cards.map((i, idx) => (
+          <Fragment key={i.id}>
+            {dragId && dragId !== i.id && insertBefore === i.id && <DropLine />}
+            <DraggableCard
+              i={i}
+              target={target}
+              cellKey={cellKey}
+              percentThisQuarter={straddleOriginPct(schedule.get(i.id))}
+              isFirst={idx === 0}
+              isLast={idx === cards.length - 1}
+            />
+          </Fragment>
         ))}
+        {dragId && overKey === cellKey && insertBefore === null && <DropLine />}
       </div>
     )
   }
 
   // ── The "To Be Prioritized" bucket ───────────────────────────────────────────
-  const backlogCards = initiatives
-    .filter((i) => i.unscheduled === 1)
-    .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority) || a.sort_order - b.sort_order)
+  const backlogCards = initiatives.filter((i) => i.unscheduled === 1).sort(sortCards)
   const backlogTarget: MoveTarget = { year: QUARTERS[0].year, quarter: QUARTERS[0].quarter, groupKey: 'all', unscheduled: true }
   const backlogEl = (
     <div
@@ -251,8 +300,15 @@ export function RoadmapGrid({
         </p>
       ) : (
         <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-          {backlogCards.map((i) => (
-            <DraggableCard key={i.id} i={i} target={backlogTarget} cellKey="backlog" />
+          {backlogCards.map((i, idx) => (
+            <DraggableCard
+              key={i.id}
+              i={i}
+              target={backlogTarget}
+              cellKey="backlog"
+              isFirst={idx === 0}
+              isLast={idx === backlogCards.length - 1}
+            />
           ))}
         </div>
       )}
