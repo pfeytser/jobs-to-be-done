@@ -9,10 +9,13 @@ import { PRIORITY_META, STATUS_META, THEME_META, formatHours, formatRevenue, the
 export function InitiativeCard({
   initiative,
   onClick,
+  percentThisQuarter,
 }: {
   initiative: Initiative
   onClick: () => void
+  percentThisQuarter?: number | null // set when the work straddles quarters
 }) {
+  const straddlePct = percentThisQuarter != null ? Math.round(percentThisQuarter * 100) : null
   const theme = THEME_META[themeKey(initiative.theme)]
   const status = STATUS_META[initiative.status]
   const revenue = formatRevenue(initiative.impact_revenue)
@@ -31,18 +34,25 @@ export function InitiativeCard({
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-[13px] font-semibold leading-snug text-ink line-clamp-2">{initiative.title}</p>
-        {initiative.effort_weeks != null ? (
-          <span className="shrink-0 rounded-md bg-canvas px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-ink-soft">
-            {initiative.effort_weeks}w
-          </span>
-        ) : (
-          <span
-            className="shrink-0 rounded-md bg-fail-soft px-1.5 py-0.5 text-[11px] font-bold text-fail"
-            title="No effort estimate"
-          >
-            ?w
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-1">
+          {straddlePct != null && (
+            <span
+              className="rounded-md bg-accent-wash px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-ink"
+              title="Share of this initiative's effort scheduled in this quarter"
+            >
+              {straddlePct}%
+            </span>
+          )}
+          {initiative.effort_weeks != null ? (
+            <span className="rounded-md bg-canvas px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-ink-soft">
+              {initiative.effort_weeks}w
+            </span>
+          ) : (
+            <span className="rounded-md bg-fail-soft px-1.5 py-0.5 text-[11px] font-bold text-fail" title="No effort estimate">
+              ?w
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">

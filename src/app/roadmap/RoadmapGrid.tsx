@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import type { Initiative, Priority } from '@/lib/roadmap/types'
-import type { QuarterCapacity } from '@/lib/roadmap/capacity'
-import { roundWeeks } from '@/lib/roadmap/capacity'
+import type { QuarterCapacity, ScheduleSegment } from '@/lib/roadmap/capacity'
+import { roundWeeks, straddleOriginPct } from '@/lib/roadmap/capacity'
 import { BACKLOG_LABEL, PRIORITY_META, QUARTERS, THEME_META, THEME_ORDER, quarterLabel, themeKey } from '@/lib/roadmap/types'
 import { InitiativeCard } from './InitiativeCard'
 
@@ -24,6 +24,7 @@ export interface MoveTarget {
 export function RoadmapGrid({
   initiatives,
   capacity,
+  schedule,
   groupBy,
   orientation,
   onOpen,
@@ -32,6 +33,7 @@ export function RoadmapGrid({
 }: {
   initiatives: Initiative[]
   capacity: QuarterCapacity[]
+  schedule: Map<string, ScheduleSegment[]>
   groupBy: GroupBy
   orientation: Orientation
   onOpen: (i: Initiative) => void
@@ -68,8 +70,55 @@ export function RoadmapGrid({
       .filter((i) => i.unscheduled !== 1 && i.year === year && i.quarter === quarter && groupOf(i) === groupKey)
       .sort(sortCards)
 
+  // Continuation ("ghost") segments from initiatives whose home quarter is earlier
+  // but whose work spills into this cell. They sit at the top and can't be moved.
+  const byId = new Map(initiatives.map((i) => [i.id, i]))
+  const ghostsFor = (groupKey: string, year: number, quarter: number) => {
+    const out: { item: Initiative; pct: number }[] = []
+    for (const [id, segs] of schedule) {
+      const item = byId.get(id)
+      if (!item || groupOf(item) !== groupKey) continue
+      if (item.year === year && item.quarter === quarter) continue // that's the origin
+      const seg = segs.find((s) => !s.isOrigin && s.year === year && s.quarter === quarter)
+      if (seg) out.push({ item, pct: seg.pct })
+    }
+    return out.sort(
+      (a, b) =>
+        a.item.year - b.item.year || a.item.quarter - b.item.quarter || a.item.sort_order - b.item.sort_order
+    )
+  }
+
+  // A fixed continuation card: muted, not draggable. Clicking opens the origin.
+  const GhostCard = ({ i, pct }: { i: Initiative; pct: number }) => (
+    <button
+      type="button"
+      onClick={() => onOpen(i)}
+      className="w-full rounded-lg border border-dashed border-line bg-canvas/60 px-3 py-2 text-left opacity-90 hover:opacity-100"
+      style={{ borderLeftWidth: 3, borderLeftColor: THEME_META[themeKey(i.theme)].dot, borderLeftStyle: 'solid' }}
+      title="Continuation from an earlier quarter — edit it on its origin card"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[13px] font-medium italic leading-snug text-ink-soft line-clamp-2">{i.title}</p>
+        <span className="shrink-0 rounded-md bg-accent-wash px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-ink">
+          {Math.round(pct * 100)}%
+        </span>
+      </div>
+      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted">↳ continues here</p>
+    </button>
+  )
+
   // A draggable initiative card. `target` is where a drop-on-this-card re-orders to.
-  const DraggableCard = ({ i, target, cellKey }: { i: Initiative; target: MoveTarget; cellKey: string }) => (
+  const DraggableCard = ({
+    i,
+    target,
+    cellKey,
+    percentThisQuarter,
+  }: {
+    i: Initiative
+    target: MoveTarget
+    cellKey: string
+    percentThisQuarter?: number | null
+  }) => (
     <div
       draggable
       onDragStart={(e) => {
@@ -98,7 +147,7 @@ export function RoadmapGrid({
       }}
       className={dragId === i.id ? 'opacity-40' : 'cursor-grab active:cursor-grabbing'}
     >
-      <InitiativeCard initiative={i} onClick={() => onOpen(i)} />
+      <InitiativeCard initiative={i} onClick={() => onOpen(i)} percentThisQuarter={percentThisQuarter} />
     </div>
   )
 
@@ -136,6 +185,7 @@ export function RoadmapGrid({
 
   const Cell = ({ groupKey, year, quarter }: { groupKey: string; year: number; quarter: number }) => {
     const cards = cardsFor(groupKey, year, quarter)
+    const ghosts = ghostsFor(groupKey, year, quarter)
     const cellKey = `${groupKey}:${year}-${quarter}`
     const target: MoveTarget = { year, quarter, groupKey }
     return (
@@ -155,8 +205,11 @@ export function RoadmapGrid({
           setOverKey(null)
         }}
       >
+        {ghosts.map(({ item, pct }) => (
+          <GhostCard key={`ghost-${item.id}`} i={item} pct={pct} />
+        ))}
         {cards.map((i) => (
-          <DraggableCard key={i.id} i={i} target={target} cellKey={cellKey} />
+          <DraggableCard key={i.id} i={i} target={target} cellKey={cellKey} percentThisQuarter={straddleOriginPct(schedule.get(i.id))} />
         ))}
       </div>
     )

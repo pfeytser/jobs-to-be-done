@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { CompanyOffDay, Engineer, Initiative, PtoEntry, QuarterSetting, Theme } from '@/lib/roadmap/types'
 import { QUARTERS, formatHours, formatRevenue, themeKey } from '@/lib/roadmap/types'
-import { computeCapacity, roundWeeks } from '@/lib/roadmap/capacity'
+import { computeCapacity, computeSchedule, roundWeeks } from '@/lib/roadmap/capacity'
 import type { RoadmapData, ScenarioMeta } from '@/lib/db/roadmap'
 import { CapacityRibbon } from './CapacityRibbon'
 import { RoadmapGrid, type GroupBy, type Orientation } from './RoadmapGrid'
@@ -65,6 +65,9 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
     () => computeCapacity({ engineers, pto, settings, initiatives, quarters: QUARTERS, companyOffDays }),
     [engineers, pto, settings, initiatives, companyOffDays]
   )
+
+  // Multi-quarter straddle: how each committed initiative's effort flows across quarters.
+  const schedule = useMemo(() => computeSchedule(initiatives, capacity, QUARTERS), [initiatives, capacity])
 
   const totals = useMemo(() => {
     const feature = capacity.reduce((a, c) => a + c.featureWeeks, 0)
@@ -535,6 +538,7 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
           <RoadmapGrid
             initiatives={initiatives}
             capacity={capacity}
+            schedule={schedule}
             groupBy={groupBy}
             orientation={orientation}
             onOpen={(i) => setEditing({ draft: i, isNew: false })}

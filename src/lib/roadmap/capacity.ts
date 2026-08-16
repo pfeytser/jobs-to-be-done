@@ -216,3 +216,97 @@ export function computeCapacity(inputs: CapacityInputs): QuarterCapacity[] {
 export function roundWeeks(n: number): number {
   return Math.round(n * 10) / 10
 }
+
+// ── Multi-quarter scheduling (straddle) ──────────────────────────────────────
+// Committed initiatives stack (in sort_order) within their home quarter and consume
+// that quarter's feature capacity top-to-bottom. Whatever doesn't fit spills to the
+// TOP of the next quarter (consuming it first) and cascades forward. The result is,
+// per initiative, the fraction of its effort that lands in each quarter — so a piece
+// of work can show e.g. 60% in Q3 and 40% in Q4.
+//
+// Only committed, scheduled work participates; proposed / unscheduled / BAU do not.
+
+export interface ScheduleSegment {
+  year: number
+  quarter: number
+  weeksHere: number
+  pct: number // weeksHere / total effort (0..1); 1 when effort is 0/unknown
+  isOrigin: boolean // true for the initiative's home quarter (the editable card)
+}
+
+interface WorkItem {
+  id: string
+  total: number
+  remaining: number
+  originYear: number
+  originQuarter: number
+}
+
+const EPS = 1e-9
+
+export function computeSchedule(
+  initiatives: Initiative[],
+  capacity: QuarterCapacity[],
+  quarters: Quarter[]
+): Map<string, ScheduleSegment[]> {
+  const featureByKey = new Map(capacity.map((c) => [quarterKey(c), c.featureWeeks]))
+  const result = new Map<string, ScheduleSegment[]>()
+  const push = (id: string, seg: ScheduleSegment) => {
+    const arr = result.get(id)
+    if (arr) arr.push(seg)
+    else result.set(id, [seg])
+  }
+
+  let carry: WorkItem[] = []
+  for (const q of quarters) {
+    const feature = featureByKey.get(quarterKey(q)) ?? 0
+    const own: WorkItem[] = initiatives
+      .filter((i) => i.committed === 1 && i.unscheduled !== 1 && i.year === q.year && i.quarter === q.quarter)
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((i) => ({
+        id: i.id,
+        total: i.effort_weeks ?? 0,
+        remaining: i.effort_weeks ?? 0,
+        originYear: q.year,
+        originQuarter: q.quarter,
+      }))
+
+    // Carryover from earlier quarters sits at the top and consumes capacity first.
+    const work = [...carry, ...own]
+    carry = []
+    let remaining = feature
+
+    for (const item of work) {
+      const isOrigin = item.originYear === q.year && item.originQuarter === q.quarter
+
+      if (item.total <= EPS) {
+        // No/zero effort — placed trivially in the quarter it's first seen.
+        push(item.id, { year: q.year, quarter: q.quarter, weeksHere: 0, pct: 1, isOrigin })
+        continue
+      }
+      if (remaining <= EPS) {
+        // Quarter already full; the whole item slips forward.
+        if (isOrigin) push(item.id, { year: q.year, quarter: q.quarter, weeksHere: 0, pct: 0, isOrigin: true })
+        carry.push(item)
+        continue
+      }
+      const weeksHere = Math.min(item.remaining, remaining)
+      remaining -= weeksHere
+      item.remaining -= weeksHere
+      push(item.id, { year: q.year, quarter: q.quarter, weeksHere, pct: weeksHere / item.total, isOrigin })
+      if (item.remaining > EPS) carry.push(item) // remainder to next quarter
+    }
+  }
+  // Any items still in `carry` don't fit inside the horizon; their segments simply
+  // sum to < 100%, which surfaces as a visible "doesn't fully fit" signal.
+  return result
+}
+
+// Whether an initiative straddles quarters (origin does < 100% of the work).
+export function straddleOriginPct(segments: ScheduleSegment[] | undefined): number | null {
+  if (!segments || segments.length === 0) return null
+  const origin = segments.find((s) => s.isOrigin)
+  if (!origin) return null
+  const fitsFully = segments.length === 1 && origin.pct >= 1 - 1e-6
+  return fitsFully ? null : origin.pct
+}
