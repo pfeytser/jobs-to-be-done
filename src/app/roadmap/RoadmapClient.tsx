@@ -30,9 +30,8 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
   const [companyOffDays, setCompanyOffDays] = useState<CompanyOffDay[]>(initial.companyOffDays)
 
   const [scenario, setScenario] = useState(false)
-  const [showControls, setShowControls] = useState(false)
-  const [showCalendars, setShowCalendars] = useState(false)
-  const [groupBy, setGroupBy] = useState<'theme' | 'objective'>('theme')
+  const [tab, setTab] = useState<'roadmap' | 'team' | 'calendars'>('roadmap')
+  const [groupBy, setGroupBy] = useState<'theme' | 'objective' | 'none'>('theme')
   const [editing, setEditing] = useState<{ draft: InitiativeDraft; isNew: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -268,7 +267,7 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
           </Link>
           <div>
             <h1 className="font-display text-lg font-semibold leading-none text-ink">Roadmap &amp; Capacity</h1>
-            <p className="text-[11px] text-ink-muted">Growth · Q1 2026 → Q1 2027</p>
+            <p className="text-[11px] text-ink-muted">Growth · Q3 2026 → Q2 2027</p>
           </div>
 
           <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -282,39 +281,6 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
               </span>
               <span className="tabular-nums text-ink-muted">{roundWeeks(totals.proposed)}w proposed</span>
             </div>
-
-            <div className="flex overflow-hidden rounded-lg border border-line text-xs font-semibold">
-              <button
-                onClick={() => setGroupBy('theme')}
-                className={`px-3 py-1.5 ${groupBy === 'theme' ? 'bg-ink text-surface' : 'bg-surface text-ink-soft'}`}
-              >
-                Theme
-              </button>
-              <button
-                onClick={() => setGroupBy('objective')}
-                className={`px-3 py-1.5 ${groupBy === 'objective' ? 'bg-ink text-surface' : 'bg-surface text-ink-soft'}`}
-              >
-                Objective
-              </button>
-            </div>
-
-            <button
-              onClick={() => setShowControls((v) => !v)}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
-                showControls ? 'border-ink bg-ink text-surface' : 'border-line bg-surface text-ink hover:border-ink'
-              }`}
-            >
-              Team &amp; capacity
-            </button>
-
-            <button
-              onClick={() => setShowCalendars((v) => !v)}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
-                showCalendars ? 'border-ink bg-ink text-surface' : 'border-line bg-surface text-ink hover:border-ink'
-              }`}
-            >
-              Calendars
-            </button>
 
             <button
               onClick={toggleScenario}
@@ -338,7 +304,65 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
       <div className="mx-auto max-w-[1600px] space-y-4 px-6 py-5">
         <CapacityRibbon capacity={capacity} currentQuarterKey={nowKey} />
 
-        {showControls && (
+        {/* Tabs */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line">
+          <div className="flex gap-1">
+            {(
+              [
+                ['roadmap', 'Roadmap'],
+                ['team', 'Team & Capacity'],
+                ['calendars', 'Calendars'],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold transition-colors ${
+                  tab === key
+                    ? 'border-ink text-ink'
+                    : 'border-transparent text-ink-muted hover:text-ink-soft'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'roadmap' && (
+            <div className="flex overflow-hidden rounded-lg border border-line text-xs font-semibold">
+              {(
+                [
+                  ['theme', 'Theme'],
+                  ['objective', 'Objective'],
+                  ['none', 'List'],
+                ] as const
+              ).map(([key, label], idx) => (
+                <button
+                  key={key}
+                  onClick={() => setGroupBy(key)}
+                  className={`${idx > 0 ? 'border-l border-line ' : ''}px-3 py-1.5 ${
+                    groupBy === key ? 'bg-ink text-surface' : 'bg-surface text-ink-soft'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Tab content */}
+        {tab === 'roadmap' && (
+          <RoadmapGrid
+            initiatives={initiatives}
+            capacity={capacity}
+            groupBy={groupBy}
+            onOpen={(i) => setEditing({ draft: i, isNew: false })}
+            onAdd={openNew}
+          />
+        )}
+
+        {tab === 'team' && (
           <div className="rounded-xl border border-line bg-canvas p-5">
             <TeamPanel
               engineers={engineers}
@@ -353,7 +377,7 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
           </div>
         )}
 
-        {showCalendars && (
+        {tab === 'calendars' && (
           <div className="rounded-xl border border-line bg-canvas p-5">
             <CalendarsPanel
               companyOffDays={companyOffDays}
@@ -362,14 +386,6 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
             />
           </div>
         )}
-
-        <RoadmapGrid
-          initiatives={initiatives}
-          capacity={capacity}
-          groupBy={groupBy}
-          onOpen={(i) => setEditing({ draft: i, isNew: false })}
-          onAdd={openNew}
-        />
       </div>
 
       {editing && (

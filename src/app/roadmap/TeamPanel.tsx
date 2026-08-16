@@ -34,32 +34,35 @@ export function TeamPanel({
 
   return (
     <div className="space-y-6">
-      {/* BAU levers */}
+      {/* BAU levers — compact % inputs per quarter */}
       <section>
         <h3 className="text-sm font-bold text-ink">Bugs · tech debt · maintenance</h3>
         <p className="mt-0.5 text-xs text-ink-muted">
           Share of each quarter reserved for BAU. The rest is new-feature capacity.
         </p>
-        <div className="mt-3 space-y-3">
+        <div className="mt-3 flex flex-wrap gap-2">
           {QUARTERS.map((q) => {
             const cap = capacity.find((c) => c.year === q.year && c.quarter === q.quarter)
             const pct = cap ? Math.round(cap.bauPct * 100) : 20
             return (
-              <div key={`${q.year}-${q.quarter}`} className="flex items-center gap-3">
-                <span className="w-16 shrink-0 text-xs font-semibold text-ink">{quarterLabel(q)}</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={80}
-                  step={5}
-                  value={pct}
-                  onChange={(e) => onBauChange(q.year, q.quarter, Number(e.target.value) / 100)}
-                  className="flex-1 accent-[#1D5859]"
-                />
-                <span className="w-10 shrink-0 text-right text-xs font-bold tabular-nums text-ink">{pct}%</span>
-                <span className="w-20 shrink-0 text-right text-[11px] tabular-nums text-ink-muted">
-                  {cap ? `${roundWeeks(cap.featureWeeks)}w feat.` : ''}
-                </span>
+              <div
+                key={`${q.year}-${q.quarter}`}
+                className="flex items-center gap-2 rounded-lg border border-line bg-surface px-2.5 py-1.5"
+              >
+                <span className="text-xs font-semibold text-ink">{quarterLabel(q).replace(' 20', " '")}</span>
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min={0}
+                    max={95}
+                    step={5}
+                    value={pct}
+                    onChange={(e) => onBauChange(q.year, q.quarter, Math.max(0, Math.min(95, Number(e.target.value))) / 100)}
+                    className="w-12 rounded-md border border-line bg-canvas px-1.5 py-1 text-right text-sm tabular-nums text-ink focus:border-ink focus:outline-none"
+                  />
+                  <span className="ml-0.5 text-xs text-ink-muted">%</span>
+                </div>
+                <span className="text-[11px] tabular-nums text-ink-muted">→ {cap ? roundWeeks(cap.featureWeeks) : 0}w</span>
               </div>
             )
           })}

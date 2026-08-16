@@ -114,13 +114,12 @@ export function quarterLabel(q: Quarter): string {
   return `Q${q.quarter} ${q.year}`
 }
 
-// The five quarters covered by the roadmap export.
+// The planning window shown in the app: Q3 2026 → Q2 2027.
 export const QUARTERS: Quarter[] = [
-  { year: 2026, quarter: 1 },
-  { year: 2026, quarter: 2 },
   { year: 2026, quarter: 3 },
   { year: 2026, quarter: 4 },
   { year: 2027, quarter: 1 },
+  { year: 2027, quarter: 2 },
 ]
 
 export const THEME_ORDER: string[] = [

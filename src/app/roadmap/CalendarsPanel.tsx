@@ -79,6 +79,7 @@ export function CalendarsPanel({
               <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
                 {list.map((h) => {
                   const f = fmt(h.date)
+                  const partial = h.fraction < 1
                   return (
                     <li
                       key={h.date}
@@ -87,7 +88,14 @@ export function CalendarsPanel({
                       <span className="w-8 shrink-0 font-semibold text-ink-soft">{f.weekday}</span>
                       <span className="w-24 shrink-0 tabular-nums text-ink">{f.label}</span>
                       <span className="truncate text-ink-soft">{h.name}</span>
-                      {f.isWeekend && <span className="ml-auto shrink-0 text-[10px] text-ink-muted">weekend</span>}
+                      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+                        {partial && !f.isWeekend && (
+                          <span className="rounded bg-accent-wash px-1.5 py-0.5 text-[10px] font-semibold text-ink">
+                            ½ day
+                          </span>
+                        )}
+                        {f.isWeekend && <span className="text-[10px] text-ink-muted">weekend</span>}
+                      </span>
                     </li>
                   )
                 })}

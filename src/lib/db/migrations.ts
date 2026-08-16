@@ -846,12 +846,11 @@ export async function runMigrations(): Promise<void> {
       );
     `)
 
-    // Seed default BAU% (20%) for each covered quarter, and the Growth-team
-    // initiatives with their real ids. Fixed ids + INSERT OR IGNORE means in-app
-    // edits stick and re-runs never duplicate — rows are only inserted when absent.
+    // Seed default BAU% (20%) for each covered quarter. Idempotent: INSERT OR IGNORE
+    // never overrides a value the admin has already set (setSetting upserts).
     {
       const quarters: [number, number][] = [
-        [2026, 1], [2026, 2], [2026, 3], [2026, 4], [2027, 1],
+        [2026, 1], [2026, 2], [2026, 3], [2026, 4], [2027, 1], [2027, 2],
       ]
       await turso.batch(
         quarters.map(([year, quarter]) => ({
@@ -860,40 +859,50 @@ export async function runMigrations(): Promise<void> {
         })),
         'write',
       )
+    }
 
-      await turso.batch(
-        SEED_INITIATIVES.map((i) => ({
-          sql: `INSERT OR IGNORE INTO rm_initiatives
-                  (id, title, summary, status, priority, theme, year, quarter, effort_weeks,
-                   impact_value, impact_unit, impact_kind, owner_name, objective,
-                   is_bau, is_required, committed, sort_order)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          args: [
-            i.id, i.title, i.summary, i.status, i.priority, i.theme, i.year, i.quarter, i.effort_weeks,
-            i.impact_value, i.impact_unit, i.impact_kind, i.owner_name, i.objective,
-            i.is_bau, i.is_required, i.committed, i.sort_order,
-          ] as (string | number | null)[],
-        })),
-        'write',
-      )
+    // Seed the Growth-team initiatives and a starter roster — but ONLY on first run,
+    // when each table is empty. Re-seeding on every boot (this runs per serverless
+    // cold start) would resurrect rows the admin has deleted; the emptiness guard
+    // makes deletes and edits stick.
+    {
+      const initCount = await turso.execute('SELECT COUNT(*) AS n FROM rm_initiatives')
+      if (Number((initCount.rows[0] as unknown as { n: number }).n) === 0) {
+        await turso.batch(
+          SEED_INITIATIVES.map((i) => ({
+            sql: `INSERT OR IGNORE INTO rm_initiatives
+                    (id, title, summary, status, priority, theme, year, quarter, effort_weeks,
+                     impact_value, impact_unit, impact_kind, owner_name, objective,
+                     is_bau, is_required, committed, sort_order)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [
+              i.id, i.title, i.summary, i.status, i.priority, i.theme, i.year, i.quarter, i.effort_weeks,
+              i.impact_value, i.impact_unit, i.impact_kind, i.owner_name, i.objective,
+              i.is_bau, i.is_required, i.committed, i.sort_order,
+            ] as (string | number | null)[],
+          })),
+          'write',
+        )
+      }
 
-      // Seed a starter roster from the Growth-team owners so the dashboard is
-      // useful immediately. Fixed ids keep this idempotent; the admin edits from here.
-      const roster: [string, string, string, number][] = [
-        ['rm-eng-peter', 'Peter Feytser', 'US', 0.5],
-        ['rm-eng-guillaume', 'Guillaume Wagner', 'FR', 1],
-        ['rm-eng-adrien', 'Adrien Devleschoudere', 'FR', 1],
-        ['rm-eng-matthieu', 'Matthieu Lepaix', 'FR', 1],
-        ['rm-eng-philippe', 'Philippe Bouffaut', 'FR', 1],
-      ]
-      await turso.batch(
-        roster.map(([id, name, country, cap], idx) => ({
-          sql: `INSERT OR IGNORE INTO rm_engineers (id, name, country, capacity_fraction, start_date, end_date, active, sort_order)
-                VALUES (?, ?, ?, ?, NULL, NULL, 1, ?)`,
-          args: [id, name, country, cap, idx] as (string | number)[],
-        })),
-        'write',
-      )
+      const engCount = await turso.execute('SELECT COUNT(*) AS n FROM rm_engineers')
+      if (Number((engCount.rows[0] as unknown as { n: number }).n) === 0) {
+        const roster: [string, string, string, number][] = [
+          ['rm-eng-peter', 'Peter Feytser', 'US', 0.5],
+          ['rm-eng-guillaume', 'Guillaume Wagner', 'FR', 1],
+          ['rm-eng-adrien', 'Adrien Devleschoudere', 'FR', 1],
+          ['rm-eng-matthieu', 'Matthieu Lepaix', 'FR', 1],
+          ['rm-eng-philippe', 'Philippe Bouffaut', 'FR', 1],
+        ]
+        await turso.batch(
+          roster.map(([id, name, country, cap], idx) => ({
+            sql: `INSERT OR IGNORE INTO rm_engineers (id, name, country, capacity_fraction, start_date, end_date, active, sort_order)
+                  VALUES (?, ?, ?, ?, NULL, NULL, 1, ?)`,
+            args: [id, name, country, cap, idx] as (string | number)[],
+          })),
+          'write',
+        )
+      }
     }
 
     console.log('[migrations] Turso migrations completed successfully')

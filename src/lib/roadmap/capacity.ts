@@ -105,13 +105,17 @@ export function computeEngineerQuarter(
 
   const workingDays = countWeekdays(winStart, winEnd)
 
-  // Public holidays for the engineer's country that fall on a weekday within the window.
+  // Public holidays for the engineer's country that fall on a weekday within the
+  // window. Each contributes its fraction (full day = 1, early closure = 0.5).
   const holidayDates = new Set<string>()
+  let holidayDays = 0
   for (const h of holidaysForCountry(engineer.country)) {
     const hd = toUTCDate(h.date)
-    if (hd >= winStart && hd <= winEnd && isWeekday(hd)) holidayDates.add(h.date)
+    if (hd >= winStart && hd <= winEnd && isWeekday(hd)) {
+      holidayDates.add(h.date)
+      holidayDays += h.fraction
+    }
   }
-  const holidayDays = holidayDates.size
 
   // Company-wide off days that land on a weekday in the window and aren't already
   // one of this engineer's national holidays (avoid double-counting).
