@@ -2,7 +2,7 @@
 
 import type { QuarterCapacity } from '@/lib/roadmap/capacity'
 import { roundWeeks } from '@/lib/roadmap/capacity'
-import { quarterLabel } from '@/lib/roadmap/types'
+import { formatHours, formatRevenue, quarterLabel } from '@/lib/roadmap/types'
 
 // Utilization color: green under 85%, amber to 100%, red over capacity.
 function utilColor(util: number): { bar: string; text: string; label: string } {
@@ -55,8 +55,14 @@ export function CapacityRibbon({
             </div>
 
             <div className="mt-2 border-t border-line pt-1.5 text-[10px] text-ink-muted">
-              {roundWeeks(q.grossWeeks)}w gross · {Math.round(q.bauPct * 100)}% BAU · {q.engineerCount} eng
+              {roundWeeks(q.grossWeeks)}w gross · {Math.round(q.bauPct * 100)}% BAU · {roundWeeks(q.engineerCount)} eng
             </div>
+            {(q.revenue > 0 || q.hours > 0) && (
+              <div className="mt-1 flex flex-wrap gap-x-2 text-[10px] font-semibold text-ink-soft">
+                {q.revenue > 0 && <span>{formatRevenue(q.revenue)}</span>}
+                {q.hours > 0 && <span>{formatHours(q.hours)}</span>}
+              </div>
+            )}
           </div>
         )
       })}

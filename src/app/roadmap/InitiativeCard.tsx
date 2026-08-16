@@ -1,7 +1,7 @@
 'use client'
 
 import type { Initiative } from '@/lib/roadmap/types'
-import { PRIORITY_META, STATUS_META, THEME_META, formatImpact, themeKey } from '@/lib/roadmap/types'
+import { PRIORITY_META, STATUS_META, THEME_META, formatHours, formatRevenue, themeKey } from '@/lib/roadmap/types'
 
 // A single roadmap initiative, echoing the card format from the source roadmap:
 // a colored theme accent, title, effort in engineering-weeks, an impact chip,
@@ -15,7 +15,8 @@ export function InitiativeCard({
 }) {
   const theme = THEME_META[themeKey(initiative.theme)]
   const status = STATUS_META[initiative.status]
-  const impact = formatImpact(initiative.impact_value, initiative.impact_unit)
+  const revenue = formatRevenue(initiative.impact_revenue)
+  const hours = formatHours(initiative.impact_hours)
   const priority = initiative.priority ? PRIORITY_META[initiative.priority] : null
   const uncommitted = initiative.committed === 0
 
@@ -49,12 +50,16 @@ export function InitiativeCard({
         {priority && (
           <span className={`text-[10px] font-bold uppercase tracking-wide ${priority.className}`}>{priority.label}</span>
         )}
-        {impact && (
-          <span
-            className="ml-auto rounded px-1.5 py-0.5 text-[10px] font-bold"
-            style={{ backgroundColor: theme.soft, color: theme.text }}
-          >
-            {impact}
+        {(revenue || hours) && (
+          <span className="ml-auto flex flex-wrap items-center justify-end gap-1">
+            {revenue && (
+              <span className="rounded px-1.5 py-0.5 text-[10px] font-bold" style={{ backgroundColor: theme.soft, color: theme.text }}>
+                {revenue}
+              </span>
+            )}
+            {hours && (
+              <span className="rounded bg-canvas px-1.5 py-0.5 text-[10px] font-bold text-ink-soft">{hours}</span>
+            )}
           </span>
         )}
       </div>

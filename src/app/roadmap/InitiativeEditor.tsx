@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { Initiative, InitiativeStatus, Priority, Theme, ImpactUnit } from '@/lib/roadmap/types'
-import { QUARTERS, THEME_META, THEME_ORDER } from '@/lib/roadmap/types'
+import type { Initiative, InitiativeStatus, Priority, Theme } from '@/lib/roadmap/types'
+import { BACKLOG_LABEL, QUARTERS, THEME_META, THEME_ORDER, quarterLabel } from '@/lib/roadmap/types'
 
 export type InitiativeDraft = Omit<Initiative, 'id' | 'sort_order'> & { id?: string }
 
@@ -13,8 +13,8 @@ const fieldCls =
   'w-full rounded-md border border-line bg-canvas px-2.5 py-1.5 text-sm text-ink focus:border-ink focus:outline-none'
 const labelCls = 'block text-[11px] font-semibold uppercase tracking-wide text-ink-muted mb-1'
 
-// Slide-over editor for one initiative (create or edit). Emits a full draft on
-// save; the parent handles persistence and local state.
+// Slide-over editor for one initiative (create or edit). Every field is editable.
+// Animates in/out. "Timing" doubles as the To-Be-Prioritized control.
 export function InitiativeEditor({
   draft,
   isNew,
@@ -29,20 +29,49 @@ export function InitiativeEditor({
   onClose: () => void
 }) {
   const [d, setD] = useState<InitiativeDraft>(draft)
+  const [show, setShow] = useState(false)
+
   useEffect(() => setD(draft), [draft])
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setShow(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  // Animate out, then run the action (unmount / persist).
+  const close = (after: () => void) => {
+    setShow(false)
+    setTimeout(after, 300)
+  }
 
   const set = <K extends keyof InitiativeDraft>(key: K, value: InitiativeDraft[K]) =>
     setD((prev) => ({ ...prev, [key]: value }))
 
   const numOrNull = (v: string): number | null => (v.trim() === '' ? null : Number(v))
 
+  const timingValue = d.unscheduled === 1 ? 'backlog' : `${d.year}-${d.quarter}`
+  const onTimingChange = (v: string) => {
+    if (v === 'backlog') {
+      set('unscheduled', 1)
+    } else {
+      const [y, q] = v.split('-').map(Number)
+      setD((prev) => ({ ...prev, year: y, quarter: q, unscheduled: 0 }))
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-ink/30" onClick={onClose} />
-      <div className="relative flex h-full w-full max-w-md flex-col bg-surface shadow-xl">
+      <div
+        className={`absolute inset-0 bg-ink/30 transition-opacity duration-300 ${show ? 'opacity-100' : 'opacity-0'}`}
+        onClick={() => close(onClose)}
+      />
+      <div
+        className={`relative flex h-full w-full max-w-md flex-col bg-surface shadow-xl transition-transform duration-300 ease-out ${
+          show ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
         <div className="flex items-center justify-between border-b border-line px-5 py-3">
           <h2 className="text-sm font-bold text-ink">{isNew ? 'New initiative' : 'Edit initiative'}</h2>
-          <button type="button" onClick={onClose} className="text-ink-muted hover:text-ink">
+          <button type="button" onClick={() => close(onClose)} className="text-ink-muted hover:text-ink">
             ✕
           </button>
         </div>
@@ -55,12 +84,7 @@ export function InitiativeEditor({
 
           <div>
             <label className={labelCls}>Summary</label>
-            <textarea
-              value={d.summary}
-              onChange={(e) => set('summary', e.target.value)}
-              rows={4}
-              className={`${fieldCls} resize-y`}
-            />
+            <textarea value={d.summary} onChange={(e) => set('summary', e.target.value)} rows={4} className={`${fieldCls} resize-y`} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -91,43 +115,36 @@ export function InitiativeEditor({
             </div>
           </div>
 
-          <div>
-            <label className={labelCls}>Theme</label>
-            <select
-              value={d.theme ?? ''}
-              onChange={(e) => set('theme', (e.target.value || null) as Theme | null)}
-              className={fieldCls}
-            >
-              <option value="">—</option>
-              {THEME_ORDER.filter((k) => k !== '_none').map((k) => (
-                <option key={k} value={k}>
-                  {THEME_META[k].label}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Theme</label>
+              <select
+                value={d.theme ?? ''}
+                onChange={(e) => set('theme', (e.target.value || null) as Theme | null)}
+                className={fieldCls}
+              >
+                <option value="">—</option>
+                {THEME_ORDER.filter((k) => k !== '_none').map((k) => (
+                  <option key={k} value={k}>
+                    {THEME_META[k].label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Timing</label>
+              <select value={timingValue} onChange={(e) => onTimingChange(e.target.value)} className={fieldCls}>
+                {QUARTERS.map((q) => (
+                  <option key={`${q.year}-${q.quarter}`} value={`${q.year}-${q.quarter}`}>
+                    {quarterLabel(q)}
+                  </option>
+                ))}
+                <option value="backlog">{BACKLOG_LABEL}</option>
+              </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className={labelCls}>Year</label>
-              <select value={d.year} onChange={(e) => set('year', Number(e.target.value))} className={fieldCls}>
-                {[...new Set(QUARTERS.map((q) => q.year))].map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Quarter</label>
-              <select value={d.quarter} onChange={(e) => set('quarter', Number(e.target.value))} className={fieldCls}>
-                {[1, 2, 3, 4].map((q) => (
-                  <option key={q} value={q}>
-                    Q{q}
-                  </option>
-                ))}
-              </select>
-            </div>
             <div>
               <label className={labelCls}>Effort (wks)</label>
               <input
@@ -139,30 +156,27 @@ export function InitiativeEditor({
                 placeholder="?"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Impact value</label>
+              <label className={labelCls}>Revenue ($)</label>
               <input
                 type="number"
                 min={0}
-                value={d.impact_value ?? ''}
-                onChange={(e) => set('impact_value', numOrNull(e.target.value))}
+                value={d.impact_revenue ?? ''}
+                onChange={(e) => set('impact_revenue', numOrNull(e.target.value))}
                 className={fieldCls}
+                placeholder="0"
               />
             </div>
             <div>
-              <label className={labelCls}>Impact unit</label>
-              <select
-                value={d.impact_unit ?? ''}
-                onChange={(e) => set('impact_unit', (e.target.value || null) as ImpactUnit | null)}
+              <label className={labelCls}>Hours saved</label>
+              <input
+                type="number"
+                min={0}
+                value={d.impact_hours ?? ''}
+                onChange={(e) => set('impact_hours', numOrNull(e.target.value))}
                 className={fieldCls}
-              >
-                <option value="">—</option>
-                <option value="revenue">revenue ($)</option>
-                <option value="hrs">hours</option>
-              </select>
+                placeholder="0"
+              />
             </div>
           </div>
 
@@ -177,24 +191,18 @@ export function InitiativeEditor({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 pt-1">
+          <div className="flex flex-col gap-2 pt-1">
             <label className="flex items-center gap-2 text-sm text-ink">
-              <input
-                type="checkbox"
-                checked={d.committed === 1}
-                onChange={(e) => set('committed', e.target.checked ? 1 : 0)}
-                className="accent-[#1D5859]"
-              />
+              <input type="checkbox" checked={d.committed === 1} onChange={(e) => set('committed', e.target.checked ? 1 : 0)} className="accent-[#1D5859]" />
               Committed (counts against capacity)
             </label>
             <label className="flex items-center gap-2 text-sm text-ink">
-              <input
-                type="checkbox"
-                checked={d.is_required === 1}
-                onChange={(e) => set('is_required', e.target.checked ? 1 : 0)}
-                className="accent-[#1D5859]"
-              />
+              <input type="checkbox" checked={d.is_required === 1} onChange={(e) => set('is_required', e.target.checked ? 1 : 0)} className="accent-[#1D5859]" />
               Required
+            </label>
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input type="checkbox" checked={d.is_bau === 1} onChange={(e) => set('is_bau', e.target.checked ? 1 : 0)} className="accent-[#1D5859]" />
+              BAU (bugs / tech debt / maintenance)
             </label>
           </div>
         </div>
@@ -203,7 +211,7 @@ export function InitiativeEditor({
           {onDelete ? (
             <button
               type="button"
-              onClick={onDelete}
+              onClick={() => close(onDelete)}
               className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold text-fail hover:border-fail"
             >
               Delete
@@ -214,14 +222,14 @@ export function InitiativeEditor({
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => close(onClose)}
               className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold text-ink-soft hover:border-ink"
             >
               Cancel
             </button>
             <button
               type="button"
-              onClick={() => onSave(d)}
+              onClick={() => d.title.trim() && close(() => onSave(d))}
               disabled={!d.title.trim()}
               className="rounded-md bg-ink px-4 py-1.5 text-sm font-semibold text-surface hover:opacity-90 disabled:opacity-40"
             >

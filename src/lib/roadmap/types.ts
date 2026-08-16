@@ -42,16 +42,23 @@ export interface Initiative {
   year: number
   quarter: number
   effort_weeks: number | null
-  impact_value: number | null
+  impact_value: number | null // legacy single-impact fields (kept for continuity)
   impact_unit: ImpactUnit | null
+  impact_revenue: number | null // $ revenue unlocked
+  impact_hours: number | null // hours saved
   impact_kind: string | null
   owner_name: string | null
   objective: string | null
   is_bau: number
   is_required: number
   committed: number // 1 = counts against capacity as planned/committed work
+  unscheduled: number // 1 = not yet placed in a quarter (the "To Be Prioritized" bucket)
   sort_order: number
 }
+
+// Label for the bucket of not-yet-scheduled work. Deliberately non-dismissive so
+// other teams' proposals don't read as rejected.
+export const BACKLOG_LABEL = 'To Be Prioritized'
 
 export type InitiativeStatus = 'proposed' | 'to_do' | 'in_flight' | 'done'
 export type Priority = 'critical' | 'high' | 'medium' | 'low'
@@ -135,16 +142,20 @@ export function themeKey(t: string | null | undefined): string {
   return t && THEME_META[t] ? t : '_none'
 }
 
+export function formatRevenue(value: number | null | undefined): string | null {
+  if (!value) return null
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(value % 1_000_000 === 0 ? 0 : 1)}M`
+  if (value >= 1_000) return `$${Math.round(value / 1_000)}K`
+  return `$${value}`
+}
+
+export function formatHours(value: number | null | undefined): string | null {
+  if (!value) return null
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K hrs saved`
+  return `${value} hrs saved`
+}
+
 export function formatImpact(value: number | null, unit: ImpactUnit | null): string | null {
   if (value == null || value === 0 || !unit) return null
-  if (unit === 'revenue') {
-    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(value % 1_000_000 === 0 ? 0 : 1)}M`
-    if (value >= 1_000) return `$${Math.round(value / 1_000)}K`
-    return `$${value}`
-  }
-  if (unit === 'hrs') {
-    if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K hrs`
-    return `${value} hrs`
-  }
-  return `${value}`
+  return unit === 'revenue' ? formatRevenue(value) : formatHours(value)
 }

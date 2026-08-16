@@ -26,6 +26,8 @@ export interface QuarterCapacity {
   headroomWeeks: number // featureWeeks − committedWeeks (can be negative = over capacity)
   utilizationPct: number // committedWeeks / featureWeeks
   engineerCount: number // headcount contributing (fractional-aware)
+  revenue: number // $ revenue unlocked by initiatives landing this quarter
+  hours: number // hours saved by initiatives landing this quarter
   perEngineer: EngineerQuarterCapacity[]
 }
 
@@ -168,19 +170,28 @@ export function computeCapacity(inputs: CapacityInputs): QuarterCapacity[] {
       .map((e) => computeEngineerQuarter(e, q, ptoIndex.get(`${e.id}:${quarterKey(q)}`) ?? 0, companyOffDates))
 
     const grossWeeks = perEngineer.reduce((a, e) => a + e.effectiveWeeks, 0)
+    // Headcount weighted by FTE: a 0.5 engineering manager counts as 0.5, so a team
+    // of four full engineers + one half-time EM shows as 4.5, not 5.
+    const fracById = new Map(engineers.map((e) => [e.id, e.capacity_fraction]))
     const engineerCount = perEngineer.reduce(
-      (a, e) => a + (e.effectiveWeeks > 0 ? 1 : 0),
+      (a, e) => a + (e.effectiveWeeks > 0 ? fracById.get(e.engineerId) ?? 0 : 0),
       0
     )
     const bauPct = bauIndex.get(quarterKey(q)) ?? 0.2
     const bauWeeks = grossWeeks * bauPct
     const featureWeeks = grossWeeks - bauWeeks
 
-    const inQuarter = initiatives.filter((i) => i.year === q.year && i.quarter === q.quarter)
+    // Unscheduled ("To Be Prioritized") work isn't placed in a quarter, so it never
+    // counts against that quarter's capacity.
+    const inQuarter = initiatives.filter(
+      (i) => i.year === q.year && i.quarter === q.quarter && i.unscheduled !== 1
+    )
     const committedWeeks = inQuarter
       .filter((i) => i.committed === 1)
       .reduce((a, i) => a + (i.effort_weeks ?? 0), 0)
     const plannedWeeks = inQuarter.reduce((a, i) => a + (i.effort_weeks ?? 0), 0)
+    const revenue = inQuarter.reduce((a, i) => a + (i.impact_revenue ?? 0), 0)
+    const hours = inQuarter.reduce((a, i) => a + (i.impact_hours ?? 0), 0)
 
     return {
       year: q.year,
@@ -194,6 +205,8 @@ export function computeCapacity(inputs: CapacityInputs): QuarterCapacity[] {
       headroomWeeks: featureWeeks - committedWeeks,
       utilizationPct: featureWeeks > 0 ? committedWeeks / featureWeeks : 0,
       engineerCount,
+      revenue,
+      hours,
       perEngineer,
     }
   })

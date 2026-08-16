@@ -828,12 +828,15 @@ export async function runMigrations(): Promise<void> {
         effort_weeks REAL,
         impact_value REAL,
         impact_unit TEXT,
+        impact_revenue REAL,
+        impact_hours REAL,
         impact_kind TEXT,
         owner_name TEXT,
         objective TEXT,
         is_bau INTEGER NOT NULL DEFAULT 0,
         is_required INTEGER NOT NULL DEFAULT 0,
         committed INTEGER NOT NULL DEFAULT 0,
+        unscheduled INTEGER NOT NULL DEFAULT 0,
         sort_order INTEGER NOT NULL DEFAULT 0
       );
 
@@ -844,7 +847,38 @@ export async function runMigrations(): Promise<void> {
         date TEXT NOT NULL UNIQUE,
         label TEXT NOT NULL DEFAULT ''
       );
+
+      CREATE TABLE IF NOT EXISTS rm_scenarios (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        data TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
     `)
+
+    // Additive columns for existing rm_initiatives tables: the two-unit impact model
+    // (revenue + hours saved) and the "To Be Prioritized" bucket. On the first run
+    // that adds impact_revenue, backfill it from the legacy single-impact fields.
+    {
+      let addedImpact = false
+      for (const sql of [
+        'ALTER TABLE rm_initiatives ADD COLUMN impact_revenue REAL',
+        'ALTER TABLE rm_initiatives ADD COLUMN impact_hours REAL',
+        'ALTER TABLE rm_initiatives ADD COLUMN unscheduled INTEGER NOT NULL DEFAULT 0',
+      ]) {
+        try {
+          await turso.execute(sql)
+          if (sql.includes('impact_revenue')) addedImpact = true
+        } catch {
+          // Column already exists
+        }
+      }
+      if (addedImpact) {
+        await turso.execute("UPDATE rm_initiatives SET impact_revenue = impact_value WHERE impact_unit = 'revenue' AND impact_revenue IS NULL")
+        await turso.execute("UPDATE rm_initiatives SET impact_hours = impact_value WHERE impact_unit = 'hrs' AND impact_hours IS NULL")
+      }
+    }
 
     // Seed default BAU% (20%) for each covered quarter. Idempotent: INSERT OR IGNORE
     // never overrides a value the admin has already set (setSetting upserts).
@@ -872,13 +906,13 @@ export async function runMigrations(): Promise<void> {
           SEED_INITIATIVES.map((i) => ({
             sql: `INSERT OR IGNORE INTO rm_initiatives
                     (id, title, summary, status, priority, theme, year, quarter, effort_weeks,
-                     impact_value, impact_unit, impact_kind, owner_name, objective,
-                     is_bau, is_required, committed, sort_order)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                     impact_value, impact_unit, impact_revenue, impact_hours, impact_kind, owner_name, objective,
+                     is_bau, is_required, committed, unscheduled, sort_order)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
               i.id, i.title, i.summary, i.status, i.priority, i.theme, i.year, i.quarter, i.effort_weeks,
-              i.impact_value, i.impact_unit, i.impact_kind, i.owner_name, i.objective,
-              i.is_bau, i.is_required, i.committed, i.sort_order,
+              i.impact_value, i.impact_unit, i.impact_revenue, i.impact_hours, i.impact_kind, i.owner_name, i.objective,
+              i.is_bau, i.is_required, i.committed, i.unscheduled, i.sort_order,
             ] as (string | number | null)[],
           })),
           'write',

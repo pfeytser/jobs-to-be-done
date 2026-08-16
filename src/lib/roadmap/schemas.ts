@@ -16,10 +16,16 @@ export const InitiativeSchema = z.object({
   effort_weeks: z.number().min(0).max(520).nullable().default(null),
   impact_value: z.number().min(0).max(1e12).nullable().default(null),
   impact_unit: z.enum(['revenue', 'hrs']).nullable().default(null),
+  impact_revenue: z.number().min(0).max(1e12).nullable().default(null),
+  impact_hours: z.number().min(0).max(1e9).nullable().default(null),
   impact_kind: z.string().max(40).nullable().default(null),
   owner_name: z.string().max(120).nullable().default(null),
   objective: z.string().max(200).nullable().default(null),
   is_bau: z.union([z.literal(0), z.literal(1)]).default(0),
   is_required: z.union([z.literal(0), z.literal(1)]).default(0),
   committed: z.union([z.literal(0), z.literal(1)]).default(0),
+  unscheduled: z.union([z.literal(0), z.literal(1)]).default(0),
+  // Accepted on PATCH so drag-and-drop can persist re-ordering; ignored on create
+  // (createInitiative assigns its own next sort_order).
+  sort_order: z.number().int().min(0).max(100000).optional(),
 })
