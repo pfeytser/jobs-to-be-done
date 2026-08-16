@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { waitUntil } from '@vercel/functions'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { getUseCaseById } from '@/lib/db/storyboard-use-cases'
 import { getStoryboard } from '@/lib/db/storyboards'
 import { getCardById, updateCard, deleteCard } from '@/lib/db/storyboard-cards'
@@ -26,56 +26,44 @@ async function verifyOwnership(useCaseId: string, cardId: string, userId: string
   return { useCase, storyboard, card }
 }
 
-export async function PATCH(
+export const PATCH = route(async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string; cardId: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+) => {
+  const user = await requireUser()
 
-  try {
-    const { id, cardId } = await params
-    const ownership = await verifyOwnership(id, cardId, session.user.userId)
-    if ('error' in ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status })
+  const { id, cardId } = await params
+  const ownership = await verifyOwnership(id, cardId, user.userId)
+  if ('error' in ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status })
 
-    const body = await req.json()
-    const parsed = UpdateSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
-    }
-
-    const card = await updateCard(cardId, parsed.data)
-
-    // Fire image generation after the response is sent.
-    // waitUntil tells Vercel to keep this function alive until the promise resolves,
-    // even after the HTTP response is returned — so closing the browser tab is safe.
-    if (parsed.data.scene_description !== undefined) {
-      waitUntil(generateCardImage(id, cardId, session.user.userId))
-    }
-
-    return NextResponse.json({ card: card ? { ...card, image_url: undefined } : null })
-  } catch (error) {
-    console.error('[cards/:cardId PATCH]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  const body = await req.json()
+  const parsed = UpdateSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
   }
-}
 
-export async function DELETE(
+  const card = await updateCard(cardId, parsed.data)
+
+  // Fire image generation after the response is sent.
+  // waitUntil tells Vercel to keep this function alive until the promise resolves,
+  // even after the HTTP response is returned — so closing the browser tab is safe.
+  if (parsed.data.scene_description !== undefined) {
+    waitUntil(generateCardImage(id, cardId, user.userId))
+  }
+
+  return NextResponse.json({ card: card ? { ...card, image_url: undefined } : null })
+})
+
+export const DELETE = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; cardId: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+) => {
+  const user = await requireUser()
 
-  try {
-    const { id, cardId } = await params
-    const ownership = await verifyOwnership(id, cardId, session.user.userId)
-    if ('error' in ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status })
+  const { id, cardId } = await params
+  const ownership = await verifyOwnership(id, cardId, user.userId)
+  if ('error' in ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status })
 
-    await deleteCard(cardId)
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    console.error('[cards/:cardId DELETE]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  await deleteCard(cardId)
+  return NextResponse.json({ ok: true })
+})

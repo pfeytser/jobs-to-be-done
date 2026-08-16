@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
-import { isExpenseOwner } from '@/lib/expenses/access'
+import { requireExpenseOwner, route } from '@/lib/auth/guards'
 import { buildConsentUrl } from '@/lib/expenses/google-oauth'
 import { randomBytes } from 'crypto'
 
 // Kicks off the Gmail consent flow. Owner-only. Carries the account label + a CSRF
 // nonce (also set as an httpOnly cookie) through `state`.
-export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isExpenseOwner(session.user.email)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
+export const GET = route(async (req: NextRequest) => {
+  await requireExpenseOwner()
 
   const label = (req.nextUrl.searchParams.get('label') ?? 'work').slice(0, 32)
   const nonce = randomBytes(16).toString('hex')
@@ -36,4 +31,4 @@ export async function GET(req: NextRequest) {
     path: '/',
   })
   return res
-}
+})

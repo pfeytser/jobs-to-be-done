@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { getEntriesByExercise, getEntriesByUser, createEntry } from '@/lib/db/entries'
 import { getExerciseById } from '@/lib/db/exercises'
 import { z } from 'zod'
@@ -14,14 +14,11 @@ const CreateHiringEntrySchema = z.object({
   hiringText: z.string().min(1).max(500).transform((s) => s.trim()),
 })
 
-export async function GET(
+export const GET = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+) => {
+  const user = await requireUser()
 
   const { id: exerciseId } = await params
 
@@ -31,8 +28,8 @@ export async function GET(
       return NextResponse.json({ error: 'Exercise not found' }, { status: 404 })
     }
 
-    const isAdmin = session.user.role === 'admin'
-    const userId = session.user.userId
+    const isAdmin = user.role === 'admin'
+    const userId = user.userId
 
     let entries
     if (isAdmin || exercise.currentPhase >= 2) {
@@ -56,16 +53,13 @@ export async function GET(
     console.error('[entries GET]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function POST(
+export const POST = route(async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+) => {
+  const user = await requireUser()
 
   const { id: exerciseId } = await params
 
@@ -99,9 +93,9 @@ export async function POST(
       const { hiringText } = parsed.data
       const entry = await createEntry({
         exerciseId,
-        userId: session.user.userId,
-        userEmail: session.user.email!,
-        userName: session.user.name ?? undefined,
+        userId: user.userId,
+        userEmail: user.email!,
+        userName: user.name ?? undefined,
         situation: hiringText,
         motivation: '',
         expectedOutcome: '',
@@ -121,9 +115,9 @@ export async function POST(
 
     const entry = await createEntry({
       exerciseId,
-      userId: session.user.userId,
-      userEmail: session.user.email!,
-      userName: session.user.name ?? undefined,
+      userId: user.userId,
+      userEmail: user.email!,
+      userName: user.name ?? undefined,
       ...parsed.data,
     })
 
@@ -132,4 +126,4 @@ export async function POST(
     console.error('[entries POST]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

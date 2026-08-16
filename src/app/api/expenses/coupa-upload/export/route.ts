@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import JSZip from 'jszip'
 import { get } from '@vercel/blob'
-import { auth } from '@/lib/auth/config'
-import { isExpenseOwner } from '@/lib/expenses/access'
+import { requireExpenseOwner, route } from '@/lib/auth/guards'
 import { listCoupaUploadItems } from '@/lib/db/expenses'
 import { getReceiptFileById } from '@/lib/db/receipts'
 
@@ -17,12 +16,8 @@ function csvCell(v: string | number | null): string {
 // Builds a ZIP of receipt PDFs named report_merchant_amount.ext, plus a manifest.csv
 // mapping each file to its Coupa report/line. Optional ?report=NN limits to one report.
 // The manifest is the contract the future Playwright upload step will consume.
-export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isExpenseOwner(session.user.email)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
+export const GET = route(async (req: NextRequest) => {
+  await requireExpenseOwner()
 
   try {
     const reportFilter = req.nextUrl.searchParams.get('report')
@@ -91,4 +86,4 @@ export async function GET(req: NextRequest) {
     console.error('[expenses/coupa-upload/export GET]', error)
     return NextResponse.json({ error: 'Export failed' }, { status: 500 })
   }
-}
+})

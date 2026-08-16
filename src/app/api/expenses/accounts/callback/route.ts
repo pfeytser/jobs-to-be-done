@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
-import { isExpenseOwner } from '@/lib/expenses/access'
+import { requireExpenseOwner, route } from '@/lib/auth/guards'
 import { exchangeCodeForTokens } from '@/lib/expenses/google-oauth'
 import { encryptToken } from '@/lib/expenses/crypto'
 import { upsertEmailAccount } from '@/lib/db/email-accounts'
@@ -11,12 +10,8 @@ function back(req: NextRequest, status: string) {
   return NextResponse.redirect(url)
 }
 
-export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isExpenseOwner(session.user.email)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
+export const GET = route(async (req: NextRequest) => {
+  await requireExpenseOwner()
 
   const sp = req.nextUrl.searchParams
   const code = sp.get('code')
@@ -61,4 +56,4 @@ export async function GET(req: NextRequest) {
     console.error('[expenses/accounts/callback]', e instanceof Error ? e.message : e)
     return back(req, 'error:exchange_failed')
   }
-}
+})

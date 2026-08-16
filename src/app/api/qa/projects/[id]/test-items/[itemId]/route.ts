@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireAdmin, route } from '@/lib/auth/guards'
 import { updateTestItem, deleteTestItem } from '@/lib/db/qa-test-items'
 import { z } from 'zod'
 
@@ -18,44 +18,30 @@ const UpdateSchema = z.object({
   sort_order: z.number().int().optional(),
 })
 
-export async function PATCH(
+export const PATCH = route(async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string; itemId: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+) => {
+  await requireAdmin()
 
   const { itemId } = await params
-  try {
-    const body = await req.json()
-    const parsed = UpdateSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
-    }
-    const item = await updateTestItem(itemId, parsed.data)
-    if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    return NextResponse.json({ item })
-  } catch (error) {
-    console.error('[qa/test-items/:itemId PATCH]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  const body = await req.json()
+  const parsed = UpdateSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
   }
-}
+  const item = await updateTestItem(itemId, parsed.data)
+  if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  return NextResponse.json({ item })
+})
 
-export async function DELETE(
+export const DELETE = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; itemId: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+) => {
+  await requireAdmin()
 
   const { itemId } = await params
-  try {
-    await deleteTestItem(itemId)
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    console.error('[qa/test-items/:itemId DELETE]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  await deleteTestItem(itemId)
+  return NextResponse.json({ ok: true })
+})

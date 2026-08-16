@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
-import { isExpenseOwner } from '@/lib/expenses/access'
+import { requireExpenseOwner, route } from '@/lib/auth/guards'
 import { prepareCsv, isCsvFile, MAX_BYTES } from '@/lib/expenses/prepare'
 import { FIELD_LABELS, type SourceField } from '@/lib/expenses/columns'
 
 const PREVIEW_LIMIT = 50
 
-export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isExpenseOwner(session.user.email)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
+export const POST = route(async (req: NextRequest) => {
+  await requireExpenseOwner()
 
+  const formData = await req.formData()
   try {
-    const formData = await req.formData()
     const files = formData.getAll('files').filter((f): f is File => f instanceof File)
 
     if (files.length === 0) {
@@ -78,7 +73,7 @@ export async function POST(req: NextRequest) {
     console.error('[expenses/preview POST]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
 export const config = {
   api: { bodyParser: false },

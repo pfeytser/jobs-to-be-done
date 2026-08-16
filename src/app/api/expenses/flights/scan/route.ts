@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
-import { isExpenseOwner } from '@/lib/expenses/access'
+import { requireExpenseOwner, route } from '@/lib/auth/guards'
 import { scanFlights } from '@/lib/expenses/flights-scan'
 
 export const maxDuration = 300
@@ -8,12 +7,8 @@ export const dynamic = 'force-dynamic'
 
 // Scans both connected inboxes for airline emails over a date range and rebuilds
 // trips. Defaults to the past year (Jun 2025 → Jun 2026). Runs locally for speed.
-export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isExpenseOwner(session.user.email)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
+export const POST = route(async (req: NextRequest) => {
+  await requireExpenseOwner()
 
   try {
     const body = (await req.json().catch(() => ({}))) as { after?: string; before?: string }
@@ -37,4 +32,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

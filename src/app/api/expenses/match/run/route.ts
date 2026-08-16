@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
-import { isExpenseOwner } from '@/lib/expenses/access'
+import { requireExpenseOwner, route } from '@/lib/auth/guards'
 import { countExpensesToSearch } from '@/lib/db/expenses'
 import { runMatching, DEFAULT_CONFIG } from '@/lib/expenses/engine'
 import { DEFAULT_SKIP_RULES } from '@/lib/expenses/scoring'
@@ -16,12 +15,8 @@ export const dynamic = 'force-dynamic'
 // NOTE: full receipt capture (rendering receipt emails to PDF) needs Playwright,
 // which only runs when the app runs locally. On serverless, email-body PDFs are
 // skipped gracefully (attachments + matches still work).
-export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isExpenseOwner(session.user.email)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
+export const POST = route(async (req: NextRequest) => {
+  await requireExpenseOwner()
 
   try {
     const body = (await req.json().catch(() => ({}))) as { max?: number; dryRun?: boolean }
@@ -47,4 +42,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

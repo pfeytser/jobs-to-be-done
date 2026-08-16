@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireAdmin, route } from '@/lib/auth/guards'
 import { parse } from 'csv-parse/sync'
 
 // Fuzzy column aliases — order matters (most specific first)
@@ -165,10 +165,8 @@ function buildItems(
   })
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export const POST = route(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireAdmin()
 
   await params
 
@@ -238,7 +236,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     console.error('[qa/upload POST]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
 export const config = {
   api: { bodyParser: false },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireAdmin, route } from '@/lib/auth/guards'
 import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
 import {
@@ -80,17 +80,11 @@ Required JSON structure:
 }`
 }
 
-export async function POST(
+export const POST = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+) => {
+  await requireAdmin()
 
   const { id: exerciseId } = await params
 
@@ -174,19 +168,13 @@ export async function POST(
     console.error('[deduplicate POST]', error)
     return NextResponse.json({ error: 'Deduplication failed. Please try again.' }, { status: 500 })
   }
-}
+})
 
-export async function PATCH(
+export const PATCH = route(async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+) => {
+  await requireAdmin()
 
   const { id: exerciseId } = await params
 
@@ -251,4 +239,4 @@ export async function PATCH(
     console.error('[deduplicate PATCH]', error)
     return NextResponse.json({ error: 'Update failed. Please try again.' }, { status: 500 })
   }
-}
+})

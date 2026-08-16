@@ -13,6 +13,7 @@ const ADMIN_PATTERNS = [
   /^\/admin(\/.*)?$/,
   /^\/qa\/admin(\/.*)?$/,
   /^\/admin\/storyboard(\/.*)?$/,
+  /^\/roadmap(\/.*)?$/,
 ]
 
 // Private single-owner workspace — only the owner email may reach these routes.
@@ -31,11 +32,13 @@ export default auth(function middleware(req: NextAuthRequest) {
     }
   }
 
-  // Check authentication — always land on / after login so users see the feature picker
+  // Check authentication — send unauthenticated users to sign-in, preserving the
+  // originally requested path so a shared deep link survives login (the sign-in
+  // page's safeCallbackUrl only accepts same-origin relative paths).
   const session = req.auth
   if (!session?.user) {
     const signInUrl = new URL('/auth/signin', req.url)
-    signInUrl.searchParams.set('callbackUrl', new URL('/', req.url).toString())
+    signInUrl.searchParams.set('callbackUrl', req.nextUrl.pathname + req.nextUrl.search)
     return NextResponse.redirect(signInUrl)
   }
 

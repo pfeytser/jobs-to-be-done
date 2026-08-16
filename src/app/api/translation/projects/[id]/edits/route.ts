@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { getDataset, upsertEdit, deleteEdit } from '@/lib/db/translation'
 import { englishForEntry } from '@/lib/translation/entries'
 import { validateMarkup } from '@/lib/translation/markup'
@@ -17,9 +17,8 @@ const EditSchema = z.object({
 })
 
 // Any logged-in user may edit a translation value. Autosave posts here.
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const POST = route(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  const user = await requireUser()
   const { id } = await params
   const parsed = EditSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: 'Invalid edit' }, { status: 400 })
@@ -41,9 +40,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
   }
 
-  await upsertEdit(datasetId, lang, entryKey, value, session.user.email ?? null)
+  await upsertEdit(datasetId, lang, entryKey, value, user.email ?? null)
   return NextResponse.json({ ok: true })
-}
+})
 
 const RevertSchema = z.object({
   datasetId: z.string().min(1),
@@ -52,9 +51,8 @@ const RevertSchema = z.object({
 })
 
 // Revert an entry to its originally-loaded value by removing the stored edit (FR-14).
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const DELETE = route(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireUser()
   const { id } = await params
   const parsed = RevertSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
@@ -66,4 +64,4 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
   await deleteEdit(datasetId, lang, entryKey)
   return NextResponse.json({ ok: true })
-}
+})

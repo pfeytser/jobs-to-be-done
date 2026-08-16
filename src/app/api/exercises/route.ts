@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireAdmin, route } from '@/lib/auth/guards'
 import { getAllExercises, createExercise } from '@/lib/db/exercises'
 import { z } from 'zod'
 
@@ -10,47 +10,25 @@ const CreateExerciseSchema = z.object({
   jtbdMode: z.enum(['classic', 'hiring']).optional().default('classic'),
 })
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export const GET = route(async () => {
+  await requireAdmin()
+
+  const exercises = await getAllExercises()
+  return NextResponse.json({ exercises })
+})
+
+export const POST = route(async (req: NextRequest) => {
+  await requireAdmin()
+
+  const body = await req.json()
+  const parsed = CreateExerciseSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Invalid input', details: parsed.error.issues },
+      { status: 400 }
+    )
   }
 
-  try {
-    const exercises = await getAllExercises()
-    return NextResponse.json({ exercises })
-  } catch (error) {
-    console.error('[exercises GET]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
-  try {
-    const body = await req.json()
-    const parsed = CreateExerciseSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: parsed.error.issues },
-        { status: 400 }
-      )
-    }
-
-    const exercise = await createExercise(parsed.data.name, parsed.data.mainPrompt, parsed.data.type, parsed.data.jtbdMode)
-    return NextResponse.json({ exercise }, { status: 201 })
-  } catch (error) {
-    console.error('[exercises POST]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  const exercise = await createExercise(parsed.data.name, parsed.data.mainPrompt, parsed.data.type, parsed.data.jtbdMode)
+  return NextResponse.json({ exercise }, { status: 201 })
+})

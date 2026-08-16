@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, requireAdmin, route } from '@/lib/auth/guards'
 import Anthropic from '@anthropic-ai/sdk'
 import {
   getExerciseById,
@@ -76,14 +76,11 @@ Required JSON structure:
 }`
 }
 
-export async function GET(
+export const GET = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+) => {
+  await requireUser()
 
   const { id: exerciseId } = await params
 
@@ -98,19 +95,13 @@ export async function GET(
     console.error('[discussion-analyze GET]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function POST(
+export const POST = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+) => {
+  await requireAdmin()
 
   const { id: exerciseId } = await params
 
@@ -181,4 +172,4 @@ export async function POST(
     console.error('[discussion-analyze POST]', error)
     return NextResponse.json({ error: 'Analysis failed. Please try again.' }, { status: 500 })
   }
-}
+})

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, requireAdmin, route } from '@/lib/auth/guards'
 import Anthropic from '@anthropic-ai/sdk'
 import {
   getExerciseById,
@@ -125,14 +125,11 @@ Your task is to produce a comprehensive synthesis. Instructions:
 Call the submit_synthesis tool with your completed analysis. The "id" field for each job should be a short slug based on the title (e.g. "access-workplace-smoothly"). The "canonicalEntryId" must exactly match the entry_id provided in brackets above.`
 }
 
-export async function GET(
+export const GET = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+) => {
+  await requireUser()
 
   const { id: exerciseId } = await params
 
@@ -146,19 +143,13 @@ export async function GET(
     console.error('[synthesize GET]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function POST(
+export const POST = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+) => {
+  await requireAdmin()
 
   const { id: exerciseId } = await params
 
@@ -335,19 +326,13 @@ export async function POST(
     console.error('[synthesize POST]', error)
     return NextResponse.json({ error: 'Synthesis failed. Please try again.' }, { status: 500 })
   }
-}
+})
 
-export async function PATCH(
+export const PATCH = route(async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+) => {
+  await requireAdmin()
 
   const { id: exerciseId } = await params
 
@@ -367,4 +352,4 @@ export async function PATCH(
     console.error('[synthesize PATCH]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

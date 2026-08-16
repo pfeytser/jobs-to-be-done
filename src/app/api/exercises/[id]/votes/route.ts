@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import {
   getVoteTotalsForExercise,
   getUserVoteCount,
@@ -16,14 +16,11 @@ const VoteSchema = z.object({
   action: z.enum(['add', 'remove']),
 })
 
-export async function GET(
-  req: NextRequest,
+export const GET = route(async (
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+) => {
+  const user = await requireUser()
 
   const { id: exerciseId } = await params
 
@@ -33,8 +30,8 @@ export async function GET(
       return NextResponse.json({ error: 'Exercise not found' }, { status: 404 })
     }
 
-    const isAdmin = session.user.role === 'admin'
-    const userId = session.user.userId
+    const isAdmin = user.role === 'admin'
+    const userId = user.userId
 
     const [totals, usedVotes, breakdown] = await Promise.all([
       getVoteTotalsForExercise(exerciseId),
@@ -74,16 +71,13 @@ export async function GET(
     console.error('[votes GET]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function POST(
+export const POST = route(async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+) => {
+  const user = await requireUser()
 
   const { id: exerciseId } = await params
 
@@ -116,7 +110,7 @@ export async function POST(
     const result = await submitVote({
       exerciseId,
       entryId: parsed.data.entryId,
-      userId: session.user.userId,
+      userId: user.userId,
       action: parsed.data.action,
     })
 
@@ -133,4 +127,4 @@ export async function POST(
     console.error('[votes POST]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

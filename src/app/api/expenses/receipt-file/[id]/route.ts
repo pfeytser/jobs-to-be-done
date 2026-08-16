@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { get } from '@vercel/blob'
-import { auth } from '@/lib/auth/config'
-import { isExpenseOwner } from '@/lib/expenses/access'
+import { requireExpenseOwner, route } from '@/lib/auth/guards'
 import { getReceiptFileById } from '@/lib/db/receipts'
 
 // Owner-gated proxy for private receipt blobs. The Blob store is private, so its
 // URLs 403 on anonymous fetch — we stream the bytes server-side using the store
 // token instead. Linked from the expense detail view.
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isExpenseOwner(session.user.email)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
+export const GET = route(async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireExpenseOwner()
 
   try {
     const { id } = await params
@@ -39,4 +34,4 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     console.error('[expenses/receipt-file GET]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

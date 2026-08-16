@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { getAllSessions, getVisibleSessions, createSession } from '@/lib/db/two-truths'
 import { getUserById } from '@/lib/db/users'
 import { z } from 'zod'
@@ -9,55 +9,43 @@ const CreateSchema = z.object({
   authorId: z.string().min(1),
 })
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const GET = route(async () => {
+  const user = await requireUser()
 
-  try {
-    const raw =
-      session.user.role === 'admin' ? await getAllSessions() : await getVisibleSessions()
-    // Never expose author_email in the list — the UI only needs author_name, and
-    // this endpoint is reachable directly. Drop it to avoid over-sharing emails.
-    const sessions = raw.map((s) => {
-      const copy = { ...s } as Partial<Pick<typeof s, 'author_email'>> & Omit<typeof s, 'author_email'>
-      delete copy.author_email
-      return copy
-    })
-    return NextResponse.json({ sessions })
-  } catch (error) {
-    console.error('[two-truths/sessions GET]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  const raw =
+    user.role === 'admin' ? await getAllSessions() : await getVisibleSessions()
+  // Never expose author_email in the list — the UI only needs author_name, and
+  // this endpoint is reachable directly. Drop it to avoid over-sharing emails.
+  const sessions = raw.map((s) => {
+    const copy = { ...s } as Partial<Pick<typeof s, 'author_email'>> & Omit<typeof s, 'author_email'>
+    delete copy.author_email
+    return copy
+  })
+  return NextResponse.json({ sessions })
+})
 
-export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const POST = route(async (req: NextRequest) => {
+  const user = await requireUser()
   // Any signed-in user may create a session and assign an author (incl. themselves).
 
-  try {
-    const parsed = CreateSchema.safeParse(await req.json())
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
-    }
-
-    const author = await getUserById(parsed.data.authorId)
-    if (!author) {
-      return NextResponse.json({ error: 'Author not found' }, { status: 400 })
-    }
-
-    const id = `tt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-    const created = await createSession({
-      id,
-      title: parsed.data.title,
-      author_id: author.user_id,
-      author_name: author.name ?? author.email,
-      author_email: author.email,
-      created_by: session.user.userId,
-    })
-    return NextResponse.json({ session: created }, { status: 201 })
-  } catch (error) {
-    console.error('[two-truths/sessions POST]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  const parsed = CreateSchema.safeParse(await req.json())
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
   }
-}
+
+  const author = await getUserById(parsed.data.authorId)
+  if (!author) {
+    return NextResponse.json({ error: 'Author not found' }, { status: 400 })
+  }
+
+  const id = `tt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  const created = await createSession({
+    id,
+    title: parsed.data.title,
+    author_id: author.user_id,
+    author_name: author.name ?? author.email,
+    author_email: author.email,
+    created_by: user.userId,
+  })
+  return NextResponse.json({ session: created }, { status: 201 })
+})

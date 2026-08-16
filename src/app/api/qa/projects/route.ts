@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, requireAdmin, route } from '@/lib/auth/guards'
 import { getAllQAProjects, getActiveQAProjects, createQAProject } from '@/lib/db/qa-projects'
 import { z } from 'zod'
 
@@ -13,41 +13,28 @@ const CreateSchema = z.object({
   user_types: z.array(z.string()).default([]),
 })
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const GET = route(async () => {
+  const user = await requireUser()
 
-  try {
-    if (session.user.role === 'admin') {
-      const projects = await getAllQAProjects()
-      return NextResponse.json({ projects })
-    } else {
-      const projects = await getActiveQAProjects()
-      return NextResponse.json({ projects })
-    }
-  } catch (error) {
-    console.error('[qa/projects GET]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  if (user.role === 'admin') {
+    const projects = await getAllQAProjects()
+    return NextResponse.json({ projects })
+  } else {
+    const projects = await getActiveQAProjects()
+    return NextResponse.json({ projects })
   }
-}
+})
 
-export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export const POST = route(async (req: NextRequest) => {
+  const user = await requireAdmin()
 
-  try {
-    const body = await req.json()
-    const parsed = CreateSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
-    }
-
-    const id = `qp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-    const project = await createQAProject({ ...parsed.data, id, created_by: session.user.userId })
-    return NextResponse.json({ project }, { status: 201 })
-  } catch (error) {
-    console.error('[qa/projects POST]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  const body = await req.json()
+  const parsed = CreateSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
   }
-}
+
+  const id = `qp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  const project = await createQAProject({ ...parsed.data, id, created_by: user.userId })
+  return NextResponse.json({ project }, { status: 201 })
+})

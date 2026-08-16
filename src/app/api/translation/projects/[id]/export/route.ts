@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import JSZip from 'jszip'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { getProject, listDatasets, getDatasetEdits } from '@/lib/db/translation'
 import { projectLanguages } from '@/lib/translation/entries'
 import { rebuildTargetJson, targetValueMap, flattenStrings, buildChangesPatch } from '@/lib/translation/json'
@@ -195,9 +195,8 @@ async function buildMongoPatchFiles(ds: TranslationDataset, langs: string[]): Pr
   return out
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const GET = route(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireUser()
   const { id } = await params
   const project = await getProject(id)
   if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -274,4 +273,4 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       'X-Translation-Summary': summaryHeader,
     },
   })
-}
+})

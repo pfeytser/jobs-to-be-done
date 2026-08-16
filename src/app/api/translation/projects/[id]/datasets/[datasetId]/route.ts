@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { isTranslationOwner } from '@/lib/translation/access'
 import { getDataset, deleteDataset } from '@/lib/db/translation'
 
 export const dynamic = 'force-dynamic'
 
-export async function DELETE(
+export const DELETE = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; datasetId: string }> },
-) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isTranslationOwner(session.user.email)) {
+) => {
+  const user = await requireUser()
+  if (!isTranslationOwner(user.email)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   const { id, datasetId } = await params
@@ -21,4 +20,4 @@ export async function DELETE(
   }
   await deleteDataset(datasetId)
   return NextResponse.json({ ok: true })
-}
+})

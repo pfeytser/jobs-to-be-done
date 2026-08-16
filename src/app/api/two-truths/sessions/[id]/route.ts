@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import {
   getSessionById,
   activateSession,
@@ -21,127 +21,109 @@ const PatchSchema = z.object({
  * Poll-safe status endpoint. Returns just enough for the client to know when to
  * refresh the server-rendered view — never leaks the lie or vote tallies.
  */
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const GET = route(async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  const user = await requireUser()
 
-  try {
-    const { id } = await params
-    const gameSession = await getSessionById(id)
-    if (!gameSession) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const { id } = await params
+  const gameSession = await getSessionById(id)
+  if (!gameSession) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // Non-admins can't poll drafts or archived sessions.
-    if (session.user.role !== 'admin' && !['active', 'completed'].includes(gameSession.status)) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    }
-
-    const vote = await getVoteForUser(id, session.user.userId)
-    return NextResponse.json({
-      id: gameSession.id,
-      status: gameSession.status,
-      hasVoted: !!vote,
-    })
-  } catch (error) {
-    console.error('[two-truths/sessions/:id GET]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  // Non-admins can't poll drafts or archived sessions.
+  if (user.role !== 'admin' && !['active', 'completed'].includes(gameSession.status)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
-}
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const vote = await getVoteForUser(id, user.userId)
+  return NextResponse.json({
+    id: gameSession.id,
+    status: gameSession.status,
+    hasVoted: !!vote,
+  })
+})
 
-  try {
-    const { id } = await params
-    const parsed = PatchSchema.safeParse(await req.json())
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
-    }
+export const PATCH = route(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  const user = await requireUser()
 
-    const gameSession = await getSessionById(id)
-    if (!gameSession) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-    // The admin can manage any session; everyone else only the sessions they created.
-    const canManage =
-      session.user.role === 'admin' || gameSession.created_by === session.user.userId
-    if (!canManage) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
-    const { action } = parsed.data
-
-    if (action === 'activate') {
-      if (gameSession.status !== 'draft') {
-        return NextResponse.json({ error: 'Only draft sessions can be activated' }, { status: 409 })
-      }
-      // Guard: every statement must have text and exactly one lie must be marked.
-      const statements = await getStatements(id)
-      const lies = statements.filter((s) => s.is_lie).length
-      const blanks = statements.filter((s) => !s.text.trim()).length
-      if (statements.length !== 3 || blanks > 0 || lies !== 1) {
-        return NextResponse.json(
-          { error: 'The author must fill in all three statements and mark exactly one lie before activation.' },
-          { status: 409 }
-        )
-      }
-      const updated = await activateSession(id)
-      return NextResponse.json({ session: updated })
-    }
-
-    if (action === 'reveal') {
-      if (gameSession.status !== 'active') {
-        return NextResponse.json({ error: 'Only active sessions can be revealed' }, { status: 409 })
-      }
-      const updated = await revealSession(id)
-      return NextResponse.json({ session: updated })
-    }
-
-    if (action === 'reopen') {
-      if (gameSession.status !== 'completed') {
-        return NextResponse.json({ error: 'Only revealed sessions can be reopened for voting' }, { status: 409 })
-      }
-      const updated = await reopenSession(id)
-      return NextResponse.json({ session: updated })
-    }
-
-    if (action === 'unarchive') {
-      if (gameSession.status !== 'archived') {
-        return NextResponse.json({ error: 'Only archived sessions can be unarchived' }, { status: 409 })
-      }
-      const updated = await unarchiveSession(id)
-      return NextResponse.json({ session: updated })
-    }
-
-    // archive
-    if (gameSession.status !== 'completed') {
-      return NextResponse.json({ error: 'Only completed sessions can be archived' }, { status: 409 })
-    }
-    const updated = await archiveSession(id)
-    return NextResponse.json({ session: updated })
-  } catch (error) {
-    console.error('[two-truths/sessions/:id PATCH]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  const { id } = await params
+  const parsed = PatchSchema.safeParse(await req.json())
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
   }
-}
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const gameSession = await getSessionById(id)
+  if (!gameSession) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  try {
-    const { id } = await params
-    const gameSession = await getSessionById(id)
-    if (!gameSession) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  // The admin can manage any session; everyone else only the sessions they created.
+  const canManage =
+    user.role === 'admin' || gameSession.created_by === user.userId
+  if (!canManage) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    const canManage =
-      session.user.role === 'admin' || gameSession.created_by === session.user.userId
-    if (!canManage) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const { action } = parsed.data
 
+  if (action === 'activate') {
     if (gameSession.status !== 'draft') {
-      return NextResponse.json({ error: 'Only draft sessions can be deleted' }, { status: 409 })
+      return NextResponse.json({ error: 'Only draft sessions can be activated' }, { status: 409 })
     }
-    await deleteSession(id)
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    console.error('[two-truths/sessions/:id DELETE]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    // Guard: every statement must have text and exactly one lie must be marked.
+    const statements = await getStatements(id)
+    const lies = statements.filter((s) => s.is_lie).length
+    const blanks = statements.filter((s) => !s.text.trim()).length
+    if (statements.length !== 3 || blanks > 0 || lies !== 1) {
+      return NextResponse.json(
+        { error: 'The author must fill in all three statements and mark exactly one lie before activation.' },
+        { status: 409 }
+      )
+    }
+    const updated = await activateSession(id)
+    return NextResponse.json({ session: updated })
   }
-}
+
+  if (action === 'reveal') {
+    if (gameSession.status !== 'active') {
+      return NextResponse.json({ error: 'Only active sessions can be revealed' }, { status: 409 })
+    }
+    const updated = await revealSession(id)
+    return NextResponse.json({ session: updated })
+  }
+
+  if (action === 'reopen') {
+    if (gameSession.status !== 'completed') {
+      return NextResponse.json({ error: 'Only revealed sessions can be reopened for voting' }, { status: 409 })
+    }
+    const updated = await reopenSession(id)
+    return NextResponse.json({ session: updated })
+  }
+
+  if (action === 'unarchive') {
+    if (gameSession.status !== 'archived') {
+      return NextResponse.json({ error: 'Only archived sessions can be unarchived' }, { status: 409 })
+    }
+    const updated = await unarchiveSession(id)
+    return NextResponse.json({ session: updated })
+  }
+
+  // archive
+  if (gameSession.status !== 'completed') {
+    return NextResponse.json({ error: 'Only completed sessions can be archived' }, { status: 409 })
+  }
+  const updated = await archiveSession(id)
+  return NextResponse.json({ session: updated })
+})
+
+export const DELETE = route(async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  const user = await requireUser()
+
+  const { id } = await params
+  const gameSession = await getSessionById(id)
+  if (!gameSession) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const canManage =
+    user.role === 'admin' || gameSession.created_by === user.userId
+  if (!canManage) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  if (gameSession.status !== 'draft') {
+    return NextResponse.json({ error: 'Only draft sessions can be deleted' }, { status: 409 })
+  }
+  await deleteSession(id)
+  return NextResponse.json({ ok: true })
+})

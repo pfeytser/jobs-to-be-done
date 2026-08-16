@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 
 const ALLOWED_HOSTNAME = 'blob.vercel-storage.com'
 
-export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const GET = route(async (req: NextRequest) => {
+  await requireUser()
 
   const url = req.nextUrl.searchParams.get('url')
   if (!url) return NextResponse.json({ error: 'Missing url' }, { status: 400 })
@@ -49,4 +48,4 @@ export async function GET(req: NextRequest) {
       'Cache-Control': 'private, max-age=3600',
     },
   })
-}
+})

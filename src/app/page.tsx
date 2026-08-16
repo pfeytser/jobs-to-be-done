@@ -13,6 +13,7 @@ export default async function HomePage() {
   }
 
   const showExpenses = isExpenseOwner(session.user.email)
+  const isAdmin = session.user.role === 'admin'
 
   return (
     <main className="min-h-screen bg-canvas flex items-center justify-center p-6">
@@ -76,6 +77,19 @@ export default async function HomePage() {
           </Link>
 
           <Link
+            href="/quadrant"
+            className="flex items-center justify-between w-full p-5 bg-surface border border-line rounded-lg hover:border-ink transition-colors group"
+          >
+            <div>
+              <p className="text-base font-semibold text-ink">Theme Prioritization ◳</p>
+              <p className="text-sm text-ink-muted mt-0.5">Place themes into a 2×2 and reveal where the group lands</p>
+            </div>
+            <svg className="w-5 h-5 text-ink-muted group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+
+          <Link
             href="/two-truths"
             className="flex items-center justify-between w-full p-5 bg-surface border border-line rounded-lg hover:border-ink transition-colors group"
           >
@@ -113,6 +127,21 @@ export default async function HomePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
+
+          {isAdmin && (
+            <Link
+              href="/roadmap"
+              className="flex items-center justify-between w-full p-5 bg-surface border border-line rounded-lg hover:border-ink transition-colors group"
+            >
+              <div>
+                <p className="text-base font-semibold text-ink">Roadmap &amp; Capacity 📊</p>
+                <p className="text-sm text-ink-muted mt-0.5">Plan the Growth roadmap against engineering-week capacity</p>
+              </div>
+              <svg className="w-5 h-5 text-ink-muted group-hover:text-ink transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          )}
 
           {showExpenses && (
             <Link

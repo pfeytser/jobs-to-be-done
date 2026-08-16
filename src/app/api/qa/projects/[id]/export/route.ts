@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireAdmin, route } from '@/lib/auth/guards'
 import { getQAProjectById } from '@/lib/db/qa-projects'
 import { getTestItemsByProject } from '@/lib/db/qa-test-items'
 import { getSessionsWithProgress } from '@/lib/db/qa-sessions'
@@ -26,10 +26,8 @@ function toCSVRow(cols: unknown[]): string {
   return cols.map(escapeCSV).join(',')
 }
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export const GET = route(async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireAdmin()
 
   const { id: projectId } = await params
   try {
@@ -168,6 +166,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     console.error('[qa/export GET]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
 export const maxDuration = 300

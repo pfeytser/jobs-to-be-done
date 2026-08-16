@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { getUserProfile, saveSeaCreatureAvatar } from '@/lib/db/user-profiles'
 import { rateLimit } from '@/lib/rate-limit'
 import OpenAI from 'openai'
@@ -10,13 +10,12 @@ function getOpenAI() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 }
 
-export async function POST() {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const POST = route(async () => {
+  const user = await requireUser()
 
   // Cap DALL-E avatar regenerations per user (the avatar overwrites itself, so
   // real usage is low) to prevent cost-abuse loops.
-  const limit = await rateLimit(`avatar:${session.user.userId}`, 10, 60 * 60)
+  const limit = await rateLimit(`avatar:${user.userId}`, 10, 60 * 60)
   if (!limit.allowed) {
     return NextResponse.json(
       { error: 'Rate limit exceeded. Try again later.' },
@@ -25,7 +24,7 @@ export async function POST() {
   }
 
   try {
-    const profile = await getUserProfile(session.user.userId)
+    const profile = await getUserProfile(user.userId)
     if (!profile?.sea_creature) {
       return NextResponse.json({ error: 'No sea creature set' }, { status: 400 })
     }
@@ -54,7 +53,7 @@ export async function POST() {
         const imageBuffer = await imageRes.arrayBuffer()
         const { put } = await import('@vercel/blob')
         const blob = await put(
-          `sea-creature-avatars/${session.user.userId}.png`,
+          `sea-creature-avatars/${user.userId}.png`,
           imageBuffer,
           { access: 'public', contentType: 'image/png', addRandomSuffix: false }
         )
@@ -64,10 +63,10 @@ export async function POST() {
       }
     }
 
-    await saveSeaCreatureAvatar(session.user.userId, finalUrl)
+    await saveSeaCreatureAvatar(user.userId, finalUrl)
     return NextResponse.json({ avatar_url: finalUrl })
   } catch (error) {
     console.error('[generate-avatar POST]', error)
     return NextResponse.json({ error: 'Image generation failed' }, { status: 502 })
   }
-}
+})

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireAdmin, route } from '@/lib/auth/guards'
 import Anthropic from '@anthropic-ai/sdk'
 import { getExerciseById } from '@/lib/db/exercises'
 import { getEntriesByExercise } from '@/lib/db/entries'
@@ -52,17 +52,11 @@ Statements:
 ${list}`
 }
 
-export async function POST(
+export const POST = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+) => {
+  await requireAdmin()
 
   const { id: exerciseId } = await params
 
@@ -135,4 +129,4 @@ export async function POST(
     console.error('[brainstorm/generate POST]', error)
     return NextResponse.json({ error: 'Generation failed. Please try again.' }, { status: 500 })
   }
-}
+})

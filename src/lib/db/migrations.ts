@@ -1,4 +1,5 @@
 import { turso } from './client'
+import { SEED_INITIATIVES } from '../roadmap/seed-initiatives'
 
 let migrationRan = false
 
@@ -667,6 +668,112 @@ export async function runMigrations(): Promise<void> {
         ON workshop_rankings(workshop_id, user_id, phase, category, dimension);
     `)
 
+    // Theme-prioritization workshop (2×2 quadrant placement). An admin drives a
+    // project through: setup → active → reveal. Each participant drags every theme
+    // into one of four fixed quadrants; the group tally is computed on read.
+    await turso.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS quad_projects (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'setup',
+        axis_labels TEXT NOT NULL DEFAULT '{}',
+        created_by TEXT NOT NULL,
+        created_by_name TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        activated_at TEXT,
+        revealed_at TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS quad_themes (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        items TEXT NOT NULL DEFAULT '[]',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        facilitator_reference TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (project_id) REFERENCES quad_projects(id) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_quad_themes_project ON quad_themes(project_id);
+
+      CREATE TABLE IF NOT EXISTS quad_participants (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        display_name TEXT NOT NULL DEFAULT '',
+        role TEXT NOT NULL DEFAULT 'collaborator',
+        status TEXT NOT NULL DEFAULT 'in_progress',
+        joined_at TEXT NOT NULL,
+        FOREIGN KEY (project_id) REFERENCES quad_projects(id) ON DELETE CASCADE
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_quad_participants_unique
+        ON quad_participants(project_id, user_id);
+
+      CREATE TABLE IF NOT EXISTS quad_placements (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        theme_id TEXT NOT NULL,
+        quadrant_key TEXT,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (project_id) REFERENCES quad_projects(id) ON DELETE CASCADE
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_quad_placements_unique
+        ON quad_placements(project_id, user_id, theme_id);
+      CREATE INDEX IF NOT EXISTS idx_quad_placements_theme ON quad_placements(theme_id);
+
+      -- Post-workshop decisions layer. Freezing the reveal snapshots it onto
+      -- quad_projects.frozen_board (never recomputed) and seeds one decided row
+      -- per theme from its consensus quadrant. The decided board is then the live
+      -- state and diverges freely; quad_themes/quad_placements are never touched.
+      CREATE TABLE IF NOT EXISTS quad_decided_themes (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        source_theme_id TEXT,
+        title TEXT NOT NULL,
+        items TEXT NOT NULL DEFAULT '[]',
+        quadrant_key TEXT,
+        origin TEXT NOT NULL DEFAULT 'workshop',
+        derived_from_title TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (project_id) REFERENCES quad_projects(id) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_quad_decided_project ON quad_decided_themes(project_id);
+
+      -- Append-only trail of how the decided board drifted from the vote.
+      CREATE TABLE IF NOT EXISTS quad_decision_log (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        decided_theme_id TEXT,
+        kind TEXT NOT NULL,
+        theme_title TEXT NOT NULL DEFAULT '',
+        from_quadrant TEXT,
+        to_quadrant TEXT,
+        note TEXT NOT NULL DEFAULT '',
+        actor_id TEXT NOT NULL DEFAULT '',
+        actor_name TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (project_id) REFERENCES quad_projects(id) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_quad_decision_log_project
+        ON quad_decision_log(project_id, created_at);
+    `)
+
+    // Additive columns for the decisions layer (safe to fail if already present).
+    for (const sql of [
+      'ALTER TABLE quad_projects ADD COLUMN frozen_at TEXT',
+      'ALTER TABLE quad_projects ADD COLUMN frozen_board TEXT',
+    ]) {
+      try {
+        await turso.execute(sql)
+      } catch {
+        // Column already exists
+      }
+    }
+
     // Seed the two default translation projects. Fixed ids + INSERT OR IGNORE means a
     // rename sticks and re-runs never duplicate; only ever inserted when absent.
     {
@@ -676,6 +783,109 @@ export async function runMigrations(): Promise<void> {
           { sql: 'INSERT OR IGNORE INTO translation_projects (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)', args: ['web', 'Web', now, now] },
           { sql: 'INSERT OR IGNORE INTO translation_projects (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)', args: ['mobile', 'Mobile app', now, now] },
         ],
+        'write',
+      )
+    }
+
+    // ── Roadmap & Capacity app (admin-only) ──────────────────────────────────
+    await turso.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS rm_engineers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        country TEXT NOT NULL DEFAULT 'US',
+        capacity_fraction REAL NOT NULL DEFAULT 1,
+        start_date TEXT,
+        end_date TEXT,
+        active INTEGER NOT NULL DEFAULT 1,
+        sort_order INTEGER NOT NULL DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS rm_pto (
+        engineer_id TEXT NOT NULL,
+        year INTEGER NOT NULL,
+        quarter INTEGER NOT NULL,
+        days REAL NOT NULL DEFAULT 0,
+        PRIMARY KEY (engineer_id, year, quarter),
+        FOREIGN KEY (engineer_id) REFERENCES rm_engineers(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS rm_settings (
+        year INTEGER NOT NULL,
+        quarter INTEGER NOT NULL,
+        bau_pct REAL NOT NULL DEFAULT 0.2,
+        PRIMARY KEY (year, quarter)
+      );
+
+      CREATE TABLE IF NOT EXISTS rm_initiatives (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        summary TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'proposed',
+        priority TEXT,
+        theme TEXT,
+        year INTEGER NOT NULL,
+        quarter INTEGER NOT NULL,
+        effort_weeks REAL,
+        impact_value REAL,
+        impact_unit TEXT,
+        impact_kind TEXT,
+        owner_name TEXT,
+        objective TEXT,
+        is_bau INTEGER NOT NULL DEFAULT 0,
+        is_required INTEGER NOT NULL DEFAULT 0,
+        committed INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL DEFAULT 0
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_rm_initiatives_quarter ON rm_initiatives(year, quarter);
+    `)
+
+    // Seed default BAU% (20%) for each covered quarter, and the Growth-team
+    // initiatives with their real ids. Fixed ids + INSERT OR IGNORE means in-app
+    // edits stick and re-runs never duplicate — rows are only inserted when absent.
+    {
+      const quarters: [number, number][] = [
+        [2026, 1], [2026, 2], [2026, 3], [2026, 4], [2027, 1],
+      ]
+      await turso.batch(
+        quarters.map(([year, quarter]) => ({
+          sql: 'INSERT OR IGNORE INTO rm_settings (year, quarter, bau_pct) VALUES (?, ?, ?)',
+          args: [year, quarter, 0.2] as (number)[],
+        })),
+        'write',
+      )
+
+      await turso.batch(
+        SEED_INITIATIVES.map((i) => ({
+          sql: `INSERT OR IGNORE INTO rm_initiatives
+                  (id, title, summary, status, priority, theme, year, quarter, effort_weeks,
+                   impact_value, impact_unit, impact_kind, owner_name, objective,
+                   is_bau, is_required, committed, sort_order)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [
+            i.id, i.title, i.summary, i.status, i.priority, i.theme, i.year, i.quarter, i.effort_weeks,
+            i.impact_value, i.impact_unit, i.impact_kind, i.owner_name, i.objective,
+            i.is_bau, i.is_required, i.committed, i.sort_order,
+          ] as (string | number | null)[],
+        })),
+        'write',
+      )
+
+      // Seed a starter roster from the Growth-team owners so the dashboard is
+      // useful immediately. Fixed ids keep this idempotent; the admin edits from here.
+      const roster: [string, string, string, number][] = [
+        ['rm-eng-peter', 'Peter Feytser', 'US', 0.5],
+        ['rm-eng-guillaume', 'Guillaume Wagner', 'FR', 1],
+        ['rm-eng-adrien', 'Adrien Devleschoudere', 'FR', 1],
+        ['rm-eng-matthieu', 'Matthieu Lepaix', 'FR', 1],
+        ['rm-eng-philippe', 'Philippe Bouffaut', 'FR', 1],
+      ]
+      await turso.batch(
+        roster.map(([id, name, country, cap], idx) => ({
+          sql: `INSERT OR IGNORE INTO rm_engineers (id, name, country, capacity_fraction, start_date, end_date, active, sort_order)
+                VALUES (?, ?, ?, ?, NULL, NULL, 1, ?)`,
+          args: [id, name, country, cap, idx] as (string | number)[],
+        })),
         'write',
       )
     }

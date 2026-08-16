@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { auth } from '@/lib/auth/config'
+import { requireAdmin, route } from '@/lib/auth/guards'
 
 const CODE_REVIEW_SYSTEM_PROMPT = `You are acting as an L7 engineer at a tier 1 tech company performing a thorough code review. Your standard should reflect what it takes to get an L7 engineer to approve the pull request. Do not lower the bar.
 
@@ -213,14 +213,8 @@ async function fetchPRData(
   return text
 }
 
-export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-  }
-  if (session.user.role !== 'admin') {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
-  }
+export const POST = route(async (req: NextRequest) => {
+  await requireAdmin()
 
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
@@ -306,4 +300,4 @@ export async function POST(req: NextRequest) {
       'Cache-Control': 'no-cache',
     },
   })
-}
+})

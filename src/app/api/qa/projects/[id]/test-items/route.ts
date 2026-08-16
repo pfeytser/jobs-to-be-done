@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, requireAdmin, route } from '@/lib/auth/guards'
 import { getTestItemsByProject, getTestItemsByUserType, createTestItem, deleteTestItemsByProject, deleteTestItemsByUserType, bulkCreateTestItems } from '@/lib/db/qa-test-items'
 import { z } from 'zod'
 
@@ -25,24 +25,16 @@ const BulkSaveSchema = z.object({
   user_type: z.string().optional(),
 })
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const GET = route(async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireUser()
 
   const { id } = await params
-  try {
-    const items = await getTestItemsByProject(id)
-    return NextResponse.json({ items })
-  } catch (error) {
-    console.error('[qa/test-items GET]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  const items = await getTestItemsByProject(id)
+  return NextResponse.json({ items })
+})
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export const POST = route(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireAdmin()
 
   const { id: projectId } = await params
   try {
@@ -83,4 +75,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     console.error('[qa/test-items POST]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { isTranslationOwner } from '@/lib/translation/access'
 import { getProject, createDataset } from '@/lib/db/translation'
 import { compareStructure } from '@/lib/translation/json'
@@ -66,10 +66,9 @@ function normalizeMongoSnapshot(snapshot: MongoSnapshot): MongoSnapshot {
 }
 
 // Owner-only: add a UI (JSON) or CSV (DB export) dataset to a project.
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isTranslationOwner(session.user.email)) {
+export const POST = route(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  const user = await requireUser()
+  if (!isTranslationOwner(user.email)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   const { id } = await params
@@ -175,4 +174,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   const dataset = await createDataset(id, 'csv', body.name?.trim() || 'Database export', body.text, config)
   return NextResponse.json({ dataset })
-}
+})

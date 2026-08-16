@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { getExerciseById } from '@/lib/db/exercises'
 import { getSentimentSolutionsByExercise } from '@/lib/db/sentiment-brainstorm'
 
-export async function GET(
+export const GET = route(async (
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+) => {
+  await requireUser()
 
   const { id: exerciseId } = await params
 
@@ -46,4 +43,4 @@ export async function GET(
     console.error('[sentiment-brainstorm GET]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

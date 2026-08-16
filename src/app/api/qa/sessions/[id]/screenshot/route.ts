@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/config'
+import { requireUser, route } from '@/lib/auth/guards'
 import { put } from '@vercel/blob'
 import { getSessionById } from '@/lib/db/qa-sessions'
 import { updateResultScreenshot } from '@/lib/db/qa-results'
@@ -19,15 +19,14 @@ function sanitizeForFilename(str: string): string {
   return str.replace(/[^a-z0-9-]/gi, '-').replace(/-+/g, '-')
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const POST = route(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  const user = await requireUser()
 
   const { id: sessionId } = await params
   try {
     const qaSession = await getSessionById(sessionId)
     if (!qaSession) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    if (session.user.role !== 'admin' && qaSession.tester_id !== session.user.userId) {
+    if (user.role !== 'admin' && qaSession.tester_id !== user.userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -45,8 +44,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!testItem) return NextResponse.json({ error: 'Test item not found' }, { status: 404 })
 
     // Build standardized filename
-    const firstName = (session.user.name ?? 'user').split(' ')[0].toLowerCase().replace(/\s+/g, '')
-    const testerId = sanitizeForFilename(session.user.userId.replace(/[^a-z0-9]/gi, '').slice(0, 20))
+    const firstName = (user.name ?? 'user').split(' ')[0].toLowerCase().replace(/\s+/g, '')
+    const testerId = sanitizeForFilename(user.userId.replace(/[^a-z0-9]/gi, '').slice(0, 20))
     const featureSlug = slugify(testItem.feature_area)
     const tcSlug = sanitizeForFilename(testItem.tc_number || testItemId.slice(-6)).replace(/-+/g, '-')
     const ext = file.name.split('.').pop()?.toLowerCase() ?? 'png'
@@ -64,4 +63,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     console.error('[qa/screenshot POST]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
