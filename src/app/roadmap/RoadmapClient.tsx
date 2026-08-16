@@ -47,8 +47,8 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
   const [scenarioName, setScenarioName] = useState('')
 
   const [tab, setTab] = useState<'roadmap' | 'team' | 'calendars'>('roadmap')
-  const [groupBy, setGroupBy] = useState<GroupBy>('theme')
-  const [orientation, setOrientation] = useState<Orientation>('quarters-cols')
+  const [groupBy, setGroupBy] = useState<GroupBy>('none')
+  const [orientation, setOrientation] = useState<Orientation>('quarters-rows')
   const [editing, setEditing] = useState<{ draft: InitiativeDraft; isNew: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
 
