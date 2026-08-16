@@ -93,9 +93,17 @@ export const PRIORITY_META: Record<Priority, { label: string; rank: number; clas
 
 export const COUNTRY_META: Record<string, { label: string; flag: string }> = {
   US: { label: 'United States', flag: '🇺🇸' },
+  CA: { label: 'Canada', flag: '🇨🇦' },
   FR: { label: 'France', flag: '🇫🇷' },
-  SG: { label: 'Singapore', flag: '🇸🇬' },
-  UK: { label: 'United Kingdom', flag: '🇬🇧' },
+  DO: { label: 'Dominican Republic', flag: '🇩🇴' },
+}
+
+// A company-wide day off (off-site, all-hands, holiday shutdown). Counts as a day
+// off for every active engineer — like team-wide PTO — in the capacity model.
+export interface CompanyOffDay {
+  id: string
+  date: string // ISO YYYY-MM-DD
+  label: string
 }
 
 export function quarterKey(q: Quarter): string {

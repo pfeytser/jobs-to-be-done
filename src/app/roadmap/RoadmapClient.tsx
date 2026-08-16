@@ -2,13 +2,14 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import type { Engineer, Initiative, PtoEntry, QuarterSetting } from '@/lib/roadmap/types'
+import type { CompanyOffDay, Engineer, Initiative, PtoEntry, QuarterSetting } from '@/lib/roadmap/types'
 import { QUARTERS } from '@/lib/roadmap/types'
 import { computeCapacity, roundWeeks } from '@/lib/roadmap/capacity'
 import type { RoadmapData } from '@/lib/db/roadmap'
 import { CapacityRibbon } from './CapacityRibbon'
 import { RoadmapGrid } from './RoadmapGrid'
 import { TeamPanel } from './TeamPanel'
+import { CalendarsPanel } from './CalendarsPanel'
 import { InitiativeEditor, type InitiativeDraft } from './InitiativeEditor'
 
 // Current quarter (for the "Now" marker). Client-side Date is fine here.
@@ -26,16 +27,18 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
   const [pto, setPto] = useState<PtoEntry[]>(initial.pto)
   const [settings, setSettings] = useState<QuarterSetting[]>(initial.settings)
   const [initiatives, setInitiatives] = useState<Initiative[]>(initial.initiatives)
+  const [companyOffDays, setCompanyOffDays] = useState<CompanyOffDay[]>(initial.companyOffDays)
 
   const [scenario, setScenario] = useState(false)
   const [showControls, setShowControls] = useState(false)
+  const [showCalendars, setShowCalendars] = useState(false)
   const [groupBy, setGroupBy] = useState<'theme' | 'objective'>('theme')
   const [editing, setEditing] = useState<{ draft: InitiativeDraft; isNew: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
 
   const capacity = useMemo(
-    () => computeCapacity({ engineers, pto, settings, initiatives, quarters: QUARTERS }),
-    [engineers, pto, settings, initiatives]
+    () => computeCapacity({ engineers, pto, settings, initiatives, quarters: QUARTERS, companyOffDays }),
+    [engineers, pto, settings, initiatives, companyOffDays]
   )
 
   const totals = useMemo(() => {
@@ -79,6 +82,7 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
     setPto(data.pto)
     setSettings(data.settings)
     setInitiatives(data.initiatives)
+    setCompanyOffDays(data.companyOffDays)
   }, [])
 
   const toggleScenario = useCallback(async () => {
@@ -162,6 +166,29 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
         body: JSON.stringify({ year, quarter, bau_pct: pct }),
       })
     )
+  }
+
+  // ── Company off-day handlers ────────────────────────────────────────────────
+  const onAddOffDay = async (date: string, label: string) => {
+    // Replace any existing entry for the same date (the date column is unique).
+    setCompanyOffDays((prev) => [...prev.filter((o) => o.date !== date), { id: tempId('off'), date, label }])
+    if (scenario) return
+    const res = await fetch('/api/roadmap/offdays', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, label }),
+    })
+    if (res.ok) {
+      const { offDay } = await res.json()
+      setCompanyOffDays((prev) => [...prev.filter((o) => o.date !== date), offDay])
+    }
+  }
+
+  const onDeleteOffDay = (id: string) => {
+    setCompanyOffDays((prev) => prev.filter((o) => o.id !== id))
+    if (!scenario && !id.startsWith('off-')) {
+      void fetch(`/api/roadmap/offdays/${id}`, { method: 'DELETE' })
+    }
   }
 
   // ── Initiative handlers ─────────────────────────────────────────────────────
@@ -281,6 +308,15 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
             </button>
 
             <button
+              onClick={() => setShowCalendars((v) => !v)}
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                showCalendars ? 'border-ink bg-ink text-surface' : 'border-line bg-surface text-ink hover:border-ink'
+              }`}
+            >
+              Calendars
+            </button>
+
+            <button
               onClick={toggleScenario}
               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
                 scenario ? 'border-accent bg-accent text-ink' : 'border-line bg-surface text-ink-soft hover:border-ink'
@@ -313,6 +349,16 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
               onEngineerDelete={onEngineerDelete}
               onPtoChange={onPtoChange}
               onBauChange={onBauChange}
+            />
+          </div>
+        )}
+
+        {showCalendars && (
+          <div className="rounded-xl border border-line bg-canvas p-5">
+            <CalendarsPanel
+              companyOffDays={companyOffDays}
+              onAddOffDay={onAddOffDay}
+              onDeleteOffDay={onDeleteOffDay}
             />
           </div>
         )}

@@ -838,6 +838,12 @@ export async function runMigrations(): Promise<void> {
       );
 
       CREATE INDEX IF NOT EXISTS idx_rm_initiatives_quarter ON rm_initiatives(year, quarter);
+
+      CREATE TABLE IF NOT EXISTS rm_company_offdays (
+        id TEXT PRIMARY KEY,
+        date TEXT NOT NULL UNIQUE,
+        label TEXT NOT NULL DEFAULT ''
+      );
     `)
 
     // Seed default BAU% (20%) for each covered quarter, and the Growth-team

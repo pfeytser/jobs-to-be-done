@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto'
 import { turso } from './client'
 import { runMigrations } from './migrations'
 import type {
+  CompanyOffDay,
   Engineer,
   Initiative,
   InitiativeStatus,
@@ -227,6 +228,37 @@ export async function deleteInitiative(id: string): Promise<void> {
   await turso.execute({ sql: 'DELETE FROM rm_initiatives WHERE id = ?', args: [id] })
 }
 
+// ── Company off-days ──────────────────────────────────────────────────────────
+
+export async function listCompanyOffDays(): Promise<CompanyOffDay[]> {
+  await runMigrations()
+  const res = await turso.execute('SELECT * FROM rm_company_offdays ORDER BY date')
+  return res.rows.map((r) => ({
+    id: String((r as Row).id),
+    date: String((r as Row).date),
+    label: String((r as Row).label ?? ''),
+  }))
+}
+
+export async function createCompanyOffDay(date: string, label: string): Promise<CompanyOffDay> {
+  await runMigrations()
+  const id = randomUUID()
+  // A date is unique; re-adding the same day updates its label rather than erroring.
+  await turso.execute({
+    sql: `INSERT INTO rm_company_offdays (id, date, label) VALUES (?, ?, ?)
+          ON CONFLICT(date) DO UPDATE SET label = excluded.label`,
+    args: [id, date, label],
+  })
+  const res = await turso.execute({ sql: 'SELECT * FROM rm_company_offdays WHERE date = ?', args: [date] })
+  const r = res.rows[0] as Row
+  return { id: String(r.id), date: String(r.date), label: String(r.label ?? '') }
+}
+
+export async function deleteCompanyOffDay(id: string): Promise<void> {
+  await runMigrations()
+  await turso.execute({ sql: 'DELETE FROM rm_company_offdays WHERE id = ?', args: [id] })
+}
+
 // ── Bundled load for the dashboard ─────────────────────────────────────────────
 
 export interface RoadmapData {
@@ -234,15 +266,17 @@ export interface RoadmapData {
   pto: PtoEntry[]
   settings: QuarterSetting[]
   initiatives: Initiative[]
+  companyOffDays: CompanyOffDay[]
 }
 
 export async function getRoadmapData(): Promise<RoadmapData> {
   await runMigrations()
-  const [engineers, pto, settings, initiatives] = await Promise.all([
+  const [engineers, pto, settings, initiatives, companyOffDays] = await Promise.all([
     listEngineers(),
     listPto(),
     listSettings(),
     listInitiatives(),
+    listCompanyOffDays(),
   ])
-  return { engineers, pto, settings, initiatives }
+  return { engineers, pto, settings, initiatives, companyOffDays }
 }

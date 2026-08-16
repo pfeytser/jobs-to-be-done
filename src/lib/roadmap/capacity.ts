@@ -10,7 +10,7 @@
 //   engineerWeeks = (effectiveDays / 5) × capacity_fraction
 // Summed across engineers → grossWeeks. Feature capacity = grossWeeks × (1 − bau_pct).
 
-import type { Engineer, Initiative, PtoEntry, Quarter, QuarterSetting } from './types'
+import type { CompanyOffDay, Engineer, Initiative, PtoEntry, Quarter, QuarterSetting } from './types'
 import { quarterKey } from './types'
 import { holidaysForCountry } from './holidays'
 
@@ -34,6 +34,7 @@ export interface EngineerQuarterCapacity {
   name: string
   workingDays: number
   holidayDays: number
+  companyOffDays: number // team-wide off days not already a national holiday
   ptoDays: number
   effectiveWeeks: number
 }
@@ -79,7 +80,8 @@ const DAYS_PER_WEEK = 5
 export function computeEngineerQuarter(
   engineer: Engineer,
   q: Quarter,
-  ptoDays: number
+  ptoDays: number,
+  companyOffDates: Set<string>
 ): EngineerQuarterCapacity {
   const { start: qStart, end: qEnd } = quarterRange(q)
 
@@ -95,6 +97,7 @@ export function computeEngineerQuarter(
       name: engineer.name,
       workingDays: 0,
       holidayDays: 0,
+      companyOffDays: 0,
       ptoDays: 0,
       effectiveWeeks: 0,
     }
@@ -103,15 +106,25 @@ export function computeEngineerQuarter(
   const workingDays = countWeekdays(winStart, winEnd)
 
   // Public holidays for the engineer's country that fall on a weekday within the window.
-  let holidayDays = 0
+  const holidayDates = new Set<string>()
   for (const h of holidaysForCountry(engineer.country)) {
     const hd = toUTCDate(h.date)
-    if (hd >= winStart && hd <= winEnd && isWeekday(hd)) holidayDays++
+    if (hd >= winStart && hd <= winEnd && isWeekday(hd)) holidayDates.add(h.date)
+  }
+  const holidayDays = holidayDates.size
+
+  // Company-wide off days that land on a weekday in the window and aren't already
+  // one of this engineer's national holidays (avoid double-counting).
+  let companyOffDays = 0
+  for (const date of companyOffDates) {
+    if (holidayDates.has(date)) continue
+    const cd = toUTCDate(date)
+    if (cd >= winStart && cd <= winEnd && isWeekday(cd)) companyOffDays++
   }
 
-  const availableAfterHolidays = Math.max(0, workingDays - holidayDays)
-  const boundedPto = Math.max(0, Math.min(ptoDays, availableAfterHolidays))
-  const effectiveDays = availableAfterHolidays - boundedPto
+  const availableAfterOff = Math.max(0, workingDays - holidayDays - companyOffDays)
+  const boundedPto = Math.max(0, Math.min(ptoDays, availableAfterOff))
+  const effectiveDays = availableAfterOff - boundedPto
   const effectiveWeeks = (effectiveDays / DAYS_PER_WEEK) * engineer.capacity_fraction
 
   return {
@@ -119,6 +132,7 @@ export function computeEngineerQuarter(
     name: engineer.name,
     workingDays,
     holidayDays,
+    companyOffDays,
     ptoDays: boundedPto,
     effectiveWeeks,
   }
@@ -130,10 +144,11 @@ export interface CapacityInputs {
   settings: QuarterSetting[]
   initiatives: Initiative[]
   quarters: Quarter[]
+  companyOffDays?: CompanyOffDay[]
 }
 
 export function computeCapacity(inputs: CapacityInputs): QuarterCapacity[] {
-  const { engineers, pto, settings, initiatives, quarters } = inputs
+  const { engineers, pto, settings, initiatives, quarters, companyOffDays = [] } = inputs
 
   const ptoIndex = new Map<string, number>()
   for (const p of pto) ptoIndex.set(`${p.engineer_id}:${p.year}-Q${p.quarter}`, p.days)
@@ -141,10 +156,12 @@ export function computeCapacity(inputs: CapacityInputs): QuarterCapacity[] {
   const bauIndex = new Map<string, number>()
   for (const s of settings) bauIndex.set(quarterKey(s), s.bau_pct)
 
+  const companyOffDates = new Set(companyOffDays.map((d) => d.date))
+
   return quarters.map((q) => {
     const perEngineer = engineers
       .filter((e) => e.active === 1)
-      .map((e) => computeEngineerQuarter(e, q, ptoIndex.get(`${e.id}:${quarterKey(q)}`) ?? 0))
+      .map((e) => computeEngineerQuarter(e, q, ptoIndex.get(`${e.id}:${quarterKey(q)}`) ?? 0, companyOffDates))
 
     const grossWeeks = perEngineer.reduce((a, e) => a + e.effectiveWeeks, 0)
     const engineerCount = perEngineer.reduce(
