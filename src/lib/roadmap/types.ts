@@ -121,13 +121,50 @@ export function quarterLabel(q: Quarter): string {
   return `Q${q.quarter} ${q.year}`
 }
 
-// The planning window shown in the app: Q3 2026 → Q2 2027.
-export const QUARTERS: Quarter[] = [
+// The full universe of quarters the app knows about (holiday data covers 2026–27).
+// The roadmap shows a user-chosen sub-range of these.
+export const ALL_QUARTERS: Quarter[] = [
+  { year: 2026, quarter: 1 },
+  { year: 2026, quarter: 2 },
   { year: 2026, quarter: 3 },
   { year: 2026, quarter: 4 },
   { year: 2027, quarter: 1 },
   { year: 2027, quarter: 2 },
+  { year: 2027, quarter: 3 },
+  { year: 2027, quarter: 4 },
 ]
+
+export function quarterIndex(key: string): number {
+  return ALL_QUARTERS.findIndex((q) => quarterKey(q) === key)
+}
+
+export function currentQuarter(): Quarter {
+  const d = new Date()
+  return { year: d.getUTCFullYear(), quarter: Math.floor(d.getUTCMonth() / 3) + 1 }
+}
+
+// Clamp a quarter key into the known universe.
+function clampIndex(i: number): number {
+  return Math.max(0, Math.min(ALL_QUARTERS.length - 1, i))
+}
+
+export function quartersInRange(fromKey: string, toKey: string): Quarter[] {
+  const a = clampIndex(quarterIndex(fromKey) < 0 ? 0 : quarterIndex(fromKey))
+  const b = clampIndex(quarterIndex(toKey) < 0 ? ALL_QUARTERS.length - 1 : quarterIndex(toKey))
+  const lo = Math.min(a, b)
+  const hi = Math.max(a, b)
+  return ALL_QUARTERS.slice(lo, hi + 1)
+}
+
+// Default view: current quarter through the next two (clamped to the universe).
+export function defaultRange(): { from: string; to: string } {
+  const cur = currentQuarter()
+  const curKey = quarterKey(cur)
+  const idx = quarterIndex(curKey)
+  const fromIdx = idx < 0 ? 0 : idx
+  const toIdx = clampIndex(fromIdx + 2)
+  return { from: quarterKey(ALL_QUARTERS[fromIdx]), to: quarterKey(ALL_QUARTERS[toIdx]) }
+}
 
 export const THEME_ORDER: string[] = [
   'revenue',

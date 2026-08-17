@@ -1,10 +1,10 @@
 'use client'
 
 import { Fragment, useState } from 'react'
-import type { Initiative } from '@/lib/roadmap/types'
+import type { Initiative, Quarter } from '@/lib/roadmap/types'
 import type { QuarterCapacity, ScheduleSegment } from '@/lib/roadmap/capacity'
 import { roundWeeks, straddleOriginPct } from '@/lib/roadmap/capacity'
-import { BACKLOG_LABEL, QUARTERS, THEME_META, THEME_ORDER, quarterLabel, themeKey } from '@/lib/roadmap/types'
+import { BACKLOG_LABEL, THEME_META, THEME_ORDER, quarterLabel, themeKey } from '@/lib/roadmap/types'
 import { InitiativeCard } from './InitiativeCard'
 
 export type GroupBy = 'theme' | 'objective' | 'none'
@@ -31,6 +31,7 @@ const reorderBtn =
 export function RoadmapGrid({
   initiatives,
   capacity,
+  quarters,
   schedule,
   groupBy,
   orientation,
@@ -41,6 +42,7 @@ export function RoadmapGrid({
 }: {
   initiatives: Initiative[]
   capacity: QuarterCapacity[]
+  quarters: Quarter[]
   schedule: Map<string, ScheduleSegment[]>
   groupBy: GroupBy
   orientation: Orientation
@@ -232,9 +234,16 @@ export function RoadmapGrid({
     const ghosts = ghostsFor(groupKey, year, quarter)
     const cellKey = `${groupKey}:${year}-${quarter}`
     const target: MoveTarget = { year, quarter, groupKey }
+    // In list (flat) view the cell is full width, so tile the cards into columns
+    // instead of one very wide card per row.
+    const containerCls = flat
+      ? 'grid gap-2 min-h-[72px] p-2 transition-colors'
+      : 'space-y-2 min-h-[72px] p-2 transition-colors'
+    const containerStyle = flat ? { gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' } : undefined
     return (
       <div
-        className={`min-h-[72px] space-y-2 p-2 transition-colors ${overKey === cellKey && dragId ? 'bg-accent-wash/40' : ''}`}
+        className={`${containerCls} ${overKey === cellKey && dragId ? 'bg-accent-wash/40' : ''}`}
+        style={containerStyle}
         onDragOver={(e) => {
           if (dragId) {
             e.preventDefault()
@@ -256,7 +265,7 @@ export function RoadmapGrid({
         ))}
         {cards.map((i, idx) => (
           <Fragment key={i.id}>
-            {dragId && dragId !== i.id && insertBefore === i.id && <DropLine />}
+            {!flat && dragId && dragId !== i.id && insertBefore === i.id && <DropLine />}
             <DraggableCard
               i={i}
               target={target}
@@ -267,14 +276,14 @@ export function RoadmapGrid({
             />
           </Fragment>
         ))}
-        {dragId && overKey === cellKey && insertBefore === null && <DropLine />}
+        {!flat && dragId && overKey === cellKey && insertBefore === null && <DropLine />}
       </div>
     )
   }
 
   // ── The "To Be Prioritized" bucket ───────────────────────────────────────────
   const backlogCards = initiatives.filter((i) => i.unscheduled === 1).sort(sortCards)
-  const backlogTarget: MoveTarget = { year: QUARTERS[0].year, quarter: QUARTERS[0].quarter, groupKey: 'all', unscheduled: true }
+  const backlogTarget: MoveTarget = { year: quarters[0].year, quarter: quarters[0].quarter, groupKey: 'all', unscheduled: true }
   const backlogEl = (
     <div
       className={`rounded-xl border border-dashed border-line bg-canvas p-3 transition-colors ${
@@ -342,7 +351,7 @@ export function RoadmapGrid({
               ))
             )}
           </div>
-          {QUARTERS.map((q) => (
+          {quarters.map((q) => (
             <div key={`${q.year}-${q.quarter}`} className="grid border-b border-line last:border-b-0" style={{ gridTemplateColumns: gridCols }}>
               <div className="bg-surface p-3">
                 <QuarterMeta year={q.year} quarter={q.quarter} />
@@ -360,18 +369,18 @@ export function RoadmapGrid({
   } else {
     const railWidth = flat ? 0 : 220
     const gridCols = flat
-      ? `repeat(${QUARTERS.length}, minmax(220px, 1fr))`
-      : `${railWidth}px repeat(${QUARTERS.length}, minmax(220px, 1fr))`
+      ? `repeat(${quarters.length}, minmax(220px, 1fr))`
+      : `${railWidth}px repeat(${quarters.length}, minmax(220px, 1fr))`
     gridEl = (
       <div className="overflow-x-auto rounded-xl border border-line bg-canvas">
-        <div style={{ minWidth: railWidth + QUARTERS.length * 220 }}>
+        <div style={{ minWidth: railWidth + quarters.length * 220 }}>
           <div className="grid border-b border-line bg-surface" style={{ gridTemplateColumns: gridCols }}>
             {!flat && (
               <div className="p-3 text-[11px] font-bold uppercase tracking-wide text-ink-muted">
                 {groupBy === 'theme' ? 'Theme' : 'Objective'}
               </div>
             )}
-            {QUARTERS.map((q) => (
+            {quarters.map((q) => (
               <div key={`${q.year}-${q.quarter}`} className="border-l border-line p-3 first:border-l-0">
                 <QuarterMeta year={q.year} quarter={q.quarter} />
               </div>
@@ -384,7 +393,7 @@ export function RoadmapGrid({
                   <GroupLabel g={g} />
                 </div>
               )}
-              {QUARTERS.map((q) => (
+              {quarters.map((q) => (
                 <div key={`${q.year}-${q.quarter}`} className="border-l border-line first:border-l-0">
                   <Cell groupKey={g.key} year={q.year} quarter={q.quarter} />
                 </div>

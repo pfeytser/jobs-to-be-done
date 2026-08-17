@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { Initiative, InitiativeStatus, Priority, Theme } from '@/lib/roadmap/types'
-import { BACKLOG_LABEL, QUARTERS, THEME_META, THEME_ORDER, quarterLabel } from '@/lib/roadmap/types'
+import { ALL_QUARTERS, BACKLOG_LABEL, THEME_META, THEME_ORDER, quarterLabel } from '@/lib/roadmap/types'
 
 export type InitiativeDraft = Omit<Initiative, 'id' | 'sort_order'> & { id?: string }
 
@@ -134,7 +134,7 @@ export function InitiativeEditor({
             <div>
               <label className={labelCls}>Timing</label>
               <select value={timingValue} onChange={(e) => onTimingChange(e.target.value)} className={fieldCls}>
-                {QUARTERS.map((q) => (
+                {ALL_QUARTERS.map((q) => (
                   <option key={`${q.year}-${q.quarter}`} value={`${q.year}-${q.quarter}`}>
                     {quarterLabel(q)}
                   </option>

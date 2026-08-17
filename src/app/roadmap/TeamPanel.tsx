@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { Engineer, PtoEntry } from '@/lib/roadmap/types'
-import { COUNTRY_META, QUARTERS, quarterLabel } from '@/lib/roadmap/types'
+import type { Engineer, PtoEntry, Quarter } from '@/lib/roadmap/types'
+import { COUNTRY_META, quarterLabel } from '@/lib/roadmap/types'
 import type { QuarterCapacity } from '@/lib/roadmap/capacity'
 import { roundWeeks } from '@/lib/roadmap/capacity'
 
@@ -13,6 +13,7 @@ export function TeamPanel({
   engineers,
   pto,
   capacity,
+  quarters,
   onEngineerChange,
   onEngineerAdd,
   onEngineerDelete,
@@ -22,6 +23,7 @@ export function TeamPanel({
   engineers: Engineer[]
   pto: PtoEntry[]
   capacity: QuarterCapacity[]
+  quarters: Quarter[]
   onEngineerChange: (id: string, patch: Partial<Engineer>) => void
   onEngineerAdd: () => void
   onEngineerDelete: (id: string) => void
@@ -41,7 +43,7 @@ export function TeamPanel({
           Share of each quarter reserved for BAU. The rest is new-feature capacity.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          {QUARTERS.map((q) => {
+          {quarters.map((q) => {
             const cap = capacity.find((c) => c.year === q.year && c.quarter === q.quarter)
             const pct = cap ? Math.round(cap.bauPct * 100) : 20
             return (
@@ -168,7 +170,7 @@ export function TeamPanel({
                     <div>
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">PTO days per quarter</p>
                       <div className="flex flex-wrap gap-2">
-                        {QUARTERS.map((q) => (
+                        {quarters.map((q) => (
                           <label key={`${q.year}-${q.quarter}`} className="flex items-center gap-1 text-xs text-ink-soft">
                             {quarterLabel(q).replace(' 20', " '")}
                             <input
@@ -199,7 +201,7 @@ export function TeamPanel({
             <thead>
               <tr className="border-b border-line bg-surface text-ink-muted">
                 <th className="px-3 py-2 text-left font-semibold">Engineer</th>
-                {QUARTERS.map((q) => (
+                {quarters.map((q) => (
                   <th key={`${q.year}-${q.quarter}`} className="px-2 py-2 text-right font-semibold">
                     {quarterLabel(q).replace(' 20', " '")}
                   </th>

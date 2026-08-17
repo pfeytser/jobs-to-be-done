@@ -3,8 +3,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { CompanyOffDay, Engineer, Initiative, PtoEntry, QuarterSetting, Theme } from '@/lib/roadmap/types'
-import { QUARTERS, formatHours, formatRevenue, themeKey } from '@/lib/roadmap/types'
-import { computeCapacity, computeSchedule, roundWeeks } from '@/lib/roadmap/capacity'
+import { ALL_QUARTERS, defaultRange, quartersInRange, quarterKey, quarterLabel, themeKey } from '@/lib/roadmap/types'
+import { computeCapacity, computeSchedule } from '@/lib/roadmap/capacity'
+import { initiativesToCsv } from '@/lib/roadmap/csv'
 import type { RoadmapData, ScenarioMeta } from '@/lib/db/roadmap'
 import { CapacityRibbon } from './CapacityRibbon'
 import { RoadmapGrid, type GroupBy, type Orientation } from './RoadmapGrid'
@@ -61,25 +62,17 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 2000)
   }, [])
 
+  // Visible quarter range (defaults to current quarter → next two).
+  const [range, setRange] = useState(() => defaultRange())
+  const quarters = useMemo(() => quartersInRange(range.from, range.to), [range])
+
   const capacity = useMemo(
-    () => computeCapacity({ engineers, pto, settings, initiatives, quarters: QUARTERS, companyOffDays }),
-    [engineers, pto, settings, initiatives, companyOffDays]
+    () => computeCapacity({ engineers, pto, settings, initiatives, quarters, companyOffDays }),
+    [engineers, pto, settings, initiatives, companyOffDays, quarters]
   )
 
   // Multi-quarter straddle: how each committed initiative's effort flows across quarters.
-  const schedule = useMemo(() => computeSchedule(initiatives, capacity, QUARTERS), [initiatives, capacity])
-
-  const totals = useMemo(() => {
-    const feature = capacity.reduce((a, c) => a + c.featureWeeks, 0)
-    const committed = capacity.reduce((a, c) => a + c.committedWeeks, 0)
-    const proposed = initiatives
-      .filter((i) => i.committed === 0 && i.unscheduled !== 1)
-      .reduce((a, i) => a + (i.effort_weeks ?? 0), 0)
-    // Portfolio outcomes across scheduled work (mirrors the source roadmap summary).
-    const revenue = capacity.reduce((a, c) => a + c.revenue, 0)
-    const hours = capacity.reduce((a, c) => a + c.hours, 0)
-    return { feature, committed, proposed, headroom: feature - committed, revenue, hours }
-  }, [capacity, initiatives])
+  const schedule = useMemo(() => computeSchedule(initiatives, capacity, quarters), [initiatives, capacity, quarters])
 
   // ── Persistence (debounced, skipped in scenario mode, with save toast) ───────
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
@@ -388,7 +381,7 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
     if (!item) return
     const target =
       item.unscheduled === 1
-        ? { year: QUARTERS[0].year, quarter: QUARTERS[0].quarter, groupKey: 'all', unscheduled: true }
+        ? { year: quarters[0].year, quarter: quarters[0].quarter, groupKey: 'all', unscheduled: true }
         : { year: item.year, quarter: item.quarter, groupKey: groupKeyOf(item) }
     const peers = initiatives
       .filter((i) =>
@@ -410,6 +403,20 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
     onMoveInitiative(id, target, beforeId)
   }
 
+  // Download every initiative as a CSV to share.
+  const exportCsv = () => {
+    const blob = new Blob([initiativesToCsv(initiatives)], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'growth-roadmap-initiatives.csv'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    pushToast('CSV exported')
+  }
+
   const nowKey = currentQuarterKey()
 
   return (
@@ -422,21 +429,19 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
           </Link>
           <div>
             <h1 className="font-display text-lg font-semibold leading-none text-ink">Roadmap &amp; Capacity</h1>
-            <p className="text-[11px] text-ink-muted">Growth · Q3 2026 → Q2 2027</p>
+            <p className="text-[11px] text-ink-muted">
+              Growth · {quarters.length > 0 ? `${quarterLabel(quarters[0])} → ${quarterLabel(quarters[quarters.length - 1])}` : ''}
+            </p>
           </div>
 
           <div className="ml-auto flex flex-wrap items-center gap-2">
-            <div className="hidden items-center gap-3 rounded-lg border border-line bg-canvas px-3 py-1.5 text-xs sm:flex">
-              <span className="tabular-nums text-ink">
-                <strong>{roundWeeks(totals.committed)}</strong>
-                <span className="text-ink-muted"> / {roundWeeks(totals.feature)}w committed</span>
-              </span>
-              <span className={`tabular-nums font-semibold ${totals.headroom < 0 ? 'text-fail' : 'text-pass'}`}>
-                {totals.headroom >= 0 ? `${roundWeeks(totals.headroom)}w free` : `${roundWeeks(-totals.headroom)}w over`}
-              </span>
-              {totals.revenue > 0 && <span className="tabular-nums font-semibold text-ink">{formatRevenue(totals.revenue)} unlocked</span>}
-              {totals.hours > 0 && <span className="tabular-nums font-semibold text-ink">{formatHours(totals.hours)}</span>}
-            </div>
+            <button
+              onClick={exportCsv}
+              className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink-soft hover:border-ink"
+              title="Download all initiatives as a CSV"
+            >
+              Export CSV
+            </button>
 
             <button
               onClick={() => (scenarioMode ? exitScenario() : enterScenario())}
@@ -530,7 +535,37 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
           </div>
 
           {tab === 'roadmap' && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 rounded-lg border border-line bg-surface px-2 py-1 text-xs">
+                <span className="font-semibold text-ink-muted">View</span>
+                <select
+                  value={range.from}
+                  onChange={(e) => {
+                    const from = e.target.value
+                    setRange((r) => ({ from, to: quartersInRange(from, r.to).length ? r.to : from }))
+                  }}
+                  className="rounded border border-line bg-canvas px-1.5 py-0.5 text-ink focus:border-ink focus:outline-none"
+                >
+                  {ALL_QUARTERS.map((q) => (
+                    <option key={quarterKey(q)} value={quarterKey(q)}>
+                      {quarterLabel(q)}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-ink-muted">→</span>
+                <select
+                  value={range.to}
+                  onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))}
+                  className="rounded border border-line bg-canvas px-1.5 py-0.5 text-ink focus:border-ink focus:outline-none"
+                >
+                  {ALL_QUARTERS.map((q) => (
+                    <option key={quarterKey(q)} value={quarterKey(q)}>
+                      {quarterLabel(q)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <button
                 onClick={() => setOrientation((o) => (o === 'quarters-cols' ? 'quarters-rows' : 'quarters-cols'))}
                 className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink-soft hover:border-ink"
@@ -566,6 +601,7 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
           <RoadmapGrid
             initiatives={initiatives}
             capacity={capacity}
+            quarters={quarters}
             schedule={schedule}
             groupBy={groupBy}
             orientation={orientation}
@@ -582,6 +618,7 @@ export function RoadmapClient({ initial }: { initial: RoadmapData }) {
               engineers={engineers}
               pto={pto}
               capacity={capacity}
+              quarters={quarters}
               onEngineerChange={onEngineerChange}
               onEngineerAdd={onEngineerAdd}
               onEngineerDelete={onEngineerDelete}
