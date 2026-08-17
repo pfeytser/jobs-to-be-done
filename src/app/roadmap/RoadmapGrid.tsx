@@ -141,7 +141,13 @@ export function RoadmapGrid({
         draggable
         onDragStart={(e) => {
           e.dataTransfer.effectAllowed = 'move'
-          setDragId(i.id)
+          // setData is required for Firefox to start a drag at all.
+          e.dataTransfer.setData('text/plain', i.id)
+          // Defer the state change so the browser snapshots the (un-faded) card for
+          // the drag image first. Setting it synchronously re-renders the node during
+          // dragstart, which cancels the first drag and leaves the card stuck faded.
+          const id = i.id
+          setTimeout(() => setDragId(id), 0)
         }}
         onDragEnd={() => {
           setDragId(null)
