@@ -234,16 +234,14 @@ export function RoadmapGrid({
     const ghosts = ghostsFor(groupKey, year, quarter)
     const cellKey = `${groupKey}:${year}-${quarter}`
     const target: MoveTarget = { year, quarter, groupKey }
-    // In list (flat) view the cell is full width, so tile the cards into columns
-    // instead of one very wide card per row.
+    // In list (flat) view the cell spans the full width, so cap the stacked cards
+    // to a readable width instead of letting them stretch across the whole row.
     const containerCls = flat
-      ? 'grid gap-2 min-h-[72px] p-2 transition-colors'
+      ? 'space-y-2 min-h-[72px] p-2 max-w-xl transition-colors'
       : 'space-y-2 min-h-[72px] p-2 transition-colors'
-    const containerStyle = flat ? { gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' } : undefined
     return (
       <div
         className={`${containerCls} ${overKey === cellKey && dragId ? 'bg-accent-wash/40' : ''}`}
-        style={containerStyle}
         onDragOver={(e) => {
           if (dragId) {
             e.preventDefault()
@@ -265,7 +263,7 @@ export function RoadmapGrid({
         ))}
         {cards.map((i, idx) => (
           <Fragment key={i.id}>
-            {!flat && dragId && dragId !== i.id && insertBefore === i.id && <DropLine />}
+            {dragId && dragId !== i.id && insertBefore === i.id && <DropLine />}
             <DraggableCard
               i={i}
               target={target}
@@ -276,7 +274,7 @@ export function RoadmapGrid({
             />
           </Fragment>
         ))}
-        {!flat && dragId && overKey === cellKey && insertBefore === null && <DropLine />}
+        {dragId && overKey === cellKey && insertBefore === null && <DropLine />}
       </div>
     )
   }
